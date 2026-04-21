@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google" content="notranslate">
+<title>Numbers 1–20 Trainer</title>
+<style>
+  :root {
+    --bg: #f0f4ff;
+    --surface: #ffffff;
+    --surface2: #e8edf8;
+    --text: #1a1f36;
+    --text-muted: #6b7280;
+    --border: #d1d5db;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-soft: #eef2ff;
+    --correct: #16a34a;
+    --correct-bg: #dcfce7;
+    --incorrect: #dc2626;
+    --incorrect-bg: #fee2e2;
+    --neutral: #f3f4f6;
+    --card-shadow: 0 2px 8px rgba(79,70,229,0.08);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  [data-theme="dark"] {
+    --bg: #0f1117;
+    --surface: #1e2130;
+    --surface2: #262b3d;
+    --text: #e8eaf0;
+    --text-muted: #9ca3af;
+    --border: #374151;
+    --accent: #6366f1;
+    --accent-hover: #818cf8;
+    --accent-soft: #1e1b4b;
+    --correct: #4ade80;
+    --correct-bg: #14532d;
+    --incorrect: #f87171;
+    --incorrect-bg: #7f1d1d;
+    --neutral: #2d3245;
+    --card-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--card-shadow);
+  }
+  .header h1 { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+  .header-actions { display: flex; gap: 0.5rem; align-items: center; }
+
+  .btn-icon {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 0.7rem;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--text);
+    transition: background 0.2s;
+  }
+  .btn-icon:hover { background: var(--accent-soft); color: var(--accent); }
+
+  /* ── MAIN CONTENT ── */
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+    max-width: 700px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    min-height: 48px;
+  }
+  .btn:hover { background: var(--accent-hover); }
+  .btn:active { transform: scale(0.97); }
+  .btn-outline {
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+  }
+  .btn-outline:hover { background: var(--accent-soft); }
+  .btn-sm { padding: 0.5rem 1rem; font-size: 0.9rem; min-height: 40px; }
+
+  /* ── HOME SCREEN ── */
+  .home-hero {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  .home-hero .emoji { font-size: 3.5rem; margin-bottom: 0.5rem; }
+  .home-hero h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.3rem; }
+  .home-hero p { color: var(--text-muted); font-size: 1rem; }
+
+  .mode-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    width: 100%;
+  }
+  .mode-card {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 1.2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: var(--card-shadow);
+  }
+  .mode-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(79,70,229,0.15);
+  }
+  .mode-card .mode-emoji { font-size: 2.2rem; margin-bottom: 0.6rem; }
+  .mode-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .mode-card p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
+  .mode-card .mode-tag {
+    display: inline-block;
+    margin-top: 0.7rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+  }
+
+  /* ── RULES BOX ── */
+  .rules-box {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    width: 100%;
+    margin-bottom: 1.5rem;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .rules-box strong { color: var(--accent); display: block; margin-bottom: 0.2rem; }
+  .rules-box .rule-en { margin-bottom: 0.2rem; }
+  .rules-box .rule-es { color: var(--text-muted); font-style: italic; }
+  .rules-box ul { padding-left: 1.2rem; margin-top: 0.5rem; }
+  .rules-box li { margin-bottom: 0.2rem; }
+
+  /* ── SCORE BAR ── */
+  .score-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.6rem 1rem;
+    margin-bottom: 1.2rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .score-correct { color: var(--correct); }
+  .score-round { color: var(--text-muted); }
+  .timer-display {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .timer-display.warning { color: var(--incorrect); animation: pulse 0.5s infinite alternate; }
+  @keyframes pulse { from { opacity: 1; } to { opacity: 0.5; } }
+
+  /* ── TIMER BAR ── */
+  .timer-bar-wrap {
+    width: 100%;
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    margin-bottom: 1.2rem;
+    overflow: hidden;
+  }
+  .timer-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+    transition: width 1s linear, background 0.3s;
+  }
+  .timer-bar-fill.warning { background: var(--incorrect); }
+
+  /* ── BIG NUMBER DISPLAY ── */
+  .big-number {
+    font-size: 5rem;
+    font-weight: 900;
+    color: var(--accent);
+    background: var(--surface);
+    border: 3px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 2.5rem;
+    margin-bottom: 1.5rem;
+    min-width: 160px;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+    letter-spacing: -2px;
+  }
+
+  /* ── WORD GRID (Mode 1) ── */
+  .word-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  .word-card {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.7rem 0.4rem;
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .word-card:hover:not(.disabled) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: scale(1.03);
+  }
+  .word-card.correct {
+    background: var(--correct-bg);
+    border-color: var(--correct);
+    color: var(--correct);
+  }
+  .word-card.incorrect {
+    background: var(--incorrect-bg);
+    border-color: var(--incorrect);
+    color: var(--incorrect);
+  }
+  .word-card.disabled { cursor: default; opacity: 0.6; }
+  .word-card.disabled:not(.correct):not(.incorrect) { opacity: 0.45; }
+
+  /* ── MC OPTIONS (Mode 2) ── */
+  .mc-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  .mc-btn {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.9rem 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
+    min-height: 56px;
+  }
+  .mc-btn:hover:not(.disabled) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .mc-btn.correct { background: var(--correct-bg); border-color: var(--correct); color: var(--correct); }
+  .mc-btn.incorrect { background: var(--incorrect-bg); border-color: var(--incorrect); color: var(--incorrect); }
+  .mc-btn.disabled { cursor: default; }
+
+  /* ── UNSCRAMBLE (Mode 3) ── */
+  .unscramble-hint {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+  .unscramble-hint-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .answer-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+    min-height: 60px;
+    width: 100%;
+    background: var(--surface2);
+    border: 2px dashed var(--accent);
+    border-radius: var(--radius);
+    padding: 0.8rem;
+    margin-bottom: 0.6rem;
+    transition: background 0.2s;
+  }
+  .answer-area.correct-flash { background: var(--correct-bg); border-color: var(--correct); }
+  .answer-area.incorrect-flash { background: var(--incorrect-bg); border-color: var(--incorrect); }
+  .answer-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .letter-bank {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+    width: 100%;
+    min-height: 52px;
+    padding: 0.6rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+  }
+  .letter-chip {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.15s, opacity 0.15s;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.05em;
+  }
+  .letter-chip:hover { filter: brightness(1.15); transform: scale(1.08); }
+  .letter-chip:active { transform: scale(0.95); }
+  .letter-chip.in-answer { background: var(--surface2); color: var(--accent); border: 2px solid var(--accent); }
+  .letter-chip.in-answer:hover { background: var(--incorrect-bg); }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+  .shake { animation: shake 0.35s ease; }
+
+  /* ── RESULTS SCREEN ── */
+  .results-emoji { font-size: 4rem; margin-bottom: 0.5rem; }
+  .results-score {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .results-label { font-size: 1rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .results-percent {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .results-message {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.5rem;
+    text-align: center;
+    margin: 1rem 0 1.5rem;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  .results-message .msg-en { font-weight: 700; }
+  .results-message .msg-es { color: var(--text-muted); font-style: italic; font-size: 0.9rem; }
+  .results-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
+
+  /* ── FEEDBACK TOAST ── */
+  .feedback-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    opacity: 0;
+    transition: transform 0.25s, opacity 0.25s;
+    z-index: 100;
+    pointer-events: none;
+  }
+  .feedback-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  .feedback-toast.correct { border-color: var(--correct); color: var(--correct); }
+  .feedback-toast.incorrect { border-color: var(--incorrect); color: var(--incorrect); }
+
+  /* ── HOT OR COLD — MODE 4 ── */
+  .hoc-attempts-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.2rem;
+    justify-content: center;
+  }
+  .hoc-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .hoc-dot.used-correct { background: var(--correct); border-color: var(--correct); }
+  .hoc-dot.used-wrong   { background: var(--incorrect); border-color: var(--incorrect); }
+
+  .hoc-input-row {
+    display: flex;
+    gap: 0.6rem;
+    width: 100%;
+    margin-bottom: 1.2rem;
+  }
+  .hoc-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-size: 1.05rem;
+    font-family: inherit;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+    min-height: 48px;
+  }
+  .hoc-input:focus { border-color: var(--accent); }
+  .hoc-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .hoc-temp-display {
+    width: 100%;
+    text-align: center;
+    padding: 1rem;
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    background: var(--surface);
+    margin-bottom: 1rem;
+    transition: background 0.4s, border-color 0.4s;
+    min-height: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+  }
+  .hoc-temp-emoji { font-size: 2rem; line-height: 1; }
+  .hoc-temp-en    { font-size: 1rem; font-weight: 700; }
+  .hoc-temp-es    { font-size: 0.82rem; color: var(--text-muted); font-style: italic; }
+
+  .hoc-log {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+  }
+  .hoc-log-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.8rem;
+    font-size: 0.88rem;
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform: translateY(0); } }
+  .hoc-log-num   { font-weight: 700; color: var(--text-muted); min-width: 1.2rem; }
+  .hoc-log-word  { font-weight: 700; color: var(--accent); flex: 1; }
+  .hoc-log-temp  { font-size: 0.9rem; }
+
+  .hoc-attempts-left {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+  .hoc-attempts-left span { color: var(--accent); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 480px) {
+    .word-grid { grid-template-columns: repeat(2, 1fr); }
+    .mc-options { grid-template-columns: 1fr; }
+    .big-number { font-size: 3.5rem; padding: 0.8rem 1.5rem; }
+    .content { padding: 1rem 0.75rem; }
+    .mode-cards { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body oncontextmenu="return false" oncopy="return false" onpaste="return false" oncut="return false">
+
+<!-- ════════════════ HOME ════════════════ -->
+<div id="screen-home" class="screen active">
+  <div class="header">
+    <h1>🔢 Numbers 1–20</h1>
+    <div class="header-actions">
+      <button class="btn-icon" id="theme-toggle-home" title="Toggle theme">🌙</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="home-hero">
+      <div class="emoji">🎯</div>
+      <h2>Numbers Trainer</h2>
+      <p>Practice numbers 1–20 in English<br><span style="color:var(--text-muted)">Practica los números del 1 al 20 en inglés</span></p>
+    </div>
+    <div class="mode-cards">
+      <div class="mode-card" onclick="startMode(1)">
+        <div class="mode-emoji">👆</div>
+        <h3>Click the Number</h3>
+        <p>See a number, click the right word / Ve un número, haz clic en la palabra correcta</p>
+        <span class="mode-tag">10 rounds</span>
+      </div>
+      <div class="mode-card" onclick="startMode(2)">
+        <div class="mode-emoji">⚡</div>
+        <h3>Speed Round</h3>
+        <p>20 questions, 60 seconds / 20 preguntas, 60 segundos</p>
+        <span class="mode-tag">⏱ Timed</span>
+      </div>
+      <div class="mode-card" onclick="startMode(3)">
+        <div class="mode-emoji">🔤</div>
+        <h3>Unscramble</h3>
+        <p>Click letters in the right order / Haz clic en las letras en el orden correcto</p>
+        <span class="mode-tag">10 words</span>
+      </div>
+      <div class="mode-card" onclick="startMode(4)">
+        <div class="mode-emoji">🌡️</div>
+        <h3>Hot or Cold</h3>
+        <p>Guess the secret number by typing its word / Adivina el número secreto escribiendo su palabra</p>
+        <span class="mode-tag">5 attempts</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ MODE 1: CLICK THE NUMBER ════════════════ -->
+<div id="screen-mode1" class="screen">
+  <div class="header">
+    <button class="btn-icon" onclick="goHome()">← Home</button>
+    <h1>👆 Click the Number</h1>
+    <button class="btn-icon" id="theme-toggle-1">🌙</button>
+  </div>
+  <div class="content">
+    <div class="rules-box">
+      <strong>📋 How to play / Cómo jugar</strong>
+      <p class="rule-en">A number will appear on screen. Click the word that matches it.</p>
+      <p class="rule-es">Aparecerá un número en pantalla. Haz clic en la palabra que le corresponde.</p>
+      <ul>
+        <li>One attempt per round / Un intento por ronda</li>
+        <li>10 rounds total / 10 rondas en total</li>
+        <li>Next round starts automatically / La siguiente ronda inicia automáticamente</li>
+      </ul>
+    </div>
+    <div class="score-bar">
+      <span class="score-correct">✓ <span id="m1-score">0</span></span>
+      <span class="score-round">Round <span id="m1-round">1</span> / 10</span>
+      <span style="color:var(--text-muted)">A1 🟢</span>
+    </div>
+    <div class="big-number" id="m1-number">7</div>
+    <div class="word-grid" id="m1-grid"></div>
+  </div>
+</div>
+
+<!-- ════════════════ MODE 2: SPEED ROUND ════════════════ -->
+<div id="screen-mode2" class="screen">
+  <div class="header">
+    <button class="btn-icon" onclick="goHome()">← Home</button>
+    <h1>⚡ Speed Round</h1>
+    <button class="btn-icon" id="theme-toggle-2">🌙</button>
+  </div>
+  <div class="content">
+    <div class="rules-box">
+      <strong>📋 How to play / Cómo jugar</strong>
+      <p class="rule-en">Match 20 numbers to their words before time runs out. Answer fast!</p>
+      <p class="rule-es">Relaciona 20 números con sus palabras antes de que se acabe el tiempo. ¡Responde rápido!</p>
+      <ul>
+        <li>4 options per question / 4 opciones por pregunta</li>
+        <li>60 seconds total / 60 segundos en total</li>
+        <li>No going back / No puedes regresar</li>
+      </ul>
+    </div>
+    <div class="score-bar">
+      <span class="score-correct">✓ <span id="m2-score">0</span> / <span id="m2-total">20</span></span>
+      <div class="timer-display" id="m2-timer-display">⏱ <span id="m2-time">60</span>s</div>
+    </div>
+    <div class="timer-bar-wrap">
+      <div class="timer-bar-fill" id="m2-bar"></div>
+    </div>
+    <div class="big-number" id="m2-number">5</div>
+    <div class="mc-options" id="m2-options"></div>
+  </div>
+</div>
+
+<!-- ════════════════ MODE 3: UNSCRAMBLE ════════════════ -->
+<div id="screen-mode3" class="screen">
+  <div class="header">
+    <button class="btn-icon" onclick="goHome()">← Home</button>
+    <h1>🔤 Unscramble</h1>
+    <button class="btn-icon" id="theme-toggle-3">🌙</button>
+  </div>
+  <div class="content">
+    <div class="rules-box">
+      <strong>📋 How to play / Cómo jugar</strong>
+      <p class="rule-en">Click the letters in the correct order to spell the number word.</p>
+      <p class="rule-es">Haz clic en las letras en el orden correcto para formar la palabra.</p>
+      <ul>
+        <li>The number is shown as a hint / El número aparece como pista</li>
+        <li>Click a letter in your answer to send it back / Haz clic en tu respuesta para devolver una letra</li>
+        <li>Only first-try correct answers score a point / Solo aciertos al primer intento suman punto</li>
+        <li>10 words total / 10 palabras en total</li>
+      </ul>
+    </div>
+    <div class="score-bar">
+      <span class="score-correct">✓ <span id="m3-score">0</span></span>
+      <span class="score-round">Word <span id="m3-round">1</span> / 10</span>
+      <span style="color:var(--text-muted)">A1 🟢</span>
+    </div>
+    <div class="unscramble-hint" id="m3-hint">13</div>
+    <div class="unscramble-hint-label">← number hint / pista de número</div>
+    <p class="answer-label">Your answer / Tu respuesta ↓</p>
+    <div class="answer-area" id="m3-answer"></div>
+    <p class="answer-label">Available letters / Letras disponibles ↓</p>
+    <div class="letter-bank" id="m3-bank"></div>
+    <button class="btn btn-outline btn-sm" onclick="clearAnswer()">Clear / Limpiar</button>
+  </div>
+</div>
+
+<!-- ════════════════ MODE 4: HOT OR COLD ════════════════ -->
+<div id="screen-mode4" class="screen">
+  <div class="header">
+    <button class="btn-icon" onclick="goHome()">← Home</button>
+    <h1>🌡️ Hot or Cold</h1>
+    <button class="btn-icon" id="theme-toggle-4">🌙</button>
+  </div>
+  <div class="content">
+    <div class="rules-box">
+      <strong>📋 How to play / Cómo jugar</strong>
+      <p class="rule-en">I'm thinking of a number from 1 to 20. Type its word and guess!</p>
+      <p class="rule-es">Estoy pensando en un número del 1 al 20. Escribe su palabra e intenta adivinarlo.</p>
+      <ul>
+        <li>5 attempts maximum / Máximo 5 intentos</li>
+        <li>I'll tell you if you're hot or cold / Te diré si estás caliente o frío</li>
+        <li>Only valid number words count / Solo palabras de números válidas cuentan</li>
+        <li>Score depends on how fast you guess / El puntaje depende de qué tan rápido adivinas</li>
+      </ul>
+    </div>
+    <div class="score-bar">
+      <span class="score-correct">Score: <span id="m4-score-label">—</span></span>
+      <span class="hoc-attempts-left">Attempts left: <span id="m4-left">5</span> / 5</span>
+      <span style="color:var(--text-muted)">A1 🟢</span>
+    </div>
+    <div class="hoc-attempts-bar" id="m4-dots"></div>
+    <div class="hoc-temp-display" id="m4-temp">
+      <div class="hoc-temp-emoji">🎯</div>
+      <div class="hoc-temp-en">What number am I thinking of?</div>
+      <div class="hoc-temp-es">¿Qué número estoy pensando?</div>
+    </div>
+    <div class="hoc-input-row">
+      <input type="text" class="hoc-input" id="m4-input" placeholder="e.g. thirteen" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="12">
+      <button class="btn" id="m4-guess-btn" onclick="handleMode4Guess()">Guess</button>
+    </div>
+    <div class="hoc-log" id="m4-log"></div>
+  </div>
+</div>
+
+<!-- ════════════════ RESULTS ════════════════ -->
+<div id="screen-results" class="screen">
+  <div class="header">
+    <h1>🏆 Results</h1>
+    <button class="btn-icon" id="theme-toggle-results">🌙</button>
+  </div>
+  <div class="content" style="text-align:center">
+    <div class="results-emoji" id="res-emoji">🌟</div>
+    <div class="results-score" id="res-score">8</div>
+    <div class="results-label" id="res-label">out of 10</div>
+    <div class="results-percent" id="res-percent">80%</div>
+    <div class="results-message">
+      <div class="msg-en" id="res-msg-en">Great job! Almost there!</div>
+      <div class="msg-es" id="res-msg-es">¡Muy bien! ¡Casi lo logras!</div>
+    </div>
+    <div class="results-actions">
+      <button class="btn" id="res-replay">🔄 Play Again</button>
+      <button class="btn btn-outline" onclick="goHome()">🏠 Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- FEEDBACK TOAST -->
+<div class="feedback-toast" id="feedback-toast">✓ Correct!</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════════
+const NUMBERS = [
+  { num: 1,  word: 'one' },
+  { num: 2,  word: 'two' },
+  { num: 3,  word: 'three' },
+  { num: 4,  word: 'four' },
+  { num: 5,  word: 'five' },
+  { num: 6,  word: 'six' },
+  { num: 7,  word: 'seven' },
+  { num: 8,  word: 'eight' },
+  { num: 9,  word: 'nine' },
+  { num: 10, word: 'ten' },
+  { num: 11, word: 'eleven' },
+  { num: 12, word: 'twelve' },
+  { num: 13, word: 'thirteen' },
+  { num: 14, word: 'fourteen' },
+  { num: 15, word: 'fifteen' },
+  { num: 16, word: 'sixteen' },
+  { num: 17, word: 'seventeen' },
+  { num: 18, word: 'eighteen' },
+  { num: 19, word: 'nineteen' },
+  { num: 20, word: 'twenty' }
+];
+
+// Confusable pairs — distractors prioritized for visual similarity
+const CONFUSABLES = {
+  'thirteen': ['thirty','fourteen','fifteen','three'],
+  'fourteen': ['forty','thirteen','fifteen','four'],
+  'fifteen':  ['fifty','fourteen','sixteen','five'],
+  'sixteen':  ['sixty','fifteen','seventeen','six'],
+  'seventeen':['seventy','sixteen','eighteen','seven'],
+  'eighteen': ['eighty','seventeen','nineteen','eight'],
+  'nineteen': ['ninety','eighteen','twenty','nine'],
+  'twelve':   ['twenty','eleven','thirteen','two'],
+  'eleven':   ['twelve','one','twenty','nine'],
+  'twenty':   ['twelve','nineteen','two','ten']
+};
+
+// ══════════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════════
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function getDisractors(correctWord, count) {
+  const preferred = (CONFUSABLES[correctWord] || []).filter(w => w !== correctWord);
+  const allWords = NUMBERS.map(n => n.word).filter(w => w !== correctWord);
+  const pool = [...new Set([...preferred, ...allWords])];
+  return shuffleArray(pool).slice(0, count);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('feedback-toast');
+  t.textContent = msg;
+  t.className = 'feedback-toast ' + type + ' show';
+  setTimeout(() => { t.classList.remove('show'); }, 1200);
+}
+
+// ══════════════════════════════════════════════
+//  THEME
+// ══════════════════════════════════════════════
+let isDark = false;
+function initTheme() {
+  try {
+    const saved = localStorage.getItem('numbers-theme');
+    isDark = saved === 'dark';
+  } catch(e) { isDark = false; }
+  applyTheme();
+}
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  const icon = isDark ? '☀️' : '🌙';
+  document.querySelectorAll('[id^="theme-toggle"]').forEach(b => b.textContent = icon);
+}
+function toggleTheme() {
+  isDark = !isDark;
+  applyTheme();
+  try { localStorage.setItem('numbers-theme', isDark ? 'dark' : 'light'); } catch(e) {}
+}
+document.querySelectorAll('[id^="theme-toggle"]').forEach(b => {
+  b.addEventListener('click', toggleTheme);
+});
+
+// ══════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════
+let currentMode = 0;
+
+function goHome() {
+  clearTimers();
+  showScreen('screen-home');
+}
+
+function startMode(mode) {
+  currentMode = mode;
+  clearTimers();
+  if (mode === 1) initMode1();
+  else if (mode === 2) initMode2();
+  else if (mode === 3) initMode3();
+  else if (mode === 4) initMode4();
+}
+
+function clearTimers() {
+  if (state.timer) { clearInterval(state.timer); state.timer = null; }
+}
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+const state = {
+  timer: null,
+  score: 0,
+  round: 0,
+  queue: [],
+  firstTry: true
+};
+
+function resetState() {
+  clearTimers();
+  state.score = 0;
+  state.round = 0;
+  state.queue = [];
+  state.firstTry = true;
+}
+
+// ══════════════════════════════════════════════
+//  RESULTS
+// ══════════════════════════════════════════════
+const PERFORMANCE = [
+  { min: 1.0,  emoji:'🏆', en:'Perfect score! You\'re a number master!',   es:'¡Puntaje perfecto! ¡Eres un experto en números!' },
+  { min: 0.7,  emoji:'🌟', en:'Great job! Almost there!',                  es:'¡Muy bien! ¡Casi lo logras!' },
+  { min: 0.4,  emoji:'💪', en:'Good effort! Keep practicing.',              es:'¡Buen intento! Sigue practicando.' },
+  { min: 0,    emoji:'🔁', en:'Don\'t give up! Try again.',                 es:'¡No te rindas! Inténtalo de nuevo.' }
+];
+
+function showResults(score, total, mode) {
+  clearTimers();
+  const pct = score / total;
+  const perf = PERFORMANCE.find(p => pct >= p.min);
+  const el = id => document.getElementById(id);
+  el('res-emoji').textContent = perf.emoji;
+  el('res-score').textContent = score;
+  el('res-label').textContent = 'out of ' + total + ' / de ' + total;
+  el('res-percent').textContent = Math.round(pct * 100) + '%';
+  el('res-msg-en').textContent = perf.en;
+  el('res-msg-es').textContent = perf.es;
+  el('res-replay').onclick = () => startMode(mode);
+  showScreen('screen-results');
+}
+
+// ══════════════════════════════════════════════
+//  MODE 1 — CLICK THE NUMBER
+// ══════════════════════════════════════════════
+const M1_ROUNDS = 10;
+const M1_OPTIONS = 8;
+
+function initMode1() {
+  resetState();
+  state.queue = shuffleArray(NUMBERS).slice(0, M1_ROUNDS);
+  showScreen('screen-mode1');
+  renderMode1Round();
+}
+
+function renderMode1Round() {
+  const round = state.round;
+  if (round >= M1_ROUNDS) { showResults(state.score, M1_ROUNDS, 1); return; }
+
+  const current = state.queue[round];
+  document.getElementById('m1-round').textContent = round + 1;
+  document.getElementById('m1-score').textContent = state.score;
+  document.getElementById('m1-number').textContent = current.num;
+
+  const distractors = getDisractors(current.word, M1_OPTIONS - 1);
+  const options = shuffleArray([current.word, ...distractors]);
+
+  const grid = document.getElementById('m1-grid');
+  grid.innerHTML = '';
+  options.forEach(word => {
+    const card = document.createElement('div');
+    card.className = 'word-card';
+    card.textContent = word;
+    card.addEventListener('click', () => handleMode1Click(card, word, current.word, options));
+    grid.appendChild(card);
+  });
+}
+
+function handleMode1Click(card, chosen, correct, allOptions) {
+  const grid = document.getElementById('m1-grid');
+  // Disable all cards
+  grid.querySelectorAll('.word-card').forEach(c => c.classList.add('disabled'));
+
+  if (chosen === correct) {
+    card.classList.add('correct');
+    state.score++;
+    showToast('✓ Correct!', 'correct');
+  } else {
+    card.classList.add('incorrect');
+    // Show correct answer
+    grid.querySelectorAll('.word-card').forEach(c => {
+      if (c.textContent === correct) c.classList.add('correct');
+    });
+    showToast('✗ ' + correct, 'incorrect');
+  }
+
+  document.getElementById('m1-score').textContent = state.score;
+  state.round++;
+  setTimeout(() => {
+    if (document.getElementById('screen-mode1').classList.contains('active')) renderMode1Round();
+  }, 1200);
+}
+
+// ══════════════════════════════════════════════
+//  MODE 2 — SPEED ROUND
+// ══════════════════════════════════════════════
+const M2_TOTAL = 20;
+const M2_TIME  = 60;
+
+function initMode2() {
+  resetState();
+  state.queue = shuffleArray(NUMBERS); // all 20
+  state.timeLeft = M2_TIME;
+  showScreen('screen-mode2');
+  updateM2TimerUI();
+  renderMode2Round();
+  state.timer = setInterval(() => {
+    state.timeLeft--;
+    updateM2TimerUI();
+    if (state.timeLeft <= 0) {
+      clearTimers();
+      showResults(state.score, M2_TOTAL, 2);
+    }
+  }, 1000);
+}
+
+function updateM2TimerUI() {
+  const t = state.timeLeft;
+  const timeEl = document.getElementById('m2-time');
+  const timerDisplay = document.getElementById('m2-timer-display');
+  const bar = document.getElementById('m2-bar');
+  if (!timeEl || !timerDisplay || !bar) return;
+  timeEl.textContent = t;
+  const pct = (t / M2_TIME) * 100;
+  bar.style.width = pct + '%';
+  const warning = t <= 10;
+  timerDisplay.className = 'timer-display' + (warning ? ' warning' : '');
+  bar.className = 'timer-bar-fill' + (warning ? ' warning' : '');
+}
+
+function renderMode2Round() {
+  if (state.round >= M2_TOTAL) {
+    showResults(state.score, M2_TOTAL, 2);
+    return;
+  }
+  const current = state.queue[state.round];
+  document.getElementById('m2-score').textContent = state.score;
+  document.getElementById('m2-number').textContent = current.num;
+
+  const distractors = getDisractors(current.word, 3);
+  const options = shuffleArray([current.word, ...distractors]);
+
+  const container = document.getElementById('m2-options');
+  container.innerHTML = '';
+  options.forEach(word => {
+    const btn = document.createElement('button');
+    btn.className = 'mc-btn';
+    btn.textContent = word;
+    btn.addEventListener('click', () => handleMode2Click(btn, word, current.word));
+    container.appendChild(btn);
+  });
+}
+
+function handleMode2Click(btn, chosen, correct) {
+  const container = document.getElementById('m2-options');
+  container.querySelectorAll('.mc-btn').forEach(b => b.classList.add('disabled'));
+
+  if (chosen === correct) {
+    btn.classList.add('correct');
+    state.score++;
+  } else {
+    btn.classList.add('incorrect');
+    container.querySelectorAll('.mc-btn').forEach(b => {
+      if (b.textContent === correct) b.classList.add('correct');
+    });
+  }
+
+  document.getElementById('m2-score').textContent = state.score;
+  state.round++;
+  setTimeout(() => {
+    if (document.getElementById('screen-mode2').classList.contains('active')) renderMode2Round();
+  }, 400);
+}
+
+// ══════════════════════════════════════════════
+//  MODE 3 — UNSCRAMBLE
+// ══════════════════════════════════════════════
+const M3_ROUNDS = 10;
+
+function initMode3() {
+  resetState();
+  state.queue = shuffleArray(NUMBERS).slice(0, M3_ROUNDS);
+  showScreen('screen-mode3');
+  renderMode3Round();
+}
+
+function renderMode3Round() {
+  if (state.round >= M3_ROUNDS) { showResults(state.score, M3_ROUNDS, 3); return; }
+
+  state.firstTry = true;
+  const current = state.queue[state.round];
+  document.getElementById('m3-round').textContent = state.round + 1;
+  document.getElementById('m3-score').textContent = state.score;
+  document.getElementById('m3-hint').textContent = current.num;
+
+  // Clear answer area
+  const answerArea = document.getElementById('m3-answer');
+  answerArea.innerHTML = '';
+  answerArea.className = 'answer-area';
+
+  // Build scrambled bank — ensure it's never in correct order
+  let letters = shuffleArray(current.word.split(''));
+  // If accidentally in order, shuffle again
+  let attempts = 0;
+  while (letters.join('') === current.word && attempts < 10) {
+    letters = shuffleArray(letters);
+    attempts++;
+  }
+
+  const bank = document.getElementById('m3-bank');
+  bank.innerHTML = '';
+  letters.forEach((letter, i) => {
+    const chip = document.createElement('button');
+    chip.className = 'letter-chip';
+    chip.textContent = letter.toUpperCase();
+    chip.dataset.letter = letter;
+    chip.dataset.idx = i;
+    chip.addEventListener('click', () => moveToBankFromBank(chip, current.word));
+    bank.appendChild(chip);
+  });
+}
+
+function moveToBankFromBank(chip, correctWord) {
+  const answerArea = document.getElementById('m3-answer');
+  const bank = document.getElementById('m3-bank');
+  chip.className = 'letter-chip in-answer';
+  chip.removeEventListener('click', chip._bankHandler);
+  chip.addEventListener('click', () => moveToBank(chip));
+  answerArea.appendChild(chip);
+  checkUnscramble(correctWord);
+}
+
+function moveToBank(chip) {
+  const bank = document.getElementById('m3-bank');
+  chip.className = 'letter-chip';
+  chip.removeEventListener('click', chip._answerHandler);
+  const correctWord = state.queue[state.round].word;
+  chip.addEventListener('click', () => moveToBankFromBank(chip, correctWord));
+  bank.appendChild(chip);
+}
+
+function clearAnswer() {
+  const answerArea = document.getElementById('m3-answer');
+  const bank = document.getElementById('m3-bank');
+  const chips = [...answerArea.querySelectorAll('.letter-chip')];
+  const correctWord = state.queue[state.round].word;
+  chips.forEach(chip => {
+    chip.className = 'letter-chip';
+    chip.replaceWith(chip.cloneNode(true)); // clone to remove all old listeners
+  });
+  // Re-init chips in bank
+  chips.forEach(chip => {
+    const newChip = chip.cloneNode(true);
+    newChip.className = 'letter-chip';
+    newChip.addEventListener('click', () => moveToBankFromBank(newChip, correctWord));
+    bank.appendChild(newChip);
+  });
+}
+
+function checkUnscramble(correctWord) {
+  const answerArea = document.getElementById('m3-answer');
+  const chips = answerArea.querySelectorAll('.letter-chip');
+  const wordLength = correctWord.length;
+  if (chips.length < wordLength) return;
+
+  const typed = [...chips].map(c => c.dataset.letter).join('');
+
+  if (typed === correctWord) {
+    // Correct
+    if (state.firstTry) state.score++;
+    document.getElementById('m3-score').textContent = state.score;
+    answerArea.classList.add('correct-flash');
+    chips.forEach(c => { c.style.pointerEvents = 'none'; });
+    showToast('✓ ' + correctWord + '!', 'correct');
+    state.round++;
+    setTimeout(() => {
+      if (document.getElementById('screen-mode3').classList.contains('active')) {
+        answerArea.classList.remove('correct-flash');
+        renderMode3Round();
+      }
+    }, 1000);
+  } else {
+    // Incorrect — shake and return letters to bank
+    state.firstTry = false;
+    answerArea.classList.add('shake', 'incorrect-flash');
+    showToast('✗ Try again!', 'incorrect');
+    setTimeout(() => {
+      if (document.getElementById('screen-mode3').classList.contains('active')) {
+        answerArea.classList.remove('shake', 'incorrect-flash');
+        clearAnswer();
+      }
+    }, 400);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  MODE 4 — HOT OR COLD (3 rounds)
+// ══════════════════════════════════════════════
+const M4_MAX    = 5;   // attempts per round
+const M4_ROUNDS = 3;   // total rounds per game
+
+const TEMP_LEVELS = [
+  { maxDiff: 0,  emoji: '🎉', en: 'You got it!',       es: '¡Lo lograste!',          color: '#16a34a', border: '#16a34a' },
+  { maxDiff: 1,  emoji: '🔥', en: 'On fire!',          es: '¡Estás ardiendo!',        color: '#ef4444', border: '#ef4444' },
+  { maxDiff: 3,  emoji: '🌡️', en: 'Very warm!',        es: '¡Muy caliente!',          color: '#f97316', border: '#f97316' },
+  { maxDiff: 5,  emoji: '☀️', en: 'Warm',              es: 'Caliente',                color: '#eab308', border: '#eab308' },
+  { maxDiff: 8,  emoji: '🌤️', en: 'Getting warmer…',  es: 'Cada vez más cerca…',     color: '#84cc16', border: '#84cc16' },
+  { maxDiff: 11, emoji: '❄️', en: 'Cold',              es: 'Frío',                    color: '#38bdf8', border: '#38bdf8' },
+  { maxDiff: 15, emoji: '🧊', en: 'Very cold!',        es: '¡Muy frío!',              color: '#818cf8', border: '#818cf8' },
+  { maxDiff: 19, emoji: '🥶', en: 'Freezing!',         es: '¡Congelado!',             color: '#6366f1', border: '#6366f1' }
+];
+
+// m4state is separate from shared state to avoid conflicts with other modes
+const m4state = {
+  round:         0,
+  attempts:      0,
+  secret:        null,
+  roundPool:     [],
+  roundAttempts: [],
+  roundGuessed:  []
+};
+
+function initMode4() {
+  m4state.round         = 0;
+  m4state.roundPool     = shuffleArray(NUMBERS).slice(0, M4_ROUNDS);
+  m4state.roundAttempts = [];
+  m4state.roundGuessed  = [];
+  showScreen('screen-mode4');
+  startHocRound();
+}
+
+function startHocRound() {
+  m4state.attempts = 0;
+  m4state.secret   = m4state.roundPool[m4state.round];
+
+  // Round counter
+  const roundNum = document.getElementById('m4-round-num');
+  if (roundNum) roundNum.textContent = m4state.round + 1;
+
+  // Attempt dots
+  const dotsEl = document.getElementById('m4-dots');
+  if (dotsEl) {
+    dotsEl.innerHTML = '';
+    for (let i = 0; i < M4_MAX; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'hoc-dot';
+      dot.id = 'm4-dot-' + i;
+      dotsEl.appendChild(dot);
+    }
+  }
+
+  // Attempts left counter
+  const leftEl = document.getElementById('m4-left');
+  if (leftEl) leftEl.textContent = M4_MAX;
+
+  // Reset temp display
+  const tempEl = document.getElementById('m4-temp');
+  if (tempEl) {
+    tempEl.style.background  = '';
+    tempEl.style.borderColor = '';
+    tempEl.innerHTML =
+      '<div class="hoc-temp-emoji">🎯</div>' +
+      '<div class="hoc-temp-en">What number am I thinking of?</div>' +
+      '<div class="hoc-temp-es">¿Qué número estoy pensando?</div>';
+  }
+
+  // Clear guess log and round summary
+  const logEl = document.getElementById('m4-log');
+  if (logEl) logEl.innerHTML = '';
+  const summaryEl = document.getElementById('m4-round-summary');
+  if (summaryEl) { summaryEl.style.display = 'none'; summaryEl.innerHTML = ''; }
+
+  // Enable input
+  const inp = document.getElementById('m4-input');
+  if (inp) { inp.value = ''; inp.disabled = false; }
+  const btn = document.getElementById('m4-guess-btn');
+  if (btn) btn.disabled = false;
+
+  setTimeout(() => {
+    const inp2 = document.getElementById('m4-input');
+    if (inp2) inp2.focus();
+  }, 150);
+}
+
+function handleMode4Guess() {
+  if (!document.getElementById('screen-mode4').classList.contains('active')) return;
+  const inp = document.getElementById('m4-input');
+  if (!inp || inp.disabled) return;
+  const raw = inp.value.trim().toLowerCase();
+  inp.value = '';
+
+  // Validate: must be a number word from 1–20
+  const match = NUMBERS.find(n => n.word === raw);
+  if (!match) {
+    showToast('Not a valid number word! / ¡Palabra inválida!', 'incorrect');
+    inp.focus();
+    return;
+  }
+
+  // Duplicate check within this round's log
+  const logEl = document.getElementById('m4-log');
+  const alreadyGuessed = logEl &&
+    [...logEl.querySelectorAll('.hoc-log-word')].some(el => el.textContent === raw);
+  if (alreadyGuessed) {
+    showToast('Already tried that! / ¡Ya lo intentaste!', 'incorrect');
+    inp.focus();
+    return;
+  }
+
+  m4state.attempts++;
+  const diff       = Math.abs(match.num - m4state.secret.num);
+  const level      = TEMP_LEVELS.find(l => diff <= l.maxDiff);
+  const attemptIdx = m4state.attempts - 1;
+
+  // Mark dot
+  const dot = document.getElementById('m4-dot-' + attemptIdx);
+  if (dot) dot.classList.add(diff === 0 ? 'used-correct' : 'used-wrong');
+
+  // Attempts left
+  const leftEl = document.getElementById('m4-left');
+  if (leftEl) leftEl.textContent = M4_MAX - m4state.attempts;
+
+  // Temp display
+  const tempEl = document.getElementById('m4-temp');
+  if (tempEl) {
+    tempEl.style.background  = level.color + '22';
+    tempEl.style.borderColor = level.border;
+    tempEl.innerHTML =
+      '<div class="hoc-temp-emoji">' + level.emoji + '</div>' +
+      '<div class="hoc-temp-en">'   + level.en    + '</div>' +
+      '<div class="hoc-temp-es">'   + level.es    + '</div>';
+  }
+
+  // Add to log
+  if (logEl) {
+    const row = document.createElement('div');
+    row.className = 'hoc-log-row';
+    row.innerHTML =
+      '<span class="hoc-log-num">'  + m4state.attempts + '.</span>' +
+      '<span class="hoc-log-word">' + raw              + '</span>' +
+      '<span class="hoc-log-temp">' + level.emoji + ' ' + level.en + '</span>';
+    logEl.appendChild(row);
+  }
+
+  // ── WIN this round ──
+  if (diff === 0) {
+    m4state.roundAttempts.push(m4state.attempts);
+    m4state.roundGuessed.push(true);
+    disableMode4Input();
+    showToast('🎉 ' + m4state.secret.word + '!', 'correct');
+    renderHocRoundSummary(true);
+    setTimeout(() => {
+      if (!document.getElementById('screen-mode4').classList.contains('active')) return;
+      m4state.round++;
+      if (m4state.round >= M4_ROUNDS) finishHocGame();
+      else startHocRound();
+    }, 1800);
+    return;
+  }
+
+  // ── OUT OF ATTEMPTS ──
+  if (m4state.attempts >= M4_MAX) {
+    m4state.roundAttempts.push(M4_MAX + 1); // penalty for not guessing
+    m4state.roundGuessed.push(false);
+    disableMode4Input();
+    showToast('The number was: ' + m4state.secret.word, 'incorrect');
+    renderHocRoundSummary(false);
+    setTimeout(() => {
+      if (!document.getElementById('screen-mode4').classList.contains('active')) return;
+      m4state.round++;
+      if (m4state.round >= M4_ROUNDS) finishHocGame();
+      else startHocRound();
+    }, 2000);
+    return;
+  }
+
+  inp.focus();
+}
+
+function renderHocRoundSummary(guessed) {
+  const summaryEl = document.getElementById('m4-round-summary');
+  if (!summaryEl) return;
+  const isLast   = m4state.round === M4_ROUNDS - 1;
+  const nextText = isLast
+    ? 'Calculating results… / Calculando resultados…'
+    : 'Round ' + (m4state.round + 2) + ' starting… / Iniciando ronda ' + (m4state.round + 2) + '…';
+  const bg    = guessed ? 'var(--correct-bg)'  : 'var(--incorrect-bg)';
+  const color = guessed ? 'var(--correct)'     : 'var(--incorrect)';
+  const att   = m4state.attempts;
+  const mainMsg = guessed
+    ? '✓ Guessed in ' + att + ' attempt' + (att > 1 ? 's' : '') +
+      ' / Adivinado en ' + att + ' intento' + (att > 1 ? 's' : '')
+    : '✗ The number was ' + m4state.secret.num + ' — ' + m4state.secret.word +
+      ' / El número era '  + m4state.secret.num + ' — ' + m4state.secret.word;
+
+  summaryEl.style.display = 'block';
+  summaryEl.innerHTML =
+    '<div style="background:' + bg + ';border:1px solid ' + color +
+    ';border-radius:var(--radius);padding:0.7rem 1rem;text-align:center;">' +
+    '<div style="font-weight:700;color:' + color + ';">' + mainMsg + '</div>' +
+    '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.3rem;">' + nextText + '</div>' +
+    '</div>';
+}
+
+function disableMode4Input() {
+  const inp = document.getElementById('m4-input');
+  const btn = document.getElementById('m4-guess-btn');
+  if (inp) inp.disabled = true;
+  if (btn) btn.disabled = true;
+}
+
+function finishHocGame() {
+  // Average attempts: unguessed rounds use M4_MAX+1 as penalty
+  const total      = m4state.roundAttempts.reduce((a, b) => a + b, 0);
+  const avg        = total / M4_ROUNDS;
+  const avgDisplay = avg.toFixed(1);
+
+  // Detail per round: R1:2 · R2:✗ · R3:1
+  const detail = m4state.roundAttempts.map((a, i) =>
+    'R' + (i + 1) + ': ' + (m4state.roundGuessed[i] ? a : '✗')
+  ).join(' · ');
+
+  // Performance by average (lower = better)
+  let emoji, msgEn, msgEs;
+  if (avg <= 1)      { emoji = '🏆'; msgEn = 'Incredible! All first try!';        msgEs = '¡Increíble! Todo al primer intento.'; }
+  else if (avg <= 2) { emoji = '🌟'; msgEn = "Excellent average! You're sharp!";  msgEs = '¡Excelente promedio! Muy listo.'; }
+  else if (avg <= 3) { emoji = '💪'; msgEn = 'Good job! Keep it up.';             msgEs = '¡Bien hecho! Sígue así.'; }
+  else if (avg <= 4) { emoji = '💡'; msgEn = 'Getting there! Practice more.';     msgEs = 'Va bien. Practica más.'; }
+  else               { emoji = '🔁'; msgEn = "Don't give up! Try again.";         msgEs = '¡No te rindas! Inténtalo de nuevo.'; }
+
+  const el = id => document.getElementById(id);
+  el('res-emoji').textContent   = emoji;
+  el('res-score').textContent   = avgDisplay;
+  el('res-label').textContent   = 'avg attempts / intentos promedio';
+  el('res-percent').textContent = detail;
+  el('res-msg-en').textContent  = msgEn;
+  el('res-msg-es').textContent  = msgEs;
+  el('res-replay').onclick      = () => startMode(4);
+  showScreen('screen-results');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const inp = document.getElementById('m4-input');
+  if (inp) {
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleMode4Guess();
+    });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+initTheme();
+</script>
+</body>
+</html>
