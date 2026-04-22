@@ -958,6 +958,11 @@ function shuffle(arr) {
   return a;
 }
 
+function getWindowSize() {
+  const [min, max] = getLevelConfig().range;
+  return Math.ceil((max - min + 1) / 3);
+}
+
 function generateDeck() {
   const [min, max] = getLevelConfig().range;
   const nums = [];
@@ -965,14 +970,32 @@ function generateDeck() {
   return shuffle(nums);
 }
 
-function generateNextDeck(lastValue) {
+// Generates a deck where none of the first windowSize positions contain a value
+// from recentWindow. Uses targeted swaps to avoid clustering recent values at the start.
+function generateNextDeck(recentWindow) {
   const deck = generateDeck();
-  // Anti-repetition at seam: if first card === last of previous deck, swap with second
-  if (deck.length > 1 && deck[0] === lastValue) {
-    [deck[0], deck[1]] = [deck[1], deck[0]];
+  if (!recentWindow || recentWindow.length === 0) return deck;
+  const windowSize = Math.min(getWindowSize(), recentWindow.length);
+
+  for (let i = 0; i < windowSize; i++) {
+    if (recentWindow.includes(deck[i])) {
+      // Prefer swapping with a safe candidate beyond the protected zone
+      let swapIdx = -1;
+      for (let j = Math.max(i + 1, windowSize); j < deck.length; j++) {
+        if (!recentWindow.includes(deck[j])) { swapIdx = j; break; }
+      }
+      // Fallback: any safe candidate after i
+      if (swapIdx === -1) {
+        for (let j = i + 1; j < deck.length; j++) {
+          if (!recentWindow.includes(deck[j])) { swapIdx = j; break; }
+        }
+      }
+      if (swapIdx !== -1) {
+        [deck[i], deck[swapIdx]] = [deck[swapIdx], deck[i]];
+      }
+    }
   }
-  return deck;
-}
+  return deck;}
 
 /* ═══════════════════════════════════════════════════════════════
    STATE
@@ -990,6 +1013,7 @@ const state = {
   totalAnswered: 0,
   totalCorrect: 0,
   lastValue: null,      // anti-repetition: last spawned number
+  recentWindow: [],     // sliding window of last N values (anti-repetition across decks)
   infiniteMode: false,  // true once MASTER is reached
   infiniteStars: 0,     // stars earned post-MASTER (each = 10 correct)
   infiniteAccrued: 0,   // correct answers accumulated toward next star
@@ -1131,12 +1155,19 @@ function spawnBlock() {
   // Rotate decks when active deck is exhausted
   if (state.deck.length === 0) {
     state.deck     = state.nextDeck;
-    state.nextDeck = generateNextDeck(state.lastValue);
+    state.nextDeck = generateNextDeck(state.recentWindow);
     state.deckIndex++;
   }
 
   const value = state.deck.shift();
   state.lastValue = value;
+
+  // Update sliding window: push new value, keep only last windowSize entries
+  const winSize = getWindowSize();
+  state.recentWindow.push(value);
+  if (state.recentWindow.length > winSize) {
+    state.recentWindow.shift();
+  }
 
   const col = Math.floor(Math.random() * COLS);
   state.falling = { value, col, row: 0 };
@@ -1377,9 +1408,10 @@ function checkLevelUp() {
       state.infiniteStars   = 0;
       state.infiniteAccrued = 0;
     }
-    // Regenerate decks for new range (discard old range cards)
+    // Regenerate decks for new range — reset window since range changes
+    state.recentWindow = [];
     state.deck      = generateDeck();
-    state.nextDeck  = generateNextDeck(state.lastValue);
+    state.nextDeck  = generateNextDeck(state.recentWindow);
     state.deckIndex = 1;
     showLevelUp();
   }
@@ -1514,7 +1546,7 @@ function startGame() {
   state.phase = 'playing';
   // Initialize decks — getLevelConfig() now works (levelIndex = 0)
   state.deck      = generateDeck();
-  state.nextDeck  = generateNextDeck(null);
+  state.nextDeck  = generateNextDeck(state.recentWindow);
   state.deckIndex = 1;
   showScreen('screen-game');
   initBoard();
@@ -1542,6 +1574,7 @@ function resetState() {
   state.totalAnswered  = 0;
   state.totalCorrect   = 0;
   state.lastValue       = null;
+  state.recentWindow    = [];
   state.infiniteMode    = false;
   state.infiniteStars   = 0;
   state.infiniteAccrued = 0;
