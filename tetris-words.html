@@ -734,16 +734,29 @@ const NUMBERS = {
   16: 'sixteen',17: 'seventeen',18: 'eighteen',19: 'nineteen',20: 'twenty'
 };
 
+// Reverse lookup: "seven" -> 7
+const WORDS_TO_NUM = Object.fromEntries(
+  Object.entries(NUMBERS).map(([k, v]) => [v, parseInt(k)])
+);
+
+function parseTypedNumber(raw) {
+  // raw is already lowercase+trimmed+nospaces
+  return (WORDS_TO_NUM[raw] !== undefined) ? WORDS_TO_NUM[raw] : null;
+}
+
 /* ═══════════════════════════════════════════════════════════════
    LEVEL CONFIG
 ═══════════════════════════════════════════════════════════════ */
 const LEVELS = [
-  { level: 1, name: 'ROOKIE',  threshold: 0,  speed: 2500, range: [1,5]   },
-  { level: 2, name: 'TRAINEE', threshold: 5,  speed: 2200, range: [1,10]  },
-  { level: 3, name: 'PLAYER',  threshold: 8,  speed: 1800, range: [1,15]  },
-  { level: 4, name: 'PRO',     threshold: 10, speed: 1400, range: [1,20]  },
-  { level: 5, name: 'MASTER',  threshold: 12, speed: 1000, range: [1,20]  }
+  { level: 1, name: 'ROOKIE',  threshold: 0,  speed: 1600, range: [1,5]   },
+  { level: 2, name: 'TRAINEE', threshold: 5,  speed: 1400, range: [1,10]  },
+  { level: 3, name: 'PLAYER',  threshold: 8,  speed: 1100, range: [1,15]  },
+  { level: 4, name: 'PRO',     threshold: 10, speed: 850,  range: [1,20]  },
+  { level: 5, name: 'MASTER',  threshold: 12, speed: 600,  range: [1,20]  }
 ];
+
+const INFINITE_SPEED_DECREMENT = 60; // ms faster per star
+const INFINITE_SPEED_FLOOR     = 250; // minimum ms
 
 const ROWS = 14;
 const COLS = 3;
@@ -762,7 +775,11 @@ const state = {
   fallTimer: null,
   spawnTimer: null,
   totalAnswered: 0,
-  totalCorrect: 0
+  totalCorrect: 0,
+  lastValue: null,      // anti-repetition: last spawned number
+  infiniteMode: false,  // true once MASTER is reached
+  infiniteStars: 0,     // stars earned post-MASTER (each = 10 correct)
+  infiniteAccrued: 0    // correct answers accumulated toward next star
 };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -830,7 +847,15 @@ function updateHUD() {
   const nameEl  = document.getElementById('hud-level-name');
   const comboEl = document.getElementById('hud-combo');
   if (scoreEl) scoreEl.textContent = state.score;
-  if (nameEl)  nameEl.textContent  = lv.name;
+  if (nameEl) {
+    if (state.infiniteMode) {
+      nameEl.textContent = 'MASTER ★' + state.infiniteStars;
+      nameEl.style.color = 'var(--red)';
+    } else {
+      nameEl.textContent = lv.name;
+      nameEl.style.color = '';
+    }
+  }
   if (comboEl) comboEl.textContent = '×' + state.combo;
 }
 
@@ -850,19 +875,31 @@ function spawnBlock() {
   if (state.phase !== 'playing') return;
 
   const { min, max } = getNumberRange();
-  const value = Math.floor(Math.random() * (max - min + 1)) + min;
-  const col   = Math.floor(Math.random() * COLS);
+  // Anti-repetition: build pool excluding last value
+  const pool = [];
+  for (let n = min; n <= max; n++) {
+    if (n !== state.lastValue) pool.push(n);
+  }
+  const value = pool[Math.floor(Math.random() * pool.length)];
+  state.lastValue = value;
 
+  const col = Math.floor(Math.random() * COLS);
   state.falling = { value, col, row: 0 };
   renderBoard();
   startFallTimer();
 }
 
+function getCurrentSpeed() {
+  if (!state.infiniteMode) return getLevelConfig().speed;
+  const base = LEVELS[LEVELS.length - 1].speed;
+  const speed = base - (state.infiniteStars * INFINITE_SPEED_DECREMENT);
+  return Math.max(speed, INFINITE_SPEED_FLOOR);
+}
+
 function startFallTimer() {
   clearInterval(state.fallTimer);
   state.fallTimer = null;
-  const speed = getLevelConfig().speed;
-  state.fallTimer = setInterval(tick, speed);
+  state.fallTimer = setInterval(tick, getCurrentSpeed());
 }
 
 function tick() {
@@ -924,8 +961,44 @@ function triggerGameOver() {
 /* ═══════════════════════════════════════════════════════════════
    ANSWER VALIDATION
 ═══════════════════════════════════════════════════════════════ */
+function tryEliminateStacked(numValue) {
+  // Search columns top→bottom (highest stack index = most dangerous visually)
+  for (let c = 0; c < COLS; c++) {
+    const col = state.stack[c];
+    for (let i = col.length - 1; i >= 0; i--) {
+      if (col[i] === numValue) {
+        col.splice(i, 1);
+        state.score += 5;
+        state.totalCorrect++;
+        flashBoard('correct');
+        showRescueFloat();
+        renderBoard();
+        updateHUD();
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function showRescueFloat() {
+  const el = document.getElementById('combo-float');
+  if (!el) return;
+  el.textContent = '+5 RESCUE!';
+  el.style.color = 'var(--accent)';
+  el.style.textShadow = '0 0 12px var(--accent)';
+  el.classList.remove('visible');
+  void el.offsetWidth;
+  el.classList.add('visible');
+  setTimeout(() => {
+    el.classList.remove('visible');
+    el.style.color = '';
+    el.style.textShadow = '';
+  }, 1100);
+}
+
 function submitAnswer() {
-  if (state.phase !== 'playing' || !state.falling) return;
+  if (state.phase !== 'playing') return;
 
   const input = document.getElementById('answer-input');
   const raw   = input.value.trim().toLowerCase().replace(/\s+/g, '');
@@ -934,13 +1007,26 @@ function submitAnswer() {
 
   if (!raw) return;
 
-  state.totalAnswered++;
-  const correct = NUMBERS[state.falling.value];
+  const numValue = parseTypedNumber(raw);
 
-  if (raw === correct || raw === correct.replace(/\s+/g, '')) {
-    handleCorrect();
+  if (state.falling) {
+    // ── Mode A: validate against falling block ──
+    state.totalAnswered++;
+    const correct = NUMBERS[state.falling.value];
+    if (raw === correct) {
+      handleCorrect();
+    } else {
+      handleWrong();
+    }
   } else {
-    handleWrong();
+    // ── Mode B: no falling block — try to rescue from stack ──
+    if (numValue === null) {
+      shakeInput(); // unknown word, not in 1-20
+      return;
+    }
+    state.totalAnswered++;
+    const eliminated = tryEliminateStacked(numValue);
+    if (!eliminated) shakeInput();
   }
 }
 
@@ -973,49 +1059,100 @@ function handleCorrect() {
   renderBoard();
 }
 
+function shakeInput() {
+  const input = document.getElementById('answer-input');
+  if (!input) return;
+  input.classList.add('shake-anim');
+  setTimeout(() => input.classList.remove('shake-anim'), 380);
+}
+
 function handleWrong() {
   state.combo = 0;
   updateHUD();
-
-  const input = document.getElementById('answer-input');
-  input.classList.add('shake-anim');
-  setTimeout(() => input.classList.remove('shake-anim'), 380);
-  // Block continues falling — do nothing to falling state
+  shakeInput();
+  // Instant drop: cancel fall timer and stack immediately
+  clearInterval(state.fallTimer);
+  state.fallTimer = null;
+  stackBlock();
 }
 
 /* ═══════════════════════════════════════════════════════════════
    LEVEL PROGRESSION
 ═══════════════════════════════════════════════════════════════ */
 function checkLevelUp() {
-  if (state.levelIndex >= LEVELS.length - 1) return;
+  // ── Infinite mode: post-MASTER star progression ──
+  if (state.infiniteMode) {
+    state.infiniteAccrued++;
+    if (state.infiniteAccrued >= 10) {
+      state.infiniteStars++;
+      state.infiniteAccrued = 0;
+      showStarUp();
+    }
+    return;
+  }
 
+  // ── Normal levels 1-5 ──
   const nextLevel = LEVELS[state.levelIndex + 1];
   if (state.aciertosEnNivel >= nextLevel.threshold) {
     state.levelIndex++;
     state.aciertosEnNivel = 0;
+    // If just reached MASTER (last level), immediately enter infinite mode
+    if (state.levelIndex >= LEVELS.length - 1) {
+      state.infiniteMode    = true;
+      state.infiniteStars   = 0;
+      state.infiniteAccrued = 0;
+    }
     showLevelUp();
   }
 }
 
 function showLevelUp() {
   const lv = getLevelConfig();
-  const overlay  = document.getElementById('levelup-overlay');
-  const nameText = document.getElementById('levelup-name-text');
+  const overlay      = document.getElementById('levelup-overlay');
+  const nameText     = document.getElementById('levelup-name-text');
+  const overlayTitle = overlay ? overlay.querySelector('.levelup-text') : null;
   if (!overlay) return;
   if (nameText) nameText.textContent = lv.name;
+  if (overlayTitle) {
+    overlayTitle.textContent = 'LEVEL UP!';
+    overlayTitle.style.color = '';
+    overlayTitle.style.textShadow = '';
+  }
   overlay.classList.add('visible');
 
-  // Flash board
   const board = document.getElementById('board');
-  board.style.borderColor = 'var(--yellow)';
+  if (board) board.style.borderColor = 'var(--yellow)';
 
   setTimeout(() => {
     overlay.classList.remove('visible');
-    board.style.borderColor = '';
+    if (board) board.style.borderColor = '';
   }, 1500);
 
   updateHUD();
-  // Speed will apply on next spawnBlock via getLevelConfig()
+}
+
+function showStarUp() {
+  const overlay      = document.getElementById('levelup-overlay');
+  const nameText     = document.getElementById('levelup-name-text');
+  const overlayTitle = overlay ? overlay.querySelector('.levelup-text') : null;
+  if (!overlay) return;
+  if (overlayTitle) {
+    overlayTitle.textContent = '★ STAR UP!';
+    overlayTitle.style.color = 'var(--red)';
+    overlayTitle.style.textShadow = '0 0 20px var(--red)';
+  }
+  if (nameText) nameText.textContent = 'MASTER ★' + state.infiniteStars;
+  overlay.classList.add('visible');
+
+  const board = document.getElementById('board');
+  if (board) board.style.borderColor = 'var(--red)';
+
+  setTimeout(() => {
+    overlay.classList.remove('visible');
+    if (board) board.style.borderColor = '';
+  }, 1500);
+
+  updateHUD();
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1107,28 +1244,34 @@ function startGame() {
 function resetState() {
   clearInterval(state.fallTimer);
   clearTimeout(state.spawnTimer);
-  state.phase       = 'start';
-  state.score       = 0;
-  state.levelIndex  = 0;
-  state.combo       = 0;
+  state.phase          = 'start';
+  state.score          = 0;
+  state.levelIndex     = 0;
+  state.combo          = 0;
   state.aciertosEnNivel = 0;
-  state.stack       = [[], [], []];
-  state.falling     = null;
-  state.fallTimer   = null;
-  state.spawnTimer  = null;
-  state.totalAnswered = 0;
-  state.totalCorrect  = 0;
+  state.stack          = [[], [], []];
+  state.falling        = null;
+  state.fallTimer      = null;
+  state.spawnTimer     = null;
+  state.totalAnswered  = 0;
+  state.totalCorrect   = 0;
+  state.lastValue      = null;
+  state.infiniteMode   = false;
+  state.infiniteStars  = 0;
+  state.infiniteAccrued = 0;
 }
 
 function showGameOver() {
   const lv = getLevelConfig();
   const score = state.score;
 
+  // rankScore weighs level reached + infinite stars
+  const rankScore = score + (state.levelIndex * 100) + (state.infiniteStars * 80);
   let rank = 'D';
-  if (score >= 400)      rank = 'S';
-  else if (score >= 250) rank = 'A';
-  else if (score >= 150) rank = 'B';
-  else if (score >= 80)  rank = 'C';
+  if (rankScore >= 800)      rank = 'S';
+  else if (rankScore >= 500) rank = 'A';
+  else if (rankScore >= 300) rank = 'B';
+  else if (rankScore >= 150) rank = 'C';
 
   const rankEl = document.getElementById('go-rank-letter');
   if (rankEl) { rankEl.textContent = rank; rankEl.className = 'rank-letter rank-' + rank; }
@@ -1137,8 +1280,11 @@ function showGameOver() {
   const goLevel   = document.getElementById('go-level');
   const goCorrect = document.getElementById('go-correct');
   const goTotal   = document.getElementById('go-total');
+  const levelLabel = state.infiniteMode
+    ? 'MASTER ★' + state.infiniteStars
+    : lv.name;
   if (goScore)   goScore.textContent   = score;
-  if (goLevel)   goLevel.textContent   = lv.name;
+  if (goLevel)   goLevel.textContent   = levelLabel;
   if (goCorrect) goCorrect.textContent = state.totalCorrect;
   if (goTotal)   goTotal.textContent   = state.totalAnswered;
 
