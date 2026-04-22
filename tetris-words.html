@@ -1010,16 +1010,30 @@ function submitAnswer() {
   const numValue = parseTypedNumber(raw);
 
   if (state.falling) {
-    // ── Mode A: validate against falling block ──
-    state.totalAnswered++;
+    // ── Mode A: falling block present ──
     const correct = NUMBERS[state.falling.value];
     if (raw === correct) {
+      // Matches the falling block → normal correct handling
+      state.totalAnswered++;
       handleCorrect();
+    } else if (numValue !== null) {
+      // Doesn't match falling block — try stack rescue first
+      const eliminated = tryEliminateStacked(numValue);
+      if (eliminated) {
+        // Stack rescue while block is falling: no penalty, no drop
+        // (don't count as totalAnswered — it's a bonus action)
+      } else {
+        // Wrong AND not in stack → wrong answer: drop penalty
+        state.totalAnswered++;
+        handleWrong();
+      }
     } else {
+      // Unknown word (not 1-20 at all) → wrong answer: drop penalty
+      state.totalAnswered++;
       handleWrong();
     }
   } else {
-    // ── Mode B: no falling block — try to rescue from stack ──
+    // ── Mode B: no falling block — rescue from stack only ──
     if (numValue === null) {
       shakeInput(); // unknown word, not in 1-20
       return;
