@@ -269,6 +269,39 @@ input { -webkit-user-select: text; user-select: text; }
   align-items: center;
 }
 
+/* ─── Deck progress bar ─────────────────────────────────────── */
+.hud-deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.deck-bar {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 80px;
+  justify-content: center;
+}
+.deck-pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--accent);
+  opacity: 0.85;
+  transition: opacity 0.15s, background 0.15s;
+}
+.deck-pip.consumed {
+  background: var(--border);
+  opacity: 0.3;
+}
+#hud-deck-label {
+  font-size: 0.4rem;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
 /* ─── BOARD ─────────────────────────────────────────────────── */
 .board-wrapper {
   position: relative;
@@ -566,6 +599,7 @@ input { -webkit-user-select: text; user-select: text; }
 
 <!-- Theme Toggle -->
 <button id="theme-toggle" onclick="toggleTheme()">☀ LIGHT</button>
+<button id="btn-mute" onclick="SFX.toggleMute()" style="position:fixed;top:10px;right:90px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:0.55rem;padding:6px 8px;cursor:pointer;z-index:1000;border-radius:4px;transition:background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg3)'">🔊 SFX</button>
 
 <!-- ══ START SCREEN ══════════════════════════════════════════ -->
 <div id="screen-start" class="screen active">
@@ -598,6 +632,10 @@ input { -webkit-user-select: text; user-select: text; }
     <div class="hud-stat">
       <span class="hud-label">LEVEL</span>
       <span id="hud-level-name">ROOKIE</span>
+    </div>
+    <div class="hud-deck">
+      <span class="hud-label" id="hud-deck-label">DECK #1</span>
+      <div class="deck-bar" id="hud-deck-bar"></div>
     </div>
     <div class="hud-stat">
       <span class="hud-label">COMBO</span>
@@ -722,6 +760,153 @@ input { -webkit-user-select: text; user-select: text; }
 </div>
 
 <script>
+/* ═══════════════════════════════════════════════════════════════
+   SOUND EFFECTS — Web Audio API (synthetic, no external files)
+═══════════════════════════════════════════════════════════════ */
+const SFX = (() => {
+  let ctx = null;
+  let muted = false;
+
+  function getCtx() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    return ctx;
+  }
+
+  function play(fn) {
+    if (muted) return;
+    try { fn(getCtx()); } catch(e) {}
+  }
+
+  // Utilities
+  function osc(ctx, type, freq, startTime, duration, gainPeak = 0.3) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, startTime);
+    g.gain.setValueAtTime(0.001, startTime);
+    g.gain.linearRampToValueAtTime(gainPeak, startTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(startTime); o.stop(startTime + duration);
+  }
+
+  function oscSlide(ctx, type, freqStart, freqEnd, startTime, duration, gainPeak = 0.3) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freqStart, startTime);
+    o.frequency.linearRampToValueAtTime(freqEnd, startTime + duration);
+    g.gain.setValueAtTime(gainPeak, startTime);
+    g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(startTime); o.stop(startTime + duration);
+  }
+
+  return {
+    toggleMute() {
+      muted = !muted;
+      const btn = document.getElementById('btn-mute');
+      if (btn) btn.textContent = muted ? '🔇 MUTE' : '🔊 SFX';
+      return muted;
+    },
+
+    // ── Acierto normal ──────────────────────────────────────
+    correct() {
+      play(ctx => {
+        const t = ctx.currentTime;
+        osc(ctx, 'sine', 660, t,        0.10, 0.25);
+        osc(ctx, 'sine', 880, t + 0.08, 0.12, 0.20);
+      });
+    },
+
+    // ── Combo (escalado por multiplicador) ──────────────────
+    combo(mult) {
+      play(ctx => {
+        const t = ctx.currentTime;
+        if (mult >= 4) {
+          // ×4+ — acorde brillante de 3 notas
+          osc(ctx, 'square', 523, t,        0.10, 0.12);
+          osc(ctx, 'square', 659, t + 0.07, 0.10, 0.12);
+          osc(ctx, 'square', 784, t + 0.14, 0.12, 0.20);
+        } else if (mult === 3) {
+          osc(ctx, 'square', 523, t,        0.10, 0.10);
+          osc(ctx, 'square', 659, t + 0.08, 0.12, 0.18);
+        } else {
+          // ×2
+          osc(ctx, 'square', 440, t,        0.10, 0.10);
+          osc(ctx, 'square', 523, t + 0.08, 0.12, 0.15);
+        }
+      });
+    },
+
+    // ── Error / drop forzado ────────────────────────────────
+    wrong() {
+      play(ctx => {
+        const t = ctx.currentTime;
+        oscSlide(ctx, 'sawtooth', 300, 180, t, 0.20, 0.25);
+      });
+    },
+
+    // ── Bloque apilado (golpe sordo) ────────────────────────
+    stack() {
+      play(ctx => {
+        const t = ctx.currentTime;
+        // Noise-like thud via detuned sawtooth pair
+        oscSlide(ctx, 'sawtooth', 120, 60, t, 0.15, 0.20);
+        oscSlide(ctx, 'sawtooth', 110, 55, t, 0.15, 0.15);
+      });
+    },
+
+    // ── Rescate de pila ─────────────────────────────────────
+    rescue() {
+      play(ctx => {
+        const t = ctx.currentTime;
+        osc(ctx, 'sine', 440, t,        0.08, 0.18);
+        osc(ctx, 'sine', 550, t + 0.07, 0.08, 0.18);
+        osc(ctx, 'sine', 660, t + 0.14, 0.10, 0.20);
+      });
+    },
+
+    // ── Level Up ────────────────────────────────────────────
+    levelup() {
+      play(ctx => {
+        const t = ctx.currentTime;
+        osc(ctx, 'square', 392, t,        0.10, 0.12);
+        osc(ctx, 'square', 523, t + 0.10, 0.10, 0.12);
+        osc(ctx, 'square', 659, t + 0.20, 0.12, 0.25);
+        osc(ctx, 'sine',   784, t + 0.32, 0.20, 0.35, 0.20);
+      });
+    },
+
+    // ── Star Up (MASTER ★) — más épico ──────────────────────
+    starup() {
+      play(ctx => {
+        const t = ctx.currentTime;
+        osc(ctx, 'square', 392, t,        0.08, 0.10);
+        osc(ctx, 'square', 523, t + 0.08, 0.08, 0.10);
+        osc(ctx, 'square', 659, t + 0.16, 0.08, 0.10);
+        osc(ctx, 'square', 784, t + 0.24, 0.10, 0.12);
+        osc(ctx, 'sine',  1047, t + 0.36, 0.22, 0.45, 0.22);
+        // shimmer
+        osc(ctx, 'sine',   880, t + 0.40, 0.18, 0.18, 0.10);
+      });
+    },
+
+    // ── Game Over ───────────────────────────────────────────
+    gameover() {
+      play(ctx => {
+        const t = ctx.currentTime;
+        oscSlide(ctx, 'sawtooth', 440, 330, t,        0.25, 0.25);
+        oscSlide(ctx, 'sawtooth', 330, 220, t + 0.22, 0.28, 0.22);
+        oscSlide(ctx, 'sawtooth', 220, 110, t + 0.48, 0.40, 0.20);
+        osc(ctx, 'sine', 55, t + 0.72, 0.50, 0.15);
+      });
+    }
+  };
+})();
+</script>
+
+<script>
 'use strict';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -762,6 +947,34 @@ const ROWS = 14;
 const COLS = 3;
 
 /* ═══════════════════════════════════════════════════════════════
+   DECK UTILITIES
+═══════════════════════════════════════════════════════════════ */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function generateDeck() {
+  const [min, max] = getLevelConfig().range;
+  const nums = [];
+  for (let n = min; n <= max; n++) nums.push(n);
+  return shuffle(nums);
+}
+
+function generateNextDeck(lastValue) {
+  const deck = generateDeck();
+  // Anti-repetition at seam: if first card === last of previous deck, swap with second
+  if (deck.length > 1 && deck[0] === lastValue) {
+    [deck[0], deck[1]] = [deck[1], deck[0]];
+  }
+  return deck;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════════════════ */
 const state = {
@@ -779,7 +992,10 @@ const state = {
   lastValue: null,      // anti-repetition: last spawned number
   infiniteMode: false,  // true once MASTER is reached
   infiniteStars: 0,     // stars earned post-MASTER (each = 10 correct)
-  infiniteAccrued: 0    // correct answers accumulated toward next star
+  infiniteAccrued: 0,   // correct answers accumulated toward next star
+  deck: [],             // active shuffled deck (consumed with shift())
+  nextDeck: [],         // next deck (pre-generated, ready to swap in)
+  deckIndex: 0          // how many decks have been consumed (for HUD)
 };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -857,6 +1073,44 @@ function updateHUD() {
     }
   }
   if (comboEl) comboEl.textContent = '×' + state.combo;
+  renderDeckBar();
+}
+
+function renderDeckBar() {
+  const bar   = document.getElementById('hud-deck-bar');
+  const label = document.getElementById('hud-deck-label');
+  if (!bar || !label) return;
+
+  const total    = state.deck.length + state.nextDeck.length;
+  const deckSize = state.deck.length + state.nextDeck.length;
+  // deckSize of the current deck when full = range size
+  const [min, max] = getLevelConfig().range;
+  const fullSize = max - min + 1;
+  const remaining = state.deck.length;
+
+  label.textContent = 'DECK #' + state.deckIndex;
+
+  // Rebuild pips only if count changed (avoid unnecessary DOM churn)
+  const currentPips = bar.children.length;
+  if (currentPips !== fullSize) {
+    bar.innerHTML = '';
+    for (let i = 0; i < fullSize; i++) {
+      const pip = document.createElement('span');
+      pip.className = 'deck-pip';
+      bar.appendChild(pip);
+    }
+  }
+
+  // Update pip states: first (fullSize - remaining) are consumed
+  const consumed = fullSize - remaining;
+  const pips = bar.querySelectorAll('.deck-pip');
+  pips.forEach((pip, i) => {
+    if (i < consumed) {
+      pip.classList.add('consumed');
+    } else {
+      pip.classList.remove('consumed');
+    }
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -874,18 +1128,20 @@ function getNumberRange() {
 function spawnBlock() {
   if (state.phase !== 'playing') return;
 
-  const { min, max } = getNumberRange();
-  // Anti-repetition: build pool excluding last value
-  const pool = [];
-  for (let n = min; n <= max; n++) {
-    if (n !== state.lastValue) pool.push(n);
+  // Rotate decks when active deck is exhausted
+  if (state.deck.length === 0) {
+    state.deck     = state.nextDeck;
+    state.nextDeck = generateNextDeck(state.lastValue);
+    state.deckIndex++;
   }
-  const value = pool[Math.floor(Math.random() * pool.length)];
+
+  const value = state.deck.shift();
   state.lastValue = value;
 
   const col = Math.floor(Math.random() * COLS);
   state.falling = { value, col, row: 0 };
   renderBoard();
+  updateHUD(); // refresh deck progress bar
   startFallTimer();
 }
 
@@ -931,6 +1187,7 @@ function stackBlock() {
 
   if (checkGameOver()) return;
 
+  SFX.stack();
   renderBoard();
 
   // Spawn next after short delay
@@ -954,6 +1211,7 @@ function triggerGameOver() {
   state.spawnTimer = null;
   state.phase = 'gameover';
   state.falling = null;
+  SFX.gameover();
   renderBoard();
   showGameOver();
 }
@@ -982,6 +1240,7 @@ function tryEliminateStacked(numValue) {
 }
 
 function showRescueFloat() {
+  SFX.rescue();
   const el = document.getElementById('combo-float');
   if (!el) return;
   el.textContent = '+5 RESCUE!';
@@ -1045,6 +1304,7 @@ function submitAnswer() {
 }
 
 function handleCorrect() {
+  SFX.correct();
   state.totalCorrect++;
   state.combo++;
   state.aciertosEnNivel++;
@@ -1081,6 +1341,7 @@ function shakeInput() {
 }
 
 function handleWrong() {
+  SFX.wrong();
   state.combo = 0;
   updateHUD();
   shakeInput();
@@ -1116,11 +1377,16 @@ function checkLevelUp() {
       state.infiniteStars   = 0;
       state.infiniteAccrued = 0;
     }
+    // Regenerate decks for new range (discard old range cards)
+    state.deck      = generateDeck();
+    state.nextDeck  = generateNextDeck(state.lastValue);
+    state.deckIndex = 1;
     showLevelUp();
   }
 }
 
 function showLevelUp() {
+  SFX.levelup();
   const lv = getLevelConfig();
   const overlay      = document.getElementById('levelup-overlay');
   const nameText     = document.getElementById('levelup-name-text');
@@ -1146,6 +1412,7 @@ function showLevelUp() {
 }
 
 function showStarUp() {
+  SFX.starup();
   const overlay      = document.getElementById('levelup-overlay');
   const nameText     = document.getElementById('levelup-name-text');
   const overlayTitle = overlay ? overlay.querySelector('.levelup-text') : null;
@@ -1182,6 +1449,7 @@ function flashBoard(type) {
 
 function showComboFloat() {
   if (state.combo < 2) return;
+  SFX.combo(state.combo);
   const el = document.getElementById('combo-float');
   let txt = '';
   if (state.combo >= 4) txt = 'COMBO ×' + state.combo + '! +50';
@@ -1244,6 +1512,10 @@ function showScreen(id) {
 function startGame() {
   resetState();
   state.phase = 'playing';
+  // Initialize decks — getLevelConfig() now works (levelIndex = 0)
+  state.deck      = generateDeck();
+  state.nextDeck  = generateNextDeck(null);
+  state.deckIndex = 1;
   showScreen('screen-game');
   initBoard();
   document.getElementById('pause-overlay')?.classList.remove('visible');
@@ -1269,10 +1541,13 @@ function resetState() {
   state.spawnTimer     = null;
   state.totalAnswered  = 0;
   state.totalCorrect   = 0;
-  state.lastValue      = null;
-  state.infiniteMode   = false;
-  state.infiniteStars  = 0;
+  state.lastValue       = null;
+  state.infiniteMode    = false;
+  state.infiniteStars   = 0;
   state.infiniteAccrued = 0;
+  state.deck            = [];
+  state.nextDeck        = [];
+  state.deckIndex       = 0;
 }
 
 function showGameOver() {
