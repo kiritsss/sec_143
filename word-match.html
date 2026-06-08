@@ -365,7 +365,7 @@
     letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--accent);
-    text-shadow: 0 0 30px var(--accent);
+    text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
     transition: color 0.4s, text-shadow 0.4s;
   }
   .category-dot-row {
@@ -539,25 +539,25 @@
   }
 
   /* Countdown overlay */
+  /* Countdown overlay — discreto, esquina inferior derecha */
   #countdownOverlay {
-    position: fixed; inset: 0;
-    display: flex; align-items: center; justify-content: center;
+    position: fixed;
+    bottom: 5rem; right: 2rem;
     pointer-events: none; z-index: 300;
     opacity: 0;
+    transition: opacity 0.15s;
   }
   #countdownOverlay.show { opacity: 1; }
   #countdownNum {
-    font-size: 25vw;
+    font-size: 4rem;
     font-weight: 900;
-    color: var(--red);
-    text-shadow: 0 0 60px var(--red);
-    animation: countBeat 1s ease;
+    line-height: 1;
+    animation: countBeat 0.6s ease;
   }
   @keyframes countBeat {
-    0%   { transform: scale(0.3); opacity: 0; }
-    40%  { transform: scale(1.2); opacity: 1; }
-    70%  { transform: scale(0.95); }
-    100% { transform: scale(1.1); opacity: 0.8; }
+    0%   { transform: scale(0.7); }
+    50%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
   }
 
   /* ── PAUSE OVERLAY ──────────────────────────────────────────── */
@@ -1005,6 +1005,7 @@ const state = {
   catBag: [],
   wordBags: {},
   lastCat: null,
+  positionBag: [],   // bag shuffle posiciones: nunca más de 2 consecutivas del mismo lado
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -1194,7 +1195,12 @@ function getNextPair() {
   const distractorWord = pickWord(otherKey);
 
   // Randomize position
-  const correctIdx = Math.random() < 0.5 ? 0 : 1;
+  // Bag shuffle de posiciones: alterna en bloques de 2 (izquierda, derecha barajadas)
+  // Garantiza nunca más de 2 consecutivas del mismo lado
+  if (state.positionBag.length === 0) {
+    state.positionBag = Math.random() < 0.5 ? [0, 1] : [1, 0];
+  }
+  const correctIdx = state.positionBag.shift();
   return { catKey, correctWord, distractorWord, correctIdx };
 }
 
@@ -1320,20 +1326,22 @@ function updatePairBar() {
 ═══════════════════════════════════════════════════════════ */
 function showCountdownNum(n) {
   const overlay = document.getElementById('countdownOverlay');
-  const numEl = document.getElementById('countdownNum');
+  const numEl   = document.getElementById('countdownNum');
   if (!overlay || !numEl) return;
 
   numEl.textContent = n;
-  numEl.style.color = n <= 2 ? 'var(--red)' : n <= 4 ? 'var(--yellow)' : 'var(--text)';
-  numEl.style.textShadow = `0 0 60px ${n <= 2 ? 'var(--red)' : 'var(--yellow)'}`;
+  numEl.style.color      = n <= 2 ? 'var(--red)' : n <= 3 ? 'var(--yellow)' : 'var(--text-dim)';
+  numEl.style.textShadow = n <= 2 ? '0 0 12px var(--red)' : 'none';
 
   overlay.classList.add('show');
   numEl.style.animation = 'none';
   void numEl.offsetWidth;
-  numEl.style.animation = 'countBeat 1s ease';
+  numEl.style.animation = 'countBeat 0.6s ease';
 
-  setTimeout(() => overlay.classList.remove('show'), 900);
+  setTimeout(() => overlay.classList.remove('show'), 700);
 }
+
+function restoreTimerDisplay() {}  // no-op, mantenido por compatibilidad
 
 /* ═══════════════════════════════════════════════════════════
    CARD INTERACTION
@@ -1575,6 +1583,7 @@ function startGame() {
   state.catBag = [];
   state.wordBags = {};
   state.lastCat = null;
+  state.positionBag = [];
 
   // Aplicar acento del modo
   setAccent(mode.accent);
@@ -1584,6 +1593,7 @@ function startGame() {
   const streakEl = document.getElementById('streakDisplay');
   if (streakEl) streakEl.classList.toggle('visible', mode.streakBonus);
 
+  restoreTimerDisplay();
   buildCatDots();
   updateScoreDisplay();
   showScreen('gameScreen');
