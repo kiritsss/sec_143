@@ -139,7 +139,7 @@ body{user-select:none;-webkit-user-select:none}
 .level-stars span:hover{animation:starWiggle 0.3s}
 .level-best{font-size:0.72rem;color:var(--color-text-tertiary)}
 .lock-icon{font-size:1.5rem;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
-.level-card.locked .level-content{opacity:0}
+.level-card.locked .level-content{opacity:0.45}
 .badge-new{position:absolute;top:6px;right:6px;background:var(--music);color:#fff;font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:10px;animation:newPulse 1.5s ease-in-out infinite}
 
 /* ─── GAME SCREEN ─── */
@@ -161,7 +161,7 @@ body{user-select:none;-webkit-user-select:none}
 .instr-en{color:var(--color-text-primary)}
 .instr-sep{color:var(--color-text-tertiary);margin:0 8px}
 .instr-es{color:var(--color-text-secondary)}
-.options-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;width:100%;max-width:420px}
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:420px;min-height:220px}
 .option-card{background:var(--color-background-secondary);border:2px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:transform 0.1s,border-color 0.15s;position:relative;animation:optIn cubic-bezier(0.34,1.4,0.64,1) 0.35s both}
 .option-card:hover{transform:scale(1.03);border-color:var(--color-border-secondary)}
 .option-arrow{font-size:1.3rem;color:var(--color-text-tertiary)}
@@ -556,11 +556,11 @@ const LEVELS=[
 ];
 
 const CATEGORY_LABELS={
-  colors:{en:'a color',es:'un color'},
-  numbers:{en:'a number',es:'un número'},
-  supplies:{en:'a school supply',es:'un útil escolar'},
-  greetings:{en:'a greeting/farewell',es:'un saludo/despedida'},
-  days:{en:'a day of the week',es:'un día de la semana'},
+  colors:    {en:'color',           es:'color'},
+  numbers:   {en:'number',          es:'número'},
+  supplies:  {en:'school supply',   es:'útil escolar'},
+  greetings: {en:'greeting/farewell',es:'saludo/despedida'},
+  days:      {en:'day of the week', es:'día de la semana'},
 };
 
 // ═══════════════════════════════════════
@@ -766,138 +766,138 @@ function evaluateCondition(item,cond){
 const DAYS_ORDER=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
 function buildInstruction(pool,difficulty,qIndex,totalQ){
-  // Determine allowed types
   let types=[];
+  const categories=[...new Set(pool.map(i=>i.category))];
+  const singleCat=categories.length===1;
   const hasColors=pool.some(i=>i.category==='colors');
   const hasNumbers=pool.some(i=>i.category==='numbers');
   const hasSupplies=pool.some(i=>i.category==='supplies');
   const hasGreetings=pool.some(i=>i.category==='greetings');
   const hasDays=pool.some(i=>i.category==='days');
 
-  const categories=[...new Set(pool.map(i=>i.category))];
+  // Only add 'category' type if pool has MULTIPLE categories
+  // (otherwise all options would be correct)
+  if(!singleCat){
+    categories.forEach(cat=>types.push({type:'category',cat}));
+  }
 
-  if(difficulty==='easy'){
-    const isLateEasy=qIndex>=5;
-    // Easy base types
-    categories.forEach(cat=>{
-      types.push({type:'category',cat});
-    });
-    if(hasGreetings){
-      types.push({type:'greeting_type',gtype:'greeting'});
-      types.push({type:'greeting_type',gtype:'farewell'});
+  // Property-based types (always valid for single-cat pools)
+  if(hasColors){
+    types.push({type:'warm_color'});
+    types.push({type:'not_warm_color'});
+    const letters=[...new Set(pool.filter(i=>i.category==='colors').map(i=>i.properties.start))];
+    if(letters.length>=2){
+      letters.forEach(l=>types.push({type:'starts_with',letter:l,cat:'colors'}));
     }
-    if(hasDays){
-      types.push({type:'weekday'});
-      types.push({type:'weekend'});
-    }
-    // Late easy can get 1 NOT
-    if(isLateEasy){
-      categories.forEach(cat=>{
-        types.push({type:'not_category',cat});
-      });
-    }
-  } else if(difficulty==='normal'){
-    categories.forEach(cat=>{
-      types.push({type:'category',cat});
-      types.push({type:'not_category',cat});
-    });
-    if(hasColors){
-      types.push({type:'warm_color'});
-      types.push({type:'not_warm_color'});
-    }
-    if(hasNumbers){
-      types.push({type:'even_number'});
-      types.push({type:'not_even_number'});
-    }
-    if(hasSupplies){
-      types.push({type:'writing_tool'});
-      types.push({type:'not_writing_tool'});
-    }
-    if(hasGreetings){
-      types.push({type:'greeting_type',gtype:'greeting'});
-      types.push({type:'greeting_type',gtype:'farewell'});
+  }
+  if(hasNumbers){
+    types.push({type:'even_number'});
+    types.push({type:'not_even_number'});
+    const letters=[...new Set(pool.filter(i=>i.category==='numbers').map(i=>i.properties.start))];
+    if(letters.length>=2) letters.forEach(l=>types.push({type:'starts_with',letter:l,cat:'numbers'}));
+  }
+  if(hasSupplies){
+    types.push({type:'writing_tool'});
+    types.push({type:'not_writing_tool'});
+    const letters=[...new Set(pool.filter(i=>i.category==='supplies').map(i=>i.properties.start))];
+    if(letters.length>=2) letters.forEach(l=>types.push({type:'starts_with',letter:l,cat:'supplies'}));
+  }
+  if(hasGreetings){
+    types.push({type:'greeting_type',gtype:'greeting'});
+    types.push({type:'greeting_type',gtype:'farewell'});
+    if(!singleCat){
       types.push({type:'not_greeting_type',gtype:'greeting'});
       types.push({type:'not_greeting_type',gtype:'farewell'});
     }
+  }
+  if(hasDays){
+    types.push({type:'weekday'});
+    types.push({type:'weekend'});
+    const pivot=VOCAB.days[Math.floor(Math.random()*(VOCAB.days.length-2))+1];
+    if(pivot){
+      types.push({type:'day_after',order:pivot.properties.order,pivotWord:pivot.word});
+      types.push({type:'day_before',order:pivot.properties.order,pivotWord:pivot.word});
+    }
+  }
+
+  // Normal/Hard: add NOT variants
+  if(difficulty==='normal'||difficulty==='hard'){
+    if(!singleCat) categories.forEach(cat=>types.push({type:'not_category',cat}));
+    if(hasColors) types.push({type:'not_warm_color'});
+    if(hasNumbers) types.push({type:'not_even_number'});
+    if(hasSupplies) types.push({type:'not_writing_tool'});
     if(hasDays){
-      types.push({type:'weekday'});
-      types.push({type:'weekend'});
-      // day after/before a random pivot
-      const pivot=rand(VOCAB.days);
-      if(pivot){
-        types.push({type:'day_after',order:pivot.properties.order,pivotWord:pivot.word});
-        types.push({type:'day_before',order:pivot.properties.order,pivotWord:pivot.word});
-      }
+      const pivot=VOCAB.days[2];
+      types.push({type:'not_day_before',order:pivot.properties.order,pivotWord:pivot.word});
+      types.push({type:'not_day_after',order:pivot.properties.order,pivotWord:pivot.word});
     }
-    // starts with
-    const letters=[...new Set(pool.map(i=>i.properties.start))];
-    const letter=rand(letters);
-    if(letter){
-      types.push({type:'starts_with',letter});
-      types.push({type:'not_starts_with',letter});
+    const allLetters=[...new Set(pool.map(i=>i.properties.start))];
+    if(allLetters.length>=2){
+      allLetters.forEach(l=>{
+        types.push({type:'starts_with',letter:l,cat:categories.length===1?categories[0]:null});
+        types.push({type:'not_starts_with',letter:l,cat:categories.length===1?categories[0]:null});
+      });
     }
-  } else { // hard
-    // NOT NOT from Q1, multi from Q6+
-    categories.forEach(cat=>{
-      types.push({type:'not_not_category',cat});
-    });
-    if(hasColors){
-      types.push({type:'not_warm_color'});
-      types.push({type:'warm_color'});
-    }
-    if(hasNumbers){
-      types.push({type:'not_even_number'});
-    }
-    if(hasSupplies){
-      types.push({type:'not_writing_tool'});
-    }
-    if(hasDays){
-      const pivot=rand(VOCAB.days);
-      if(pivot){
-        types.push({type:'not_day_before',order:pivot.properties.order,pivotWord:pivot.word});
-        types.push({type:'not_day_after',order:pivot.properties.order,pivotWord:pivot.word});
-      }
-    }
+  }
+
+  // Hard: NOT NOT and multi-condition
+  if(difficulty==='hard'){
+    categories.forEach(cat=>types.push({type:'not_not_category',cat}));
     if(qIndex>=5&&categories.length>=2){
-      // multi NOT: pick 2 categories, each "not"
       for(let a=0;a<categories.length-1;a++){
         for(let b=a+1;b<categories.length;b++){
-          types.push({
-            type:'multi',
-            conditions:[{type:'not_category',cat:categories[a]},{type:'not_category',cat:categories[b]}],
-            catA:categories[a],catB:categories[b],
-          });
+          types.push({type:'multi',conditions:[{type:'not_category',cat:categories[a]},{type:'not_category',cat:categories[b]}],catA:categories[a],catB:categories[b]});
         }
       }
     }
   }
 
-  // Shuffle and try up to 20 times to find valid
-  const shuffledTypes=shuffle(types);
-  for(let attempt=0;attempt<20;attempt++){
-    const cond=shuffledTypes[attempt%shuffledTypes.length];
+  // Try types until we find one with valid+invalid split
+  const shuffledTypes=[];
+  // Fisher-Yates shuffle of types array
+  const tmp=[...types];
+  for(let i=tmp.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[tmp[i],tmp[j]]=[tmp[j],tmp[i]];}
+  shuffledTypes.push(...tmp);
+
+  for(let attempt=0;attempt<shuffledTypes.length;attempt++){
+    const cond=shuffledTypes[attempt];
     const valid=pool.filter(item=>evaluateCondition(item,cond));
     const invalid=pool.filter(item=>!evaluateCondition(item,cond));
     if(valid.length>=1&&invalid.length>=3){
       return {cond,valid,invalid};
     }
   }
-  // Fallback: simple category
-  const fallbackCat=categories[0];
-  const cond={type:'category',cat:fallbackCat};
-  return {
-    cond,
-    valid:pool.filter(i=>evaluateCondition(i,cond)),
-    invalid:pool.filter(i=>!evaluateCondition(i,cond)),
-  };
+
+  // Absolute fallback: warm vs not-warm colors, or even vs odd numbers
+  if(hasColors){
+    const cond={type:'warm_color'};
+    const valid=pool.filter(i=>evaluateCondition(i,cond));
+    const invalid=pool.filter(i=>!evaluateCondition(i,cond));
+    if(valid.length>=1&&invalid.length>=1) return {cond,valid,invalid};
+  }
+  if(hasNumbers){
+    const cond={type:'even_number'};
+    return {cond,valid:pool.filter(i=>evaluateCondition(i,cond)),invalid:pool.filter(i=>!evaluateCondition(i,cond))};
+  }
+  // Last resort: find a letter split with at least 1 valid and 3 invalid
+  const allStarts=[...new Set(pool.map(i=>i.properties.start))];
+  for(const letter of allStarts){
+    const lcond={type:'starts_with',letter};
+    const lv=pool.filter(i=>evaluateCondition(i,lcond));
+    const li=pool.filter(i=>!evaluateCondition(i,lcond));
+    if(lv.length>=1&&li.length>=3) return {cond:lcond,valid:lv,invalid:li};
+  }
+  // Ultimate fallback: even/odd split across all numbers or warm/not-warm colors
+  const splitCond={type:'warm_color'};
+  return {cond:splitCond,valid:pool.filter(i=>evaluateCondition(i,splitCond)),invalid:pool.filter(i=>!evaluateCondition(i,splitCond))};
 }
 
 function condToText(cond){
   const CL=CATEGORY_LABELS;
   switch(cond.type){
-    case 'category': return {en:`A ${CL[cond.cat]?.en||cond.cat}`,es:`${CL[cond.cat]?.es||cond.cat}`,nots:0};
-    case 'not_category': return {en:`NOT ${CL[cond.cat]?.en||cond.cat}`,es:`NO es ${CL[cond.cat]?.es||cond.cat}`,nots:1};
-    case 'not_not_category': return {en:`NOT NOT ${CL[cond.cat]?.en||cond.cat}`,es:`NO NO es ${CL[cond.cat]?.es||cond.cat}`,nots:2};
+    case 'category': return {en:`A ${CL[cond.cat]?.en||cond.cat}`,es:`Un ${CL[cond.cat]?.es||cond.cat}`,nots:0};
+    case 'not_category': return {en:`NOT a ${CL[cond.cat]?.en||cond.cat}`,es:`NO es un ${CL[cond.cat]?.es||cond.cat}`,nots:1};
+    case 'not_not_category': return {en:`NOT NOT a ${CL[cond.cat]?.en||cond.cat}`,es:`NO NO es un ${CL[cond.cat]?.es||cond.cat}`,nots:2};
     case 'greeting_type': return cond.gtype==='greeting'
       ?{en:'A greeting',es:'Un saludo',nots:0}
       :{en:'A farewell',es:'Una despedida',nots:0};
@@ -910,8 +910,18 @@ function condToText(cond){
     case 'not_even_number': return {en:'NOT an even number',es:'NO es un número par',nots:1};
     case 'writing_tool': return {en:'A writing tool',es:'Una herramienta de escritura',nots:0};
     case 'not_writing_tool': return {en:'NOT a writing tool',es:'NO es herramienta de escritura',nots:1};
-    case 'starts_with': return {en:`A word starting with "${cond.letter.toUpperCase()}"`,es:`Empieza con "${cond.letter.toUpperCase()}"`,nots:0};
-    case 'not_starts_with': return {en:`NOT starting with "${cond.letter.toUpperCase()}"`,es:`NO empieza con "${cond.letter.toUpperCase()}"`,nots:1};
+    case 'starts_with': {
+      const CL2=CATEGORY_LABELS;
+      const thing=cond.cat?CL2[cond.cat]?.en||cond.cat:'word';
+      const thingEs=cond.cat?CL2[cond.cat]?.es||cond.cat:'palabra';
+      return {en:`A ${thing} starting with "${cond.letter.toUpperCase()}"`,es:`Un ${thingEs} que empieza con "${cond.letter.toUpperCase()}"`,nots:0};
+    }
+    case 'not_starts_with': {
+      const CL3=CATEGORY_LABELS;
+      const thing2=cond.cat?CL3[cond.cat]?.en||cond.cat:'word';
+      const thing2Es=cond.cat?CL3[cond.cat]?.es||cond.cat:'palabra';
+      return {en:`NOT a ${thing2} starting with "${cond.letter.toUpperCase()}"`,es:`NO es un ${thing2Es} que empieza con "${cond.letter.toUpperCase()}"`,nots:1};
+    }
     case 'day_after': return {en:`A day AFTER ${cond.pivotWord}`,es:`Un día DESPUÉS del ${cond.pivotWord}`,nots:0};
     case 'day_before': return {en:`A day BEFORE ${cond.pivotWord}`,es:`Un día ANTES del ${cond.pivotWord}`,nots:0};
     case 'not_day_before': return {en:`NOT a day BEFORE ${cond.pivotWord}`,es:`NO es día ANTES del ${cond.pivotWord}`,nots:1};
@@ -932,13 +942,38 @@ function condToText(cond){
 }
 
 function generateQuestion(pool,difficulty,qIndex,totalQ){
-  const {cond,valid,invalid}=buildInstruction(pool,difficulty,qIndex,totalQ);
-  const correct=rand(valid);
-  const distShuffled=shuffle(invalid);
-  const distractors=distShuffled.slice(0,3);
-  const opts=shuffle([{item:correct,isCorrect:true},...distractors.map(d=>({item:d,isCorrect:false}))]);
+  // Try up to 20 times to get a valid question with 1 correct + 3 distinct wrong
+  for(let attempt=0;attempt<20;attempt++){
+    const {cond,valid,invalid}=buildInstruction(pool,difficulty,qIndex,totalQ);
+    if(!valid.length) continue;
+    const correct=rand(valid);
+    // Wrong options: prefer invalid pool items, then other pool items, then all VOCAB
+    let wrongPool=invalid.filter(i=>i.word!==correct.word);
+    if(wrongPool.length<3){
+      wrongPool=pool.filter(i=>i.word!==correct.word);
+    }
+    if(wrongPool.length<3){
+      const allWords=Object.values(VOCAB).flat();
+      const extra=allWords.filter(i=>i.word!==correct.word&&!wrongPool.find(d=>d.word===i.word));
+      wrongPool=[...wrongPool,...extra];
+    }
+    if(wrongPool.length<3) continue; // can't build 4 options, retry
+    const distractors=shuffle(wrongPool).slice(0,3);
+    const opts=shuffle([{item:correct,isCorrect:true},...distractors.map(d=>({item:d,isCorrect:false}))]);
+    const text=condToText(cond);
+    return {cond,text,options:opts,correctWord:correct.word};
+  }
+  // Absolute last resort: pick any 4 distinct items, first is correct
+  const items=shuffle(pool).slice(0,4);
+  while(items.length<4){
+    const allWords=Object.values(VOCAB).flat();
+    const extra=shuffle(allWords).find(i=>!items.find(x=>x.word===i.word));
+    if(extra) items.push(extra); else break;
+  }
+  const cond={type:'category',cat:items[0].category};
   const text=condToText(cond);
-  return {cond,text,options:opts,correctWord:correct.word};
+  const opts=shuffle([{item:items[0],isCorrect:true},...items.slice(1).map(d=>({item:d,isCorrect:false}))]);
+  return {cond,text,options:opts,correctWord:items[0].word};
 }
 
 function generateLevelQuestions(levelId){
@@ -1066,22 +1101,21 @@ function startParticles(){
 function saveName(){
   const inp=document.getElementById('player-name-input');
   const n=inp?inp.value.trim():'';
-  if(!n){inp.style.borderColor='var(--hard)';return;}
+  if(!n){if(inp)inp.style.borderColor='var(--hard)';return;}
   state.player.name=n;
   saveState();
   sfx.saveChime();
-  renderMainMenu();
+  updateBadge();
+  const setup=document.getElementById('name-setup');
+  if(setup) setup.classList.remove('visible');
 }
 function editName(){
-  state.player.name='';
-  renderMainMenu();
+  const setup=document.getElementById('name-setup');
+  if(setup) setup.classList.toggle('visible');
 }
 function openStoryMode(){
   sfx.menuClick();
-  if(!state.player.name){
-    document.getElementById('name-setup').classList.add('visible');
-    return;
-  }
+  if(!state.player.name) state.player.name='Player';
   showScreen('levels');
 }
 function toggleTheme(){
@@ -1099,10 +1133,7 @@ function renderLevelSelect(){
   // Lock/unlock tabs
   const easyStars=getEasyStars();
   const enStars=getEasyNormalStars();
-  const tabNorm=document.getElementById('tab-normal');
-  const tabHard=document.getElementById('tab-hard');
-  if(tabNorm) tabNorm.disabled=easyStars<8;
-  if(tabHard) tabHard.disabled=enStars<18;
+  // Tabs always accessible — lock is per-level only
 }
 
 function switchDiffTab(diff){
@@ -1172,6 +1203,7 @@ function renderDiffTab(diff){
         <div class="level-content">
           <div class="level-num">Level ${lv.id}</div>
           <div class="level-name">${lv.topics.join(' + ')}</div>
+          <div class="level-stars">☆☆☆</div>
         </div>
         <div class="lock-icon">🔒</div>
       `;
@@ -1285,21 +1317,6 @@ function renderInstruction(q){
 
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-function renderOptions(q){
-  const grid=document.getElementById('options-grid');
-  if(!grid) return;
-  grid.innerHTML='';
-  q.options.forEach((opt,i)=>{
-    const card=document.createElement('div');
-    card.className='option-card';
-    card.style.animationDelay=(i*0.07)+'s';
-    card.dataset.index=i;
-    card.dataset.correct=opt.isCorrect?'1':'0';
-    card.innerHTML=`<div class="option-arrow">${ARROWS[i]}</div><div class="option-word">${escHtml(opt.item.word)}</div>`;
-    card.addEventListener('click',()=>handleAnswer(i));
-    grid.appendChild(card);
-  });
-}
 
 function startTimer(){
   const cg=state.currentGame;
@@ -2011,7 +2028,6 @@ document.addEventListener('keydown',(e)=>{
 });
 
 // Also patch option clicks for challenge mode
-const originalRenderOptions=renderOptions;
 function renderOptions(q){
   const grid=document.getElementById('options-grid');
   if(!grid) return;
