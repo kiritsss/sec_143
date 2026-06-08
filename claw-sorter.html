@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google" content="notranslate">
+<title>Word Claw</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080e1a;--bg2:#0f1c2e;--bg3:#111e30;
+  --txt:#e2f0ff;--txt2:#7aa0c0;--txt3:#3d6080;
+  --brd:#1a3050;--brd2:#2a5080;
+  --acc:#00d4ff;--acc-dim:rgba(0,212,255,0.12);
+  --green:#22c55e;--green-dim:rgba(34,197,94,0.15);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,0.15);
+  --red:#ef4444;--red-dim:rgba(239,68,68,0.15);
+  --r:10px;--rl:16px;
+}
+[data-theme="light"]{
+  --bg:#eef4fb;--bg2:#dce8f5;--bg3:#cddff0;
+  --txt:#0a1a2e;--txt2:#2a5070;--txt3:#6090b0;
+  --brd:#aac8e0;--brd2:#5090c0;
+  --acc:#0077bb;--acc-dim:rgba(0,119,187,0.12);
+}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden}
+body{user-select:none;-webkit-user-select:none}
+
+/* ── SCREENS ── */
+.screen{display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+.screen.active{display:flex}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes clawBob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+@keyframes shakeH{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes chipIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+@keyframes chipFlip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes starPop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── BUTTONS ── */
+.btn{cursor:pointer;border:none;border-radius:var(--r);padding:10px 22px;font-size:14px;font-weight:700;transition:transform .12s,filter .12s;letter-spacing:.03em}
+.btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;filter:none}
+.btn-primary{background:var(--acc);color:#000}
+.btn-ghost{background:transparent;color:var(--txt2);border:1px solid var(--brd2)}
+.btn-ghost:hover{background:var(--bg2)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.theme-btn{background:transparent;border:1px solid var(--brd);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:.82rem;color:var(--txt2)}
+
+/* ════════════════════════════
+   MENU
+════════════════════════════ */
+#screen-menu{gap:20px}
+.menu-title{font-size:clamp(2.4rem,6vw,3.6rem);font-weight:900;letter-spacing:-.03em;color:var(--acc);text-shadow:0 0 30px rgba(0,212,255,.4)}
+.menu-sub{font-size:.85rem;color:var(--txt2);text-transform:uppercase;letter-spacing:.12em}
+.menu-claw-demo{display:flex;flex-direction:column;align-items:center;animation:clawBob 2s ease-in-out infinite}
+.demo-riel{width:120px;height:6px;background:var(--bg3);border:1px solid var(--brd2);border-radius:3px;position:relative}
+.demo-slider{position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:14px;height:14px;background:var(--txt);border-radius:3px}
+.demo-cable{width:3px;height:22px;background:var(--txt2);margin:0 auto}
+.demo-claw-head{width:26px;height:9px;background:var(--txt);border-radius:4px 4px 2px 2px;margin:0 auto}
+.demo-fingers{display:flex;gap:3px;justify-content:center;margin-top:1px}
+.demo-finger{width:5px;height:16px;background:var(--txt);border-radius:0 0 4px 4px;transform-origin:top center}
+.df1{transform:rotate(-38deg)}.df2{transform:rotate(-14deg)}.df3{transform:rotate(14deg)}.df4{transform:rotate(38deg)}
+.demo-word{margin-top:6px;background:var(--acc-dim);border:1px solid var(--acc);border-radius:20px;padding:4px 14px;font-size:.85rem;font-weight:700;color:var(--acc)}
+.hs-badge{background:var(--bg3);border:1px solid var(--brd2);border-radius:20px;padding:6px 18px;font-size:.85rem;color:var(--txt2)}
+.hs-badge span{color:var(--amber);font-weight:700}
+.menu-btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px}
+
+/* ════════════════════════════
+   INTRO OVERLAY
+════════════════════════════ */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center}
+.overlay.active{display:flex}
+.overlay-box{background:var(--bg2);border:1px solid var(--brd2);border-radius:var(--rl);padding:28px;max-width:380px;width:90%;animation:fadeIn .3s ease;text-align:center}
+.overlay-title{font-size:1.1rem;font-weight:800;color:var(--acc);margin-bottom:14px}
+.intro-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.ic{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);padding:10px;text-align:center}
+.ic-key{font-size:1.2rem;margin-bottom:4px}
+.ic-label{font-size:.75rem;color:var(--txt2)}
+
+/* ════════════════════════════
+   GAME SCREEN
+════════════════════════════ */
+#screen-game{padding:8px;justify-content:flex-start;overflow-y:auto}
+.game-hud{display:flex;align-items:center;gap:10px;width:100%;max-width:520px;margin-bottom:6px;flex-shrink:0}
+.hud-score{font-size:1rem;font-weight:800;color:var(--amber)}
+.hud-round{font-size:.8rem;color:var(--txt2);font-weight:600}
+.hud-lives{display:flex;gap:4px;margin-left:auto}
+.heart{width:14px;height:13px;display:inline-block;background:var(--red);clip-path:polygon(50% 90%,5% 40%,0% 22%,15% 5%,35% 0%,50% 18%,65% 0%,85% 5%,100% 22%,95% 40%)}
+.heart.lost{background:var(--brd2)}
+
+/* Round timer bar */
+.round-timer-wrap{width:100%;max-width:520px;margin-bottom:8px;flex-shrink:0}
+.round-timer-bar{height:5px;background:var(--brd);border-radius:3px;overflow:hidden}
+.round-timer-fill{height:100%;width:100%;background:var(--green);border-radius:3px;transition:width .25s linear,background .5s}
+
+/* Machine */
+.machine{background:var(--bg2);border:2px solid var(--brd2);border-radius:var(--rl);padding:12px;width:100%;max-width:520px;flex-shrink:0}
+.machine-label{font-size:.7rem;letter-spacing:.14em;color:var(--txt3);text-align:center;margin-bottom:8px;text-transform:uppercase}
+.glass{background:var(--bg);border:1.5px solid var(--brd);border-radius:var(--r);padding:10px;position:relative}
+
+/* Claw riel area */
+.riel-area{width:100%;height:80px;position:relative;margin-bottom:6px}
+.riel-track{position:absolute;top:14px;left:8px;right:8px;height:6px;background:var(--bg3);border:1px solid var(--brd2);border-radius:3px}
+.claw-unit{position:absolute;top:4px;display:flex;flex-direction:column;align-items:center;transition:left .28s cubic-bezier(.4,0,.2,1)}
+.claw-slider{width:16px;height:16px;background:var(--txt);border-radius:3px}
+.claw-cable{width:3px;background:var(--txt2);border-radius:1px;transition:height .38s cubic-bezier(.4,0,.2,1);height:46px}
+.claw-head{width:28px;height:10px;background:var(--txt);border-radius:4px 4px 2px 2px}
+.claw-fingers{display:flex;gap:3px;margin-top:1px}
+.claw-finger{width:6px;height:20px;background:var(--txt);border-radius:0 0 5px 5px;transform-origin:top center;transition:transform .22s cubic-bezier(.4,0,.2,1)}
+.cf1{transform:rotate(-42deg)}.cf2{transform:rotate(-15deg)}.cf3{transform:rotate(15deg)}.cf4{transform:rotate(42deg)}
+.claw-fingers.closed .cf1{transform:rotate(-8deg)}.claw-fingers.closed .cf2{transform:rotate(-2deg)}
+.claw-fingers.closed .cf3{transform:rotate(2deg)}.claw-fingers.closed .cf4{transform:rotate(8deg)}
+.claw-payload{font-size:11px;font-weight:700;color:var(--green);background:var(--green-dim);border:1px solid var(--green);border-radius:5px;padding:2px 8px;margin-top:2px;white-space:nowrap;opacity:0;transition:opacity .2s}
+.claw-payload.visible{opacity:1}
+
+/* Post-grab timer */
+.grab-timer-wrap{height:4px;width:60px;background:var(--brd);border-radius:2px;margin-top:2px;overflow:hidden;opacity:0;transition:opacity .2s}
+.grab-timer-wrap.visible{opacity:1}
+.grab-timer-fill{height:100%;width:100%;background:var(--amber);border-radius:2px;transition:width .1s linear}
+
+/* Word grid */
+.word-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+.wslot{border:1px solid var(--brd);border-radius:var(--r);height:50px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--txt);background:var(--bg2);transition:opacity .2s,transform .28s cubic-bezier(.4,0,.2,1),border-color .15s}
+.wslot.active-col{border-color:var(--acc);background:var(--acc-dim)}
+.wslot.empty{opacity:.2;border-style:dashed;pointer-events:none}
+.wslot.distractor{color:var(--txt2);font-style:italic}
+.wslot.lifted{opacity:0;transform:translateY(-18px)}
+
+/* Controls */
+.game-controls{display:flex;gap:8px;justify-content:center;margin:10px 0}
+.ctrl-btn{border:1.5px solid var(--brd2);border-radius:var(--r);padding:8px 18px;background:var(--bg2);color:var(--txt);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+.ctrl-btn:hover{background:var(--bg3);border-color:var(--acc)}
+.ctrl-btn:active{transform:scale(.95)}
+.ctrl-btn:disabled{opacity:.4;cursor:default}
+.ctrl-grab{border-color:var(--acc);color:var(--acc);background:var(--acc-dim)}
+.ctrl-grab:hover{background:rgba(0,212,255,.22)}
+
+/* Drop buttons */
+.drop-btns{display:none;gap:6px;width:100%;margin-top:8px}
+.drop-btns.visible{display:flex}
+.drop-btn{flex:1;border-radius:var(--r);padding:9px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid;transition:background .15s}
+.drop-a{border-color:var(--green);color:var(--green);background:var(--green-dim)}
+.drop-a:hover{background:rgba(34,197,94,.28)}
+.drop-b{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+.drop-b:hover{background:rgba(245,158,11,.28)}
+.drop-c{border-color:var(--acc);color:var(--acc);background:var(--acc-dim)}
+.drop-c:hover{background:rgba(0,212,255,.22)}
+
+/* Status */
+.game-status{font-size:11px;color:var(--txt2);text-align:center;min-height:16px;margin:4px 0}
+
+/* Bins */
+.bins-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;max-width:520px;margin-top:10px;flex-shrink:0}
+.bin{border:1.5px solid var(--brd);border-radius:var(--r);overflow:hidden}
+.bin-header{padding:6px 10px;display:flex;justify-content:space-between;align-items:center}
+.bin-a .bin-header{background:rgba(34,197,94,.1);border-bottom:1px solid rgba(34,197,94,.25)}
+.bin-b .bin-header{background:rgba(245,158,11,.1);border-bottom:1px solid rgba(245,158,11,.25)}
+.bin-c .bin-header{background:rgba(0,212,255,.1);border-bottom:1px solid rgba(0,212,255,.25)}
+.bin-title{font-size:12px;font-weight:700}
+.bin-a .bin-title{color:var(--green)}
+.bin-b .bin-title{color:var(--amber)}
+.bin-c .bin-title{color:var(--acc)}
+.bin-count{font-size:10px;color:var(--txt3)}
+.bin-body{padding:6px;min-height:48px;display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+.chip{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;animation:chipIn .22s cubic-bezier(.34,1.4,.64,1);cursor:default}
+.chip-neutral-a{background:rgba(34,197,94,.12);color:#16a34a;border:1px solid rgba(34,197,94,.3)}
+[data-theme="light"] .chip-neutral-a{color:#15803d}
+.chip-neutral-b{background:rgba(245,158,11,.12);color:#d97706;border:1px solid rgba(245,158,11,.3)}
+[data-theme="light"] .chip-neutral-b{color:#b45309}
+.chip-neutral-c{background:var(--acc-dim);color:var(--acc);border:1px solid rgba(0,212,255,.3)}
+.chip-correct{background:var(--green-dim);color:var(--green);border:1px solid var(--green)}
+.chip-wrong{background:var(--red-dim);color:var(--red);border:1px solid var(--red);text-decoration:line-through}
+.chip-distractor-ok{background:var(--acc-dim);color:var(--acc);border:1px solid var(--acc)}
+.chip-distractor{background:var(--bg3);color:var(--txt3);border:1px solid var(--brd);text-decoration:line-through}
+.chip-auto{border-style:dashed;opacity:.7}
+
+/* ════════════════════════════
+   ROUND RESULT OVERLAY
+════════════════════════════ */
+.round-result-list{display:flex;flex-direction:column;gap:6px;margin:12px 0;max-height:260px;overflow-y:auto;text-align:left}
+.rr-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r);font-size:.82rem}
+.rr-correct{background:var(--green-dim);border:1px solid rgba(34,197,94,.35)}
+.rr-wrong{background:var(--red-dim);border:1px solid rgba(239,68,68,.35)}
+.rr-distractor{background:var(--bg3);border:1px solid var(--brd)}
+.rr-auto{background:var(--amber-dim);border:1px solid rgba(245,158,11,.35)}
+.rr-icon{font-size:1rem;flex-shrink:0}
+.rr-word{font-weight:700;flex:1}
+.rr-info{font-size:.75rem;color:var(--txt2)}
+.rr-pts{font-weight:700;font-size:.82rem;margin-left:auto}
+.round-score-summary{display:flex;justify-content:space-between;font-size:.85rem;border-top:1px solid var(--brd);padding-top:10px;margin-top:4px}
+.rss-earned{color:var(--green);font-weight:700}
+.rss-lost{color:var(--red);font-weight:700}
+.rss-total{color:var(--amber);font-weight:800;font-size:1rem}
+
+/* ════════════════════════════
+   RESULT SCREEN
+════════════════════════════ */
+#screen-result{gap:16px;text-align:center}
+.result-title{font-size:1.5rem;font-weight:900;color:var(--acc)}
+.result-stars{font-size:2.8rem;display:flex;gap:8px;justify-content:center}
+.result-score{font-size:3rem;font-weight:900;color:var(--amber)}
+.result-detail{font-size:.85rem;color:var(--txt2)}
+.new-record{display:none;background:var(--acc-dim);border:1px solid var(--acc);border-radius:var(--r);padding:7px 18px;color:var(--acc);font-weight:700;font-size:.88rem}
+.new-record.visible{display:block}
+.result-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+</style>
+</head>
+<body oncontextmenu="return false" oncopy="return false" onpaste="return false" oncut="return false">
+
+<!-- ═══════ MENU ═══════ -->
+<div id="screen-menu" class="screen">
+  <div class="menu-claw-demo">
+    <div class="demo-riel"><div class="demo-slider"></div></div>
+    <div class="demo-cable"></div>
+    <div class="demo-claw-head"></div>
+    <div class="demo-fingers"><div class="demo-finger df1"></div><div class="demo-finger df2"></div><div class="demo-finger df3"></div><div class="demo-finger df4"></div></div>
+    <div class="demo-word" id="demo-word">blue</div>
+  </div>
+  <div>
+    <div class="menu-title">WORD CLAW</div>
+    <div class="menu-sub">Sort · Classify · Learn</div>
+  </div>
+  <div class="hs-badge">Best Score: <span id="menu-hs">0</span></div>
+  <div class="menu-btns">
+    <button class="btn btn-primary" onclick="startGame()">▶ Play</button>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="theme-btn" onclick="toggleTheme()">🌙 / ☀️</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ INTRO OVERLAY ═══════ -->
+<div class="overlay" id="overlay-intro">
+  <div class="overlay-box">
+    <div class="overlay-title">🦾 How to Play</div>
+    <p style="font-size:.82rem;color:var(--txt2);line-height:1.6">Move the claw over a word, grab it, then drop it into the correct bin. Watch out for <em>distractors</em> — they always cost points!</p>
+    <div class="intro-controls">
+      <div class="ic"><div class="ic-key">← →</div><div class="ic-label">Move claw</div></div>
+      <div class="ic"><div class="ic-key">GRAB</div><div class="ic-label">Grab word</div></div>
+      <div class="ic"><div class="ic-key">A / S / D</div><div class="ic-label">Choose bin</div></div>
+      <div class="ic"><div class="ic-key">⏱</div><div class="ic-label">Drop fast!</div></div>
+    </div>
+    <p style="font-size:.78rem;color:var(--txt3)">Results reveal at the end of each round.</p>
+    <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="closeIntro()">Let's go! →</button>
+  </div>
+</div>
+
+<!-- ═══════ ROUND RESULT OVERLAY ═══════ -->
+<div class="overlay" id="overlay-round">
+  <div class="overlay-box" style="max-width:440px;width:95%">
+    <div class="overlay-title" id="rr-title">Round Complete!</div>
+    <div class="round-result-list" id="rr-list"></div>
+    <div class="round-score-summary">
+      <span class="rss-earned" id="rss-earned">+0</span>
+      <span class="rss-lost" id="rss-lost">-0</span>
+      <span class="rss-total" id="rss-total">0 pts</span>
+    </div>
+    <button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="nextRound()">Next Round →</button>
+  </div>
+</div>
+
+<!-- ═══════ GAME ═══════ -->
+<div id="screen-game" class="screen">
+  <div class="game-hud">
+    <div class="hud-score" id="hud-score">0</div>
+    <div class="hud-round" id="hud-round">Round 1</div>
+    <div class="hud-lives" id="hud-lives"></div>
+  </div>
+  <div class="round-timer-wrap">
+    <div class="round-timer-bar"><div class="round-timer-fill" id="round-timer-fill"></div></div>
+  </div>
+  <div class="machine">
+    <div class="machine-label">Word Claw Machine</div>
+    <div class="glass">
+      <div class="riel-area">
+        <div class="riel-track"></div>
+        <div class="claw-unit" id="claw-unit">
+          <div class="claw-slider"></div>
+          <div class="claw-cable" id="claw-cable"></div>
+          <div class="claw-head"></div>
+          <div class="claw-fingers" id="claw-fingers">
+            <div class="claw-finger cf1"></div>
+            <div class="claw-finger cf2"></div>
+            <div class="claw-finger cf3"></div>
+            <div class="claw-finger cf4"></div>
+          </div>
+          <div class="claw-payload" id="claw-payload"></div>
+          <div class="grab-timer-wrap" id="grab-timer-wrap">
+            <div class="grab-timer-fill" id="grab-timer-fill"></div>
+          </div>
+        </div>
+      </div>
+      <div class="word-grid" id="word-grid"></div>
+    </div>
+    <div class="game-controls">
+      <button class="ctrl-btn" id="btn-left" onclick="moveClaw(-1)">←</button>
+      <button class="ctrl-btn ctrl-grab" id="btn-grab" onclick="doGrab()">GRAB</button>
+      <button class="ctrl-btn" id="btn-right" onclick="moveClaw(1)">→</button>
+    </div>
+    <div class="drop-btns" id="drop-btns">
+      <button class="drop-btn drop-a" id="drop-a-btn" onclick="dropWord('a')">← <span id="drop-a-label">A</span></button>
+      <button class="drop-btn drop-c" onclick="dropWord('c')">Others</button>
+      <button class="drop-btn drop-b" id="drop-b-btn" onclick="dropWord('b')"><span id="drop-b-label">B</span> →</button>
+    </div>
+    <div class="game-status" id="game-status">Move the claw and press GRAB</div>
+  </div>
+  <div class="bins-row">
+    <div class="bin bin-a">
+      <div class="bin-header"><span class="bin-title" id="bin-a-title">A</span><span class="bin-count" id="bin-a-count">0</span></div>
+      <div class="bin-body" id="bin-a-body"></div>
+    </div>
+    <div class="bin bin-c">
+      <div class="bin-header"><span class="bin-title">Others</span><span class="bin-count" id="bin-c-count">0</span></div>
+      <div class="bin-body" id="bin-c-body"></div>
+    </div>
+    <div class="bin bin-b">
+      <div class="bin-header"><span class="bin-title" id="bin-b-title">B</span><span class="bin-count" id="bin-b-count">0</span></div>
+      <div class="bin-body" id="bin-b-body"></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-shrink:0">
+    <button class="btn btn-ghost btn-sm" onclick="endGame()">🏠 Menu</button>
+  </div>
+</div>
+
+<!-- ═══════ RESULT ═══════ -->
+<div id="screen-result" class="screen">
+  <div class="result-title">Game Over</div>
+  <div class="result-stars" id="res-stars"></div>
+  <div class="result-score" id="res-score">0</div>
+  <div class="result-detail" id="res-detail"></div>
+  <div class="new-record" id="res-record">🏆 New Record!</div>
+  <div class="result-btns">
+    <button class="btn btn-primary" onclick="startGame()">🔄 Play Again</button>
+    <button class="btn btn-ghost" onclick="showScreen('menu')">🏠 Menu</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+// VOCAB
+// ═══════════════════════════════════
+const VOCAB = {
+  colors:[
+    {w:'blue',cat:'colors',p:{warm:false}},{w:'green',cat:'colors',p:{warm:false}},
+    {w:'brown',cat:'colors',p:{warm:true}},{w:'grey',cat:'colors',p:{warm:false}},
+    {w:'red',cat:'colors',p:{warm:true}},{w:'white',cat:'colors',p:{warm:false}},
+    {w:'pink',cat:'colors',p:{warm:true}},{w:'yellow',cat:'colors',p:{warm:true}},
+    {w:'black',cat:'colors',p:{warm:false}},{w:'beige',cat:'colors',p:{warm:true}},
+    {w:'purple',cat:'colors',p:{warm:false}},{w:'orange',cat:'colors',p:{warm:true}},
+    {w:'aqua',cat:'colors',p:{warm:false}},{w:'navy',cat:'colors',p:{warm:false}},
+  ],
+  numbers:[
+    {w:'one',cat:'numbers',p:{even:false}},{w:'two',cat:'numbers',p:{even:true}},
+    {w:'three',cat:'numbers',p:{even:false}},{w:'four',cat:'numbers',p:{even:true}},
+    {w:'five',cat:'numbers',p:{even:false}},{w:'six',cat:'numbers',p:{even:true}},
+    {w:'seven',cat:'numbers',p:{even:false}},{w:'eight',cat:'numbers',p:{even:true}},
+    {w:'nine',cat:'numbers',p:{even:false}},{w:'ten',cat:'numbers',p:{even:true}},
+    {w:'eleven',cat:'numbers',p:{even:false}},{w:'twelve',cat:'numbers',p:{even:true}},
+    {w:'fifteen',cat:'numbers',p:{even:false}},{w:'sixteen',cat:'numbers',p:{even:true}},
+    {w:'twenty',cat:'numbers',p:{even:true}},
+  ],
+  supplies:[
+    {w:'scissors',cat:'supplies',p:{tool:false}},{w:'backpack',cat:'supplies',p:{tool:false}},
+    {w:'books',cat:'supplies',p:{tool:false}},{w:'ruler',cat:'supplies',p:{tool:false}},
+    {w:'pencil',cat:'supplies',p:{tool:true}},{w:'eraser',cat:'supplies',p:{tool:false}},
+    {w:'crayons',cat:'supplies',p:{tool:true}},{w:'glue',cat:'supplies',p:{tool:false}},
+    {w:'paper',cat:'supplies',p:{tool:false}},{w:'folder',cat:'supplies',p:{tool:false}},
+    {w:'pen',cat:'supplies',p:{tool:true}},{w:'desk',cat:'supplies',p:{tool:false}},
+    {w:'stapler',cat:'supplies',p:{tool:false}},
+  ],
+  greetings:[
+    {w:'Hello',cat:'greetings',p:{type:'greeting'}},{w:'Hi',cat:'greetings',p:{type:'greeting'}},
+    {w:'Good morning',cat:'greetings',p:{type:'greeting'}},{w:'Good day',cat:'greetings',p:{type:'greeting'}},
+    {w:'How are you?',cat:'greetings',p:{type:'greeting'}},
+    {w:'Bye',cat:'greetings',p:{type:'farewell'}},{w:'Goodbye',cat:'greetings',p:{type:'farewell'}},
+    {w:'See you later',cat:'greetings',p:{type:'farewell'}},{w:'See you soon',cat:'greetings',p:{type:'farewell'}},
+    {w:'Take care',cat:'greetings',p:{type:'farewell'}},{w:'See you!',cat:'greetings',p:{type:'farewell'}},
+  ],
+  days:[
+    {w:'Monday',cat:'days',p:{weekday:true}},{w:'Tuesday',cat:'days',p:{weekday:true}},
+    {w:'Wednesday',cat:'days',p:{weekday:true}},{w:'Thursday',cat:'days',p:{weekday:true}},
+    {w:'Friday',cat:'days',p:{weekday:true}},{w:'Saturday',cat:'days',p:{weekday:false}},
+    {w:'Sunday',cat:'days',p:{weekday:false}},
+  ],
+};
+const ALL_WORDS = Object.values(VOCAB).flat();
+
+// ═══════════════════════════════════
+// SORTING PAIRS
+// ═══════════════════════════════════
+const PAIRS = [
+  {a:{label:'Color',fn:w=>w.cat==='colors'},       b:{label:'Number',fn:w=>w.cat==='numbers'},      minR:1},
+  {a:{label:'School Supply',fn:w=>w.cat==='supplies'}, b:{label:'Day',fn:w=>w.cat==='days'},         minR:1},
+  {a:{label:'Greeting',fn:w=>w.p&&w.p.type==='greeting'},  b:{label:'Farewell',fn:w=>w.p&&w.p.type==='farewell'}, minR:1},
+  {a:{label:'Color',fn:w=>w.cat==='colors'},        b:{label:'Day',fn:w=>w.cat==='days'},            minR:1},
+  {a:{label:'Supply',fn:w=>w.cat==='supplies'},     b:{label:'Greeting/Farewell',fn:w=>w.cat==='greetings'}, minR:1},
+  {a:{label:'Warm color',fn:w=>w.cat==='colors'&&w.p&&w.p.warm===true},  b:{label:'Cool color',fn:w=>w.cat==='colors'&&w.p&&w.p.warm===false}, minR:3},
+  {a:{label:'Weekday',fn:w=>w.p&&w.p.weekday===true},   b:{label:'Weekend',fn:w=>w.p&&w.p.weekday===false}, minR:3},
+  {a:{label:'Writing tool',fn:w=>w.cat==='supplies'&&w.p&&w.p.tool===true}, b:{label:'Supply (other)',fn:w=>w.cat==='supplies'&&w.p&&w.p.tool===false}, minR:3},
+  {a:{label:'Even number',fn:w=>w.cat==='numbers'&&w.p&&w.p.even===true}, b:{label:'Odd number',fn:w=>w.cat==='numbers'&&w.p&&w.p.even===false}, minR:3},
+  {a:{label:'Color',fn:w=>w.cat==='colors'},        b:{label:'Supply',fn:w=>w.cat==='supplies'},     minR:1},
+  {a:{label:'Number',fn:w=>w.cat==='numbers'},      b:{label:'Day',fn:w=>w.cat==='days'},            minR:1},
+];
+
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+const state = {
+  screen:'menu',
+  round:1, score:0, lives:3, highScore:0,
+  roundsPlayed:0, totalCorrect:0, totalWords:0,
+  phase:'idle',   // idle | descending | holding | busy
+  colIdx:1,
+  stacks:[],      // [col][row] items
+  pair:null,      // current PAIR
+  deposits:[],    // {word, bin, auto} per round
+  roundTimer:null, roundTimeLeft:0, roundTimeSec:40,
+  grabTimer:null, grabTimeSec:4, grabTimeLeft:0,
+  grabIntervalId:null, roundIntervalId:null,
+};
+
+// COL_LEFTS: % left for claw-unit per column (4 cols)
+const COL_LEFTS = ['3%','27%','52%','76%'];
+
+// ═══════════════════════════════════
+// UTILS
+// ═══════════════════════════════════
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function rand(a){return a[Math.floor(Math.random()*a.length)];}
+function el(id){return document.getElementById(id);}
+
+// ═══════════════════════════════════
+// SCREEN ROUTING
+// ═══════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('active');
+    s.style.display='';
+  });
+  const s=el('screen-'+id);
+  if(s){s.classList.add('active');}
+  state.screen=id;
+  if(id==='menu') renderMenu();
+}
+
+// ═══════════════════════════════════
+// THEME
+// ═══════════════════════════════════
+function toggleTheme(){
+  const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  try{localStorage.setItem('wc_theme',t);}catch(e){}
+}
+
+// ═══════════════════════════════════
+// MENU
+// ═══════════════════════════════════
+const DEMO_WORDS=['blue','Monday','pencil','Hello','seven','red','Tuesday','Goodbye','pink','four'];
+let demoIdx=0,demoTimer=null;
+function renderMenu(){
+  el('menu-hs').textContent=state.highScore;
+  clearInterval(demoTimer);
+  demoTimer=setInterval(()=>{
+    demoIdx=(demoIdx+1)%DEMO_WORDS.length;
+    el('demo-word').textContent=DEMO_WORDS[demoIdx];
+  },1200);
+}
+
+// ═══════════════════════════════════
+// BUILD ROUND
+// ═══════════════════════════════════
+function buildRound(){
+  clearTimers();
+  const available=PAIRS.filter(p=>p.minR<=state.round);
+  state.pair=rand(available);
+  const {a,b}=state.pair;
+
+  const classifiableA=shuffle(ALL_WORDS.filter(w=>a.fn(w))).slice(0,4);
+  const classifiableB=shuffle(ALL_WORDS.filter(w=>b.fn(w))).slice(0,4);
+  const distractorPool=shuffle(ALL_WORDS.filter(w=>!a.fn(w)&&!b.fn(w)));
+  const distractors=distractorPool.slice(0,4);
+
+  const allWords=shuffle([...classifiableA,...classifiableB,...distractors]);
+
+  // Distribute into 4 columns of 3 (fill columns sequentially)
+  state.stacks=[[],[],[],[]];
+  allWords.forEach((w,i)=>{
+    state.stacks[i%4].push({...w,isDistractor:!a.fn(w)&&!b.fn(w)});
+  });
+
+  state.deposits=[];
+  state.phase='idle';
+  state.colIdx=1;
+  state.roundTimeSec=state.round<=3?45:state.round<=6?35:25;
+  state.roundTimeLeft=state.roundTimeSec;
+}
+
+// ═══════════════════════════════════
+// RENDER
+// ═══════════════════════════════════
+function renderHUD(){
+  el('hud-score').textContent=state.score;
+  el('hud-round').textContent='Round '+state.round;
+  const livesEl=el('hud-lives');
+  livesEl.innerHTML='';
+  for(let i=0;i<3;i++){
+    const h=document.createElement('div');
+    h.className='heart'+(i>=state.lives?' lost':'');
+    livesEl.appendChild(h);
+  }
+}
+
+function renderBinHeaders(){
+  el('bin-a-title').textContent=state.pair.a.label;
+  el('bin-b-title').textContent=state.pair.b.label;
+  el('drop-a-label').textContent=state.pair.a.label;
+  el('drop-b-label').textContent=state.pair.b.label;
+  el('bin-a-count').textContent='0';
+  el('bin-b-count').textContent='0';
+  el('bin-c-count').textContent='0';
+  el('bin-a-body').innerHTML='';
+  el('bin-b-body').innerHTML='';
+  el('bin-c-body').innerHTML='';
+}
+
+function renderGrid(){
+  const grid=el('word-grid');
+  grid.innerHTML='';
+  for(let row=2;row>=0;row--){
+    for(let col=0;col<4;col++){
+      const div=document.createElement('div');
+      div.id=`ws_${col}_${row}`;
+      const item=state.stacks[col][row];
+      div.className='wslot'+(col===state.colIdx?' active-col':'')+(item?'':' empty')+(item&&item.isDistractor?' distractor':'');
+      div.textContent=item?item.w:'';
+      grid.appendChild(div);
+    }
+  }
+}
+
+function positionClaw(){
+  el('claw-unit').style.left=COL_LEFTS[state.colIdx];
+  document.querySelectorAll('.wslot').forEach((s,i)=>s.classList.toggle('active-col',i%4===state.colIdx));
+}
+
+function setCtrlButtons(on){
+  ['btn-left','btn-right','btn-grab'].forEach(id=>{const b=el(id);if(b)b.disabled=!on;});
+}
+
+// ═══════════════════════════════════
+// ROUND TIMER
+// ═══════════════════════════════════
+function startRoundTimer(){
+  clearInterval(state.roundIntervalId);
+  const fill=el('round-timer-fill');
+  fill.style.transition='none';
+  fill.style.width='100%';
+  fill.style.background='var(--green)';
+
+  state.roundTimeLeft=state.roundTimeSec;
+  state.roundIntervalId=setInterval(()=>{
+    if(state.phase==='busy'||state.phase==='holding') return;
+    state.roundTimeLeft-=.25;
+    const pct=Math.max(0,state.roundTimeLeft/state.roundTimeSec*100);
+    fill.style.transition='width .25s linear';
+    fill.style.width=pct+'%';
+    if(pct<33) fill.style.background='var(--red)';
+    else if(pct<60) fill.style.background='var(--amber)';
+    else fill.style.background='var(--green)';
+    if(state.roundTimeLeft<=0) endRound();
+  },250);
+}
+
+// ═══════════════════════════════════
+// GRAB TIMER
+// ═══════════════════════════════════
+function startGrabTimer(){
+  clearInterval(state.grabIntervalId);
+  state.grabTimeLeft=state.grabTimeSec;
+  const wrap=el('grab-timer-wrap');
+  const fill=el('grab-timer-fill');
+  wrap.classList.add('visible');
+  fill.style.width='100%';
+  fill.style.background='var(--amber)';
+
+  state.grabIntervalId=setInterval(()=>{
+    state.grabTimeLeft-=.1;
+    const pct=Math.max(0,state.grabTimeLeft/state.grabTimeSec*100);
+    fill.style.width=pct+'%';
+    if(pct<30) fill.style.background='var(--red)';
+    if(state.grabTimeLeft<=0){
+      clearInterval(state.grabIntervalId);
+      autoDropWord();
+    }
+  },100);
+}
+
+function stopGrabTimer(){
+  clearInterval(state.grabIntervalId);
+  const wrap=el('grab-timer-wrap');
+  if(wrap) wrap.classList.remove('visible');
+}
+
+// ═══════════════════════════════════
+// CLAW MOVEMENT
+// ═══════════════════════════════════
+function moveClaw(dir){
+  if(state.phase!=='idle') return;
+  state.colIdx=Math.max(0,Math.min(3,state.colIdx+dir));
+  positionClaw();
+}
+
+// ═══════════════════════════════════
+// GRAB
+// ═══════════════════════════════════
+function doGrab(){
+  if(state.phase!=='idle') return;
+  const stack=state.stacks[state.colIdx];
+  const topIdx=stack.length-1;
+  const item=topIdx>=0?stack[topIdx]:null;
+  const cable=el('claw-cable');
+  const fingers=el('claw-fingers');
+  const payload=el('claw-payload');
+  const status=el('game-status');
+
+  state.phase='busy';
+  setCtrlButtons(false);
+
+  if(!item){
+    status.textContent='Empty slot!';
+    cable.style.height='100px';
+    setTimeout(()=>{fingers.classList.add('closed');},400);
+    setTimeout(()=>{cable.style.height='46px';},660);
+    setTimeout(()=>{
+      fingers.classList.remove('closed');
+      state.phase='idle';
+      setCtrlButtons(true);
+      status.textContent='Move the claw and press GRAB';
+    },1100);
+    return;
+  }
+
+  status.textContent='Grabbing...';
+  cable.style.height='110px';
+
+  setTimeout(()=>{
+    fingers.classList.add('closed');
+    const slotEl=el(`ws_${state.colIdx}_${topIdx}`);
+    if(slotEl) slotEl.classList.add('lifted');
+
+    setTimeout(()=>{
+      state._heldItem=item;
+      payload.textContent=item.w;
+      payload.classList.add('visible');
+      cable.style.height='46px';
+
+      setTimeout(()=>{
+        state.phase='holding';
+        setCtrlButtons(true);
+        el('drop-btns').classList.add('visible');
+        status.textContent='Drop it fast! →';
+        startGrabTimer();
+      },380);
+    },240);
+  },420);
+}
+
+// ═══════════════════════════════════
+// DROP
+// ═══════════════════════════════════
+function dropWord(bin){
+  if(state.phase!=='holding') return;
+  stopGrabTimer();
+  _commitDrop(bin,false);
+}
+
+function autoDropWord(){
+  if(state.phase!=='holding') return;
+  const bin=['a','b','c'][Math.floor(Math.random()*3)];
+  const cu=el('claw-unit');
+  if(cu) cu.classList.add('shake-claw');
+  setTimeout(()=>{const cu2=el('claw-unit');if(cu2)cu2.classList.remove('shake-claw');},500);
+  _commitDrop(bin,true);
+}
+
+function _commitDrop(bin,auto){
+  const item=state._heldItem;
+  state._heldItem=null;
+
+  // Remove from stack
+  state.stacks[state.colIdx].pop();
+
+  // Reset claw
+  el('claw-payload').classList.remove('visible');
+  el('claw-fingers').classList.remove('closed');
+  el('drop-btns').classList.remove('visible');
+
+  // Record deposit
+  state.deposits.push({word:item,bin,auto});
+
+  // Add chip to bin
+  const bodyId=bin==='a'?'bin-a-body':bin==='b'?'bin-b-body':'bin-c-body';
+  const countId=bin==='a'?'bin-a-count':bin==='b'?'bin-b-count':'bin-c-count';
+  const bodyEl=el(bodyId);
+  const chip=document.createElement('div');
+  const neutralClass=bin==='a'?'chip-neutral-a':bin==='b'?'chip-neutral-b':'chip-neutral-c';
+  chip.className='chip '+neutralClass+(auto?' chip-auto':'');
+  chip.textContent=item.w+(auto?' ⏱':'');
+  chip.dataset.depositIdx=state.deposits.length-1;
+  bodyEl.appendChild(chip);
+  const cnt=parseInt(el(countId).textContent)||0;
+  el(countId).textContent=cnt+1;
+
+  state.phase='idle';
+  const remaining=state.stacks.flat().length;
+  el('game-status').textContent=remaining>0?'Move the claw and press GRAB':'Round complete!';
+
+  renderGrid();
+  positionClaw();
+
+  if(remaining===0) setTimeout(()=>endRound(),400);
+}
+
+// ═══════════════════════════════════
+// END ROUND
+// ═══════════════════════════════════
+function endRound(){
+  clearTimers();
+  state.phase='busy';
+  setCtrlButtons(false);
+  state.roundsPlayed++;
+
+  const {a,b}=state.pair;
+  let earned=0,lost=0;
+
+  // Evaluate deposits
+  const evaluated=state.deposits.map(dep=>{
+    const {word,bin,auto}=dep;
+    if(word.isDistractor){
+      if(bin==='c'){
+        earned+=5;
+        state.totalCorrect++;
+        state.totalWords++;
+        return{word,bin,auto,result:'distractor-ok',pts:5};
+      } else {
+        lost+=5;
+        state.totalWords++;
+        return{word,bin,auto,result:'distractor',pts:-5};
+      }
+    }
+    if(bin==='c'){
+      lost+=8;
+      state.totalWords++;
+      return{word,bin,auto,result:'wrong',pts:-8};
+    }
+    const correctBin=a.fn(word)?'a':'b';
+    if(bin===correctBin){
+      earned+=10;
+      state.totalCorrect++;
+      state.totalWords++;
+      return{word,bin,auto,result:'correct',pts:10};
+    } else {
+      lost+=8;
+      state.totalWords++;
+      return{word,bin,auto,result:'wrong',pts:-8};
+    }
+  });
+
+  // Words left in machine (not classified) = no penalty, no reward
+  state.score=Math.max(0,state.score+earned-lost);
+
+  // Flip chips
+  const chips=document.querySelectorAll('.chip');
+  chips.forEach((chip,i)=>{
+    const dep=evaluated[i];
+    if(!dep) return;
+    chip.style.animation='chipFlip .4s ease';
+    setTimeout(()=>{
+      chip.className='chip';
+      if(dep.result==='correct') chip.className+=' chip-correct';
+      else if(dep.result==='distractor-ok') chip.className+=' chip-distractor-ok';
+      else if(dep.result==='wrong') chip.className+=' chip-wrong';
+      else chip.className+=' chip-distractor';
+      if(dep.auto) chip.className+=' chip-auto';
+      chip.style.animation='';
+    },i*150+200);
+  });
+
+  // Build result list
+  setTimeout(()=>{
+    showRoundResult(evaluated,earned,lost);
+  },evaluated.length*150+400);
+}
+
+function showRoundResult(evaluated,earned,lost){
+  const list=el('rr-list');
+  list.innerHTML='';
+  evaluated.forEach(dep=>{
+    const item=document.createElement('div');
+    item.className='rr-item';
+    let icon='',cls='',info='',pts='';
+    if(dep.result==='correct'){
+      cls='rr-correct';icon='✅';
+      info=`Correct bin: ${dep.bin==='a'?state.pair.a.label:state.pair.b.label}`;
+      pts='+10';
+    } else if(dep.result==='distractor-ok'){
+      cls='rr-correct';icon='✅';
+      info='Correctly placed in Others';pts='+5';
+    } else if(dep.result==='wrong' && dep.bin==='c'){
+      cls='rr-wrong';icon='❌';
+      const correct=state.pair.a.fn(dep.word)?state.pair.a.label:state.pair.b.label;
+      info=`Should be: ${correct} — not Others`;pts='-8';
+    } else if(dep.result==='wrong'){
+      cls='rr-wrong';icon='❌';
+      const correct=state.pair.a.fn(dep.word)?state.pair.a.label:state.pair.b.label;
+      info=`Should be: ${correct}`;pts='-8';
+    } else {
+      cls='rr-distractor';icon='⚠️';
+      info='Distractor — should go to Others';pts='-5';
+    }
+    if(dep.auto){cls='rr-auto';icon='⏱';info='Auto-dropped (time out)';pts=pts;}
+    item.className='rr-item '+cls;
+    item.innerHTML=`<span class="rr-icon">${icon}</span><span class="rr-word">${dep.word.w}</span><span class="rr-info">${info}</span><span class="rr-pts">${pts}</span>`;
+    list.appendChild(item);
+  });
+  el('rss-earned').textContent='+'+earned;
+  el('rss-lost').textContent='-'+lost;
+  el('rss-total').textContent=state.score+' pts total';
+  el('rr-title').textContent=earned>lost?'Round Complete! 🎉':'Tough round...';
+  el('overlay-round').classList.add('active');
+  renderHUD();
+}
+
+function nextRound(){
+  el('overlay-round').classList.remove('active');
+  state.round++;
+  buildRound();
+  renderHUD();
+  renderBinHeaders();
+  renderGrid();
+  positionClaw();
+  el('game-status').textContent='Move the claw and press GRAB';
+  startRoundTimer();
+  state.phase='idle';
+  setCtrlButtons(true);
+}
+
+// ═══════════════════════════════════
+// TIMERS
+// ═══════════════════════════════════
+function clearTimers(){
+  clearInterval(state.roundIntervalId);
+  clearInterval(state.grabIntervalId);
+  state.roundIntervalId=null;
+  state.grabIntervalId=null;
+}
+
+// ═══════════════════════════════════
+// START / END GAME
+// ═══════════════════════════════════
+function startGame(){
+  clearInterval(demoTimer);
+  clearTimers();
+  state.round=1; state.score=0; state.lives=3;
+  state.roundsPlayed=0; state.totalCorrect=0; state.totalWords=0;
+  state.phase='idle'; state.colIdx=1;
+  el('claw-cable').style.height='28px';
+  el('claw-fingers').classList.remove('closed');
+  el('claw-payload').classList.remove('visible');
+  el('drop-btns').classList.remove('visible');
+  stopGrabTimer();
+  buildRound();
+  renderHUD();
+  renderBinHeaders();
+  renderGrid();
+  positionClaw();
+  el('game-status').textContent='Move the claw and press GRAB';
+  showScreen('game');
+  el('overlay-intro').classList.add('active');
+}
+
+function closeIntro(){
+  el('overlay-intro').classList.remove('active');
+  setCtrlButtons(true);
+  startRoundTimer();
+}
+
+function endGame(){
+  clearTimers();
+  el('overlay-round').classList.remove('active');
+  const isNew=state.score>state.highScore;
+  if(isNew){state.highScore=state.score;try{localStorage.setItem('wc_hs',state.highScore);}catch(e){}}
+  showScreen('result');
+
+  const acc=state.totalWords>0?Math.round(state.totalCorrect/state.totalWords*100):0;
+  let stars=acc>=80?3:acc>=50?2:acc>=20?1:0;
+
+  const starsEl=el('res-stars');
+  starsEl.innerHTML='';
+  ['⭐','⭐','⭐'].forEach((_,i)=>{
+    const s=document.createElement('span');
+    s.textContent=i<stars?'⭐':'☆';
+    s.style.opacity='0';
+    starsEl.appendChild(s);
+    setTimeout(()=>{s.style.opacity='1';s.style.animation='starPop .4s cubic-bezier(.34,1.5,.64,1)';},i*280+200);
+  });
+
+  let cur=0;const target=state.score;const step=Math.max(1,Math.ceil(target/40));
+  const iv=setInterval(()=>{cur=Math.min(cur+step,target);el('res-score').textContent=cur;if(cur>=target)clearInterval(iv);},30);
+
+  el('res-detail').textContent=`${acc}% accuracy · ${state.roundsPlayed} rounds · Round ${state.round} reached`;
+  el('res-record').classList.toggle('visible',isNew);
+}
+
+// ═══════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(state.screen!=='game') return;
+  if(el('overlay-intro').classList.contains('active')||el('overlay-round').classList.contains('active')) return;
+  switch(e.key){
+    case'ArrowLeft': e.preventDefault(); moveClaw(-1); break;
+    case'ArrowRight': e.preventDefault(); moveClaw(1); break;
+    case'ArrowDown':
+    case' ': e.preventDefault();
+      if(state.phase==='idle') doGrab();
+      break;
+    case'a':case'A': if(state.phase==='holding'){e.preventDefault();dropWord('a');}break;
+    case's':case'S': if(state.phase==='holding'){e.preventDefault();dropWord('c');}break;
+    case'd':case'D': if(state.phase==='holding'){e.preventDefault();dropWord('b');}break;
+    case'Enter': if(state.phase==='holding'){e.preventDefault();dropWord('c');}break;
+  }
+});
+
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+(function init(){
+  try{
+    const hs=localStorage.getItem('wc_hs');
+    if(hs) state.highScore=parseInt(hs)||0;
+    const theme=localStorage.getItem('wc_theme');
+    if(theme) document.documentElement.setAttribute('data-theme',theme);
+  }catch(e){}
+  showScreen('menu');
+})();
+</script>
+</body>
+</html>
