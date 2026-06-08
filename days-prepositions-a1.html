@@ -6,497 +6,696 @@
 <meta name="google" content="notranslate">
 <title>Days of the Week – A1</title>
 <style>
-  :root {
-    --bg: #f5f7ff;
-    --surface: #ffffff;
-    --surface2: #eef1fb;
-    --text: #1a1d2e;
-    --text2: #555870;
-    --border: #d0d4ef;
-    --accent: #3a4fd4;
-    --accent2: #6c63ff;
-    --correct: #16a34a;
-    --correct-bg: #dcfce7;
-    --wrong: #dc2626;
-    --wrong-bg: #fee2e2;
-    --shadow: 0 2px 12px rgba(60,70,180,.10);
-    --radius: 12px;
+/* ═══════════════════════════════════════════
+   TOKENS – dark default, light override
+═══════════════════════════════════════════ */
+:root {
+  --bg:          #0b0d1a;
+  --surface:     #12152a;
+  --surface2:    #1c2040;
+  --surface3:    #242849;
+  --text:        #e8eaf6;
+  --text2:       #8b90b8;
+  --border:      #2d3260;
+  --accent:      #7c88f7;
+  --accent2:     #a89cf8;
+  --accent-glow: rgba(124,136,247,.25);
+  --correct:     #4ade80;
+  --correct-bg:  rgba(74,222,128,.12);
+  --wrong:       #f87171;
+  --wrong-bg:    rgba(248,113,113,.12);
+  --shadow:      0 4px 24px rgba(0,0,0,.5);
+  --shadow-sm:   0 2px 10px rgba(0,0,0,.35);
+  --radius:      14px;
+  --radius-sm:   9px;
 
-    /* Day colors */
-    --mon: #f87171;
-    --tue: #fb923c;
-    --wed: #facc15;
-    --thu: #34d399;
-    --fri: #a78bfa;
-    --sat: #818cf8;
-    --sun: #f472b6;
-  }
-  [data-theme="dark"] {
-    --bg: #0f1123;
-    --surface: #1a1d35;
-    --surface2: #252847;
-    --text: #e8eaf6;
-    --text2: #9fa3c0;
-    --border: #353860;
-    --accent: #7c88f7;
-    --accent2: #a89cf8;
-    --correct: #4ade80;
-    --correct-bg: #14532d55;
-    --wrong: #f87171;
-    --wrong-bg: #7f1d1d55;
-    --shadow: 0 2px 12px rgba(0,0,0,.35);
-  }
+  /* day palette (vivid but readable on dark) */
+  --mon: #ff6b6b;
+  --tue: #ff9f43;
+  --wed: #f9ca24;
+  --thu: #6bcb77;
+  --fri: #c77dff;
+  --sat: #748ffc;
+  --sun: #ff6eb4;
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+[data-theme="light"] {
+  --bg:          #f0f2ff;
+  --surface:     #ffffff;
+  --surface2:    #e8ebfa;
+  --surface3:    #dde1f5;
+  --text:        #1a1d2e;
+  --text2:       #555870;
+  --border:      #c8cce8;
+  --accent:      #3a4fd4;
+  --accent2:     #6c63ff;
+  --accent-glow: rgba(58,79,212,.18);
+  --correct:     #16a34a;
+  --correct-bg:  rgba(22,163,74,.1);
+  --wrong:       #dc2626;
+  --wrong-bg:    rgba(220,38,38,.08);
+  --shadow:      0 4px 20px rgba(60,70,180,.1);
+  --shadow-sm:   0 2px 8px rgba(60,70,180,.08);
+}
 
-  body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
-    transition: background .3s, color .3s;
-  }
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── ALERT DE PESTAÑA ── */
-  #tab-alert {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.82);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-  }
-  #tab-alert.show { display: flex; }
-  #tab-alert-box {
-    background: var(--surface);
-    border: 3px solid var(--wrong);
-    border-radius: 16px;
-    padding: 2rem 2.5rem;
-    text-align: center;
-    max-width: 380px;
-    box-shadow: 0 8px 40px rgba(220,38,38,.3);
-  }
-  #tab-alert-box .icon { font-size: 3rem; margin-bottom: .5rem; }
-  #tab-alert-box h2 { color: var(--wrong); margin-bottom: .5rem; }
-  #tab-alert-box p { color: var(--text2); font-size: .95rem; margin-bottom: 1.2rem; }
-  #tab-alert-close {
-    background: var(--wrong);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: .6rem 2rem;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-  }
+body {
+  font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  transition: background .35s, color .35s;
+  font-size: 15px;
+  line-height: 1.55;
+}
 
-  /* ── HEADER ── */
-  header {
-    background: var(--surface);
-    border-bottom: 2px solid var(--border);
-    padding: .9rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: var(--shadow);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .header-left h1 { font-size: 1.15rem; font-weight: 800; color: var(--accent); }
-  .header-left span { font-size: .78rem; color: var(--text2); }
-  .header-right { display: flex; align-items: center; gap: .75rem; }
-  .score-badge {
-    background: var(--surface2);
-    border: 2px solid var(--border);
-    border-radius: 20px;
-    padding: .3rem .85rem;
-    font-size: .85rem;
-    font-weight: 700;
-    color: var(--accent);
-  }
-  /* Theme toggle */
-  .theme-btn {
-    background: var(--surface2);
-    border: 2px solid var(--border);
-    border-radius: 50%;
-    width: 38px; height: 38px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: background .2s;
-  }
-  .theme-btn:hover { background: var(--border); }
+/* ═══════════════════════════════════════════
+   TAB ALERT
+═══════════════════════════════════════════ */
+#tab-alert {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.88);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+#tab-alert.show { display: flex; }
+#tab-alert-box {
+  background: var(--surface);
+  border: 2px solid var(--wrong);
+  border-radius: 20px;
+  padding: 2.25rem 2.5rem;
+  text-align: center;
+  max-width: 380px;
+  box-shadow: 0 0 40px rgba(248,113,113,.2), var(--shadow);
+  animation: popIn .25s ease;
+}
+@keyframes popIn {
+  from { transform: scale(.85); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+#tab-alert-box .icon   { font-size: 3.2rem; margin-bottom: .5rem; }
+#tab-alert-box h2      { color: var(--wrong); margin-bottom: .5rem; font-size: 1.15rem; }
+#tab-alert-box p       { color: var(--text2); font-size: .9rem; margin-bottom: 1.25rem; line-height: 1.6; }
+#tab-alert-count       { font-size: 1rem; font-weight: 900; color: var(--wrong); margin-bottom: .4rem; }
+#tab-alert-close {
+  background: var(--wrong);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: .65rem 2.2rem;
+  font-size: .95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+#tab-alert-close:hover { opacity: .88; }
 
-  /* ── MAIN ── */
-  main { max-width: 780px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: .85rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 20px rgba(0,0,0,.3);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: .75rem;
+}
+.header-left h1 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -.01em;
+}
+.header-left span { font-size: .73rem; color: var(--text2); }
+.header-right { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
 
-  /* ── SECTION CARDS ── */
-  .section-card {
-    background: var(--surface);
-    border: 2px solid var(--border);
-    border-radius: var(--radius);
-    margin-bottom: 2rem;
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-  .section-header {
-    background: var(--surface2);
-    padding: .75rem 1.2rem;
-    border-bottom: 2px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-  }
-  .section-header .section-num {
-    background: var(--accent);
-    color: #fff;
-    border-radius: 50%;
-    width: 28px; height: 28px;
-    font-weight: 800;
-    font-size: .85rem;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .section-header h2 { font-size: 1rem; font-weight: 700; }
-  .section-header .instr { font-size: .8rem; color: var(--text2); margin-left: .2rem; }
-  .section-body { padding: 1.2rem; }
+.score-badge {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: .3rem .9rem;
+  font-size: .85rem;
+  font-weight: 800;
+  color: var(--accent);
+  white-space: nowrap;
+}
 
-  /* ── GLOSSARY HIDE/SHOW ── */
-  #gloss-wrapper {
-    overflow: hidden;
-    max-height: 500px;
-    transition: max-height .5s ease, opacity .4s ease;
-    opacity: 1;
-  }
-  #gloss-wrapper.hidden {
-    max-height: 0;
-    opacity: 0;
-    pointer-events: none;
-  }
-  #gloss-toggle-row {
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    margin-top: .9rem;
-    flex-wrap: wrap;
-  }
-  .btn-start {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: .6rem 1.4rem;
-    font-size: .92rem;
-    font-weight: 800;
-    cursor: pointer;
-    min-height: 44px;
-    transition: opacity .15s, transform .1s;
-    box-shadow: 0 2px 8px rgba(60,70,180,.25);
-  }
-  .btn-start:hover { opacity: .88; transform: translateY(-1px); }
-  .btn-show-gloss {
-    background: var(--surface2);
-    color: var(--text2);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    padding: .55rem 1.1rem;
-    font-size: .85rem;
-    font-weight: 700;
-    cursor: pointer;
-    min-height: 44px;
-    transition: border-color .15s;
-  }
-  .btn-show-gloss:hover { border-color: var(--accent); color: var(--text); }
+/* Tab counter */
+#tab-counter {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: .3rem .75rem;
+  font-size: .8rem;
+  font-weight: 800;
+  color: var(--text2);
+  transition: background .3s, border-color .3s, color .3s;
+  white-space: nowrap;
+}
+#tab-counter.warn-1 { background: rgba(202,138,4,.15); border-color: #ca8a04; color: #fde68a; }
+#tab-counter.warn-2 { background: rgba(234,88,12,.15); border-color: #ea580c; color: #fed7aa; }
+#tab-counter.warn-3 {
+  background: var(--wrong-bg); border-color: var(--wrong); color: var(--wrong);
+  animation: pulse-badge 1.2s ease infinite;
+}
+@keyframes pulse-badge {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.08); }
+}
 
-  /* ── GLOSSARY ── */
-  .gloss-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: .6rem;
-  }
-  .day-chip {
-    border-radius: 10px;
-    padding: .55rem .6rem;
-    text-align: center;
-    font-weight: 800;
-    font-size: .88rem;
-    color: #1a1d2e;
-    border: 2px solid transparent;
-    box-shadow: 0 2px 6px rgba(0,0,0,.12);
-  }
-  .day-chip .day-num { font-size: .7rem; font-weight: 600; opacity: .65; display: block; }
+/* Theme button */
+.theme-btn {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  width: 36px; height: 36px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, border-color .2s;
+  flex-shrink: 0;
+}
+.theme-btn:hover { background: var(--surface3); border-color: var(--accent); }
 
-  /* ── SPELL IT (S1) ── */
-  .spell-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: .85rem;
-  }
-  .spell-card {
-    border-radius: 12px;
-    padding: .9rem .75rem .75rem;
-    text-align: center;
-    border: 3px solid transparent;
-    transition: border-color .2s, box-shadow .2s;
-    position: relative;
-  }
-  .spell-card .sc-num {
-    font-size: .72rem; font-weight: 800; opacity: .65; margin-bottom: .25rem; display: block;
-  }
-  .spell-card .sc-emoji { font-size: 1.8rem; display: block; margin-bottom: .45rem; }
-  .spell-card .sc-hint {
-    font-size: .75rem; font-weight: 700; opacity: .7;
-    margin-bottom: .5rem; letter-spacing: .5px;
-  }
-  .spell-card input[type="text"] {
-    width: 100%;
-    background: rgba(255,255,255,.45);
-    border: 2px solid rgba(0,0,0,.18);
-    border-radius: 8px;
-    padding: .35rem .5rem;
-    font-size: .95rem;
-    font-weight: 800;
-    text-align: center;
-    color: #1a1d2e;
-    outline: none;
-    transition: border-color .15s;
-  }
-  [data-theme="dark"] .spell-card input[type="text"] {
-    background: rgba(0,0,0,.3);
-    color: #e8eaf6;
-    border-color: rgba(255,255,255,.25);
-  }
-  .spell-card input[type="text"]:focus { border-color: rgba(0,0,0,.5); }
-  .spell-card input[type="text"]:disabled { opacity: .8; cursor: default; }
-  .spell-card .sc-feedback {
-    font-size: .78rem; font-weight: 700;
-    margin-top: .4rem; min-height: 1.1rem;
-    padding: .2rem .4rem; border-radius: 6px;
-  }
-  .spell-card .sc-feedback.ok  { background: rgba(0,0,0,.15); color: #14532d; }
-  .spell-card .sc-feedback.err { background: rgba(0,0,0,.12); color: #7f1d1d; }
-  [data-theme="dark"] .spell-card .sc-feedback.ok  { color: #bbf7d0; }
-  [data-theme="dark"] .spell-card .sc-feedback.err { color: #fca5a5; }
-  .spell-card.correct-card { border-color: var(--correct) !important; box-shadow: 0 0 0 2px var(--correct-bg); }
-  .spell-card.wrong-card   { border-color: var(--wrong) !important;   box-shadow: 0 0 0 2px var(--wrong-bg);   }
-  .spell-card.correct-card input { border-color: var(--correct) !important; }
-  .spell-card.wrong-card   input { border-color: var(--wrong)   !important; }
+/* ═══════════════════════════════════════════
+   MAIN LAYOUT
+═══════════════════════════════════════════ */
+main { max-width: 800px; margin: 0 auto; padding: 1.75rem 1rem 4rem; }
 
-  /* ── DRAG & DROP ORDER (S2) ── */
-  .drag-instruction { font-size: .82rem; color: var(--text2); margin-bottom: .85rem; }
-  .day-bank {
-    display: flex; flex-wrap: wrap; gap: .5rem;
-    background: var(--surface2);
-    border: 2px dashed var(--border);
-    border-radius: 10px;
-    padding: .75rem;
-    min-height: 52px;
-    margin-bottom: 1rem;
-  }
-  .order-slots {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: .4rem;
-    margin-bottom: .75rem;
-  }
-  @media(max-width:600px) {
-    .order-slots { grid-template-columns: repeat(4, 1fr); }
-  }
-  .order-slot {
-    min-height: 48px;
-    border: 2px dashed var(--border);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: .7rem; color: var(--text2);
-    transition: background .15s, border-color .15s;
-  }
-  .order-slot .slot-label { font-size: .65rem; color: var(--text2); }
-  .order-slot.drag-over { background: var(--surface2); border-color: var(--accent); }
-  .order-slot.correct-slot { border-color: var(--correct); background: var(--correct-bg); }
-  .order-slot.wrong-slot { border-color: var(--wrong); background: var(--wrong-bg); }
-  .drag-pill {
-    border-radius: 8px;
-    padding: .35rem .65rem;
-    font-size: .8rem;
-    font-weight: 800;
-    cursor: grab;
-    color: #1a1d2e;
-    transition: opacity .15s, transform .15s;
-    white-space: nowrap;
-  }
-  .drag-pill:active { cursor: grabbing; }
-  .drag-pill.dragging { opacity: .35; }
+/* ═══════════════════════════════════════════
+   SECTION CARDS
+═══════════════════════════════════════════ */
+.section-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 1.75rem;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow .2s;
+}
+.section-card:focus-within { box-shadow: var(--shadow); }
 
-  /* ── FILL-IN (S3) ── */
-  .fill-item {
-    background: var(--surface2);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    padding: .85rem 1rem;
-    margin-bottom: .7rem;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: .4rem;
-    font-size: .95rem;
-    font-weight: 600;
-  }
-  .fill-item select {
-    background: var(--surface);
-    color: var(--text);
-    border: 2px solid var(--accent);
-    border-radius: 6px;
-    padding: .25rem .5rem;
-    font-size: .9rem;
-    font-weight: 700;
-    cursor: pointer;
-    outline: none;
-  }
-  .fill-item select:disabled { opacity: .7; cursor: default; }
-  .fill-feedback {
-    font-size: .8rem;
-    font-weight: 700;
-    padding: .2rem .5rem;
-    border-radius: 6px;
-    margin-left: .3rem;
-  }
-  .fill-feedback.ok { background: var(--correct-bg); color: var(--correct); }
-  .fill-feedback.err { background: var(--wrong-bg); color: var(--wrong); }
+.section-header {
+  background: var(--surface2);
+  padding: .85rem 1.3rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+}
+.section-num {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  font-weight: 900;
+  font-size: .85rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+.section-header h2 { font-size: 1rem; font-weight: 800; color: var(--text); }
+.section-header .instr { font-size: .78rem; color: var(--text2); margin-top: .1rem; }
+.section-body { padding: 1.3rem; }
 
-  /* ── MULTIPLE CHOICE (S4) ── */
-  .mc-item { margin-bottom: 1rem; }
-  .mc-q { font-weight: 700; margin-bottom: .5rem; font-size: .95rem; }
-  .mc-opts { display: flex; flex-wrap: wrap; gap: .45rem; }
-  .mc-btn {
-    background: var(--surface2);
-    border: 2px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: .45rem .9rem;
-    font-size: .88rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background .15s, border-color .15s;
-    min-height: 44px;
-  }
-  .mc-btn:hover:not(:disabled) { border-color: var(--accent); background: var(--surface); }
-  .mc-btn.correct { background: var(--correct-bg); border-color: var(--correct); color: var(--correct); }
-  .mc-btn.wrong { background: var(--wrong-bg); border-color: var(--wrong); color: var(--wrong); }
-  .mc-btn:disabled { cursor: default; }
-  .mc-explanation {
-    font-size: .8rem;
-    color: var(--text2);
-    margin-top: .4rem;
-    padding: .35rem .6rem;
-    background: var(--surface2);
-    border-radius: 6px;
-    border-left: 3px solid var(--accent);
-    display: none;
-  }
-  .mc-explanation.show { display: block; }
+/* ═══════════════════════════════════════════
+   GLOSSARY
+═══════════════════════════════════════════ */
+#gloss-wrapper {
+  overflow: hidden;
+  max-height: 600px;
+  transition: max-height .5s ease, opacity .4s ease;
+  opacity: 1;
+}
+#gloss-wrapper.hidden {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.gloss-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: .55rem;
+  margin-bottom: .9rem;
+}
+.day-chip {
+  border-radius: 10px;
+  padding: .6rem .55rem;
+  text-align: center;
+  font-weight: 800;
+  font-size: .9rem;
+  color: #0d0d0d;
+  border: 2px solid transparent;
+  box-shadow: 0 3px 10px rgba(0,0,0,.25);
+  transition: transform .15s;
+}
+.day-chip:hover { transform: translateY(-2px); }
+.day-chip .day-num { font-size: .68rem; font-weight: 700; opacity: .75; display: block; margin-bottom: .1rem; }
 
-  /* ── BUTTONS ── */
-  .btn-row { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1rem; }
-  .btn-check, .btn-reset-section {
-    border: none;
-    border-radius: 8px;
-    padding: .55rem 1.2rem;
-    font-size: .88rem;
-    font-weight: 700;
-    cursor: pointer;
-    min-height: 44px;
-    transition: opacity .15s;
-  }
-  .btn-check { background: var(--accent); color: #fff; }
-  .btn-check:hover { opacity: .88; }
-  .btn-reset-section { background: var(--surface2); color: var(--text); border: 2px solid var(--border); }
-  .btn-reset-section:hover { border-color: var(--accent); }
+.gloss-notes { font-size: .8rem; color: var(--text2); margin-top: .5rem; }
+.gloss-notes strong { color: var(--text); }
 
-  /* ── TAB COUNTER BADGE ── */
-  #tab-counter {
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    background: var(--surface2);
-    border: 2px solid var(--border);
-    border-radius: 20px;
-    padding: .3rem .75rem;
-    font-size: .82rem;
-    font-weight: 800;
-    color: var(--text2);
-    transition: background .3s, border-color .3s, color .3s;
-    white-space: nowrap;
-  }
-  #tab-counter.warn-1 {
-    background: #fef9c3;
-    border-color: #ca8a04;
-    color: #78350f;
-  }
-  #tab-counter.warn-2 {
-    background: #fed7aa;
-    border-color: #ea580c;
-    color: #7c2d12;
-  }
-  #tab-counter.warn-3 {
-    background: var(--wrong-bg);
-    border-color: var(--wrong);
-    color: var(--wrong);
-    animation: pulse-badge 1.2s ease infinite;
-  }
-  @keyframes pulse-badge {
-    0%, 100% { transform: scale(1); }
-    50%       { transform: scale(1.08); }
-  }
-  [data-theme="dark"] #tab-counter.warn-1 { background:#422006aa; border-color:#ca8a04; color:#fde68a; }
-  [data-theme="dark"] #tab-counter.warn-2 { background:#431407aa; border-color:#ea580c; color:#fed7aa; }
+#gloss-toggle-row { display: flex; align-items: center; gap: .75rem; margin-top: 1rem; flex-wrap: wrap; }
 
-  /* Alert tab count line */
-  #tab-alert-count {
-    font-size: 1.1rem;
-    font-weight: 900;
-    color: var(--wrong);
-    margin-bottom: .4rem;
-  }
+.btn-start {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: .65rem 1.5rem;
+  font-size: .92rem;
+  font-weight: 800;
+  cursor: pointer;
+  min-height: 44px;
+  transition: opacity .15s, transform .1s;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+.btn-start:hover { opacity: .9; transform: translateY(-1px); }
 
-  /* Section result */
-  .section-result {
-    font-size: .85rem;
-    font-weight: 700;
-    margin-top: .7rem;
-    padding: .4rem .8rem;
-    border-radius: 8px;
-    display: none;
-  }
-  .section-result.show { display: inline-block; }
-  .section-result.all-ok { background: var(--correct-bg); color: var(--correct); }
-  .section-result.partial { background: #fef3c7; color: #92400e; }
+.btn-show-gloss {
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: .6rem 1.1rem;
+  font-size: .85rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+  transition: border-color .15s, color .15s;
+}
+.btn-show-gloss:hover { border-color: var(--accent); color: var(--text); }
 
-  /* ── FOOTER ── */
-  footer {
-    text-align: center;
-    font-size: .75rem;
-    color: var(--text2);
-    padding: 1.5rem 1rem;
-    border-top: 1px solid var(--border);
-  }
+/* ═══════════════════════════════════════════
+   SECTION 1 – SPELL IT
+═══════════════════════════════════════════ */
+.spell-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  gap: .85rem;
+}
+.spell-card {
+  border-radius: 12px;
+  padding: 1rem .85rem .8rem;
+  text-align: center;
+  border: 2px solid transparent;
+  transition: border-color .2s, box-shadow .2s, transform .15s;
+  position: relative;
+}
+.spell-card:hover { transform: translateY(-2px); }
+.spell-card .sc-num  { font-size: .72rem; font-weight: 800; opacity: .7; margin-bottom: .25rem; display: block; color: #0d0d0d; }
+.spell-card .sc-emoji { font-size: 2rem; display: block; margin-bottom: .45rem; }
+.spell-card .sc-hint  { font-size: .72rem; font-weight: 700; opacity: .7; margin-bottom: .55rem; letter-spacing: 1px; color: #0d0d0d; }
+.spell-card input[type="text"] {
+  width: 100%;
+  background: rgba(0,0,0,.25);
+  border: 2px solid rgba(255,255,255,.2);
+  border-radius: 8px;
+  padding: .4rem .5rem;
+  font-size: .95rem;
+  font-weight: 800;
+  text-align: center;
+  color: #fff;
+  outline: none;
+  transition: border-color .15s, background .15s;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
+}
+.spell-card input::placeholder { color: rgba(255,255,255,.45); font-weight: 500; }
+.spell-card input:focus { border-color: rgba(255,255,255,.6); background: rgba(0,0,0,.35); }
+.spell-card input:disabled { opacity: .8; cursor: default; }
+[data-theme="light"] .spell-card input[type="text"] {
+  background: rgba(255,255,255,.45);
+  border-color: rgba(0,0,0,.2);
+  color: #1a1d2e;
+}
+[data-theme="light"] .spell-card input::placeholder { color: rgba(0,0,0,.4); }
+[data-theme="light"] .spell-card input:focus { border-color: rgba(0,0,0,.5); }
 
-  /* ── SHAKE ANIMATION ── */
-  @keyframes shake {
-    0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)}
-    40%{transform:translateX(5px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
-  }
-  .shake { animation: shake .35s ease; }
+.spell-card .sc-feedback {
+  font-size: .76rem; font-weight: 700;
+  margin-top: .45rem; min-height: 1.15rem;
+  padding: .2rem .4rem; border-radius: 6px;
+  color: #0d0d0d;
+}
+.spell-card .sc-feedback.ok  { background: rgba(255,255,255,.2); }
+.spell-card .sc-feedback.err { background: rgba(0,0,0,.2); }
+
+.spell-card.correct-card { border-color: var(--correct) !important; box-shadow: 0 0 0 3px var(--correct-bg), 0 4px 16px rgba(0,0,0,.3); }
+.spell-card.wrong-card   { border-color: var(--wrong) !important;   box-shadow: 0 0 0 3px var(--wrong-bg),   0 4px 16px rgba(0,0,0,.3); }
+.spell-card.correct-card input { border-color: var(--correct) !important; }
+.spell-card.wrong-card   input { border-color: var(--wrong) !important; }
+
+/* ═══════════════════════════════════════════
+   SECTION 2 – DRAG ORDER
+═══════════════════════════════════════════ */
+.drag-instruction { font-size: .82rem; color: var(--text2); margin-bottom: .9rem; }
+
+.day-bank {
+  display: flex; flex-wrap: wrap; gap: .5rem;
+  background: var(--surface2);
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: .8rem;
+  min-height: 54px;
+  margin-bottom: 1rem;
+  transition: border-color .15s;
+}
+.day-bank.drag-over { border-color: var(--accent); }
+
+.order-slots {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: .4rem;
+  margin-bottom: .85rem;
+}
+@media(max-width: 600px) {
+  .order-slots { grid-template-columns: repeat(4, 1fr); }
+}
+.order-slot {
+  min-height: 50px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .7rem; color: var(--text2);
+  transition: background .15s, border-color .15s;
+}
+.order-slot .slot-label { font-size: .65rem; color: var(--text2); }
+.order-slot.drag-over   { background: var(--surface3); border-color: var(--accent); border-style: solid; }
+.order-slot.correct-slot { border-color: var(--correct); background: var(--correct-bg); border-style: solid; }
+.order-slot.wrong-slot   { border-color: var(--wrong);   background: var(--wrong-bg);   border-style: solid; }
+
+.drag-pill {
+  border-radius: 8px;
+  padding: .38rem .7rem;
+  font-size: .82rem;
+  font-weight: 800;
+  cursor: grab;
+  color: #0d0d0d;
+  transition: opacity .15s, transform .15s, box-shadow .15s;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+.drag-pill:hover   { transform: scale(1.05); box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+.drag-pill:active  { cursor: grabbing; }
+.drag-pill.dragging { opacity: .3; transform: scale(.95); }
+
+/* ═══════════════════════════════════════════
+   SECTION 3 – FILL IN THE BLANK
+═══════════════════════════════════════════ */
+.fill-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .9rem 1rem;
+  margin-bottom: .65rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem;
+  font-size: .95rem;
+  font-weight: 600;
+  transition: border-color .2s;
+}
+.fill-item:hover { border-color: var(--accent); }
+.fill-item select {
+  background: var(--surface);
+  color: var(--text);
+  border: 2px solid var(--accent);
+  border-radius: 7px;
+  padding: .28rem .55rem;
+  font-size: .9rem;
+  font-weight: 800;
+  cursor: pointer;
+  outline: none;
+  transition: border-color .15s;
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+.fill-item select:focus { border-color: var(--accent2); }
+.fill-item select:disabled { opacity: .7; cursor: default; }
+.fill-feedback {
+  font-size: .78rem;
+  font-weight: 700;
+  padding: .2rem .55rem;
+  border-radius: 6px;
+}
+.fill-feedback.ok  { background: var(--correct-bg); color: var(--correct); }
+.fill-feedback.err { background: var(--wrong-bg);   color: var(--wrong); }
+
+/* ═══════════════════════════════════════════
+   SECTION 4 – MULTIPLE CHOICE
+═══════════════════════════════════════════ */
+.mc-item { margin-bottom: 1.1rem; }
+.mc-q { font-weight: 700; margin-bottom: .55rem; font-size: .95rem; line-height: 1.5; }
+.mc-opts { display: flex; flex-wrap: wrap; gap: .45rem; }
+.mc-btn {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: .48rem .95rem;
+  font-size: .88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .1s;
+  min-height: 44px;
+}
+.mc-btn:hover:not(:disabled) { border-color: var(--accent); background: var(--surface3); transform: translateY(-1px); }
+.mc-btn.correct { background: var(--correct-bg); border-color: var(--correct); color: var(--correct); }
+.mc-btn.wrong   { background: var(--wrong-bg);   border-color: var(--wrong);   color: var(--wrong); }
+.mc-btn:disabled { cursor: default; }
+.mc-explanation {
+  font-size: .79rem;
+  color: var(--text2);
+  margin-top: .5rem;
+  padding: .4rem .7rem;
+  background: var(--surface2);
+  border-radius: 6px;
+  border-left: 3px solid var(--accent);
+  display: none;
+  line-height: 1.5;
+}
+.mc-explanation.show { display: block; }
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════ */
+.btn-row { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1rem; }
+.btn-check, .btn-reset-section {
+  border: none;
+  border-radius: 8px;
+  padding: .55rem 1.25rem;
+  font-size: .88rem;
+  font-weight: 800;
+  cursor: pointer;
+  min-height: 44px;
+  transition: opacity .15s, transform .1s;
+}
+.btn-check {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  box-shadow: 0 3px 12px var(--accent-glow);
+}
+.btn-check:hover { opacity: .9; transform: translateY(-1px); }
+.btn-reset-section {
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1.5px solid var(--border);
+}
+.btn-reset-section:hover { border-color: var(--accent); color: var(--text); }
+
+/* ═══════════════════════════════════════════
+   SECTION RESULT
+═══════════════════════════════════════════ */
+.section-result {
+  font-size: .85rem;
+  font-weight: 700;
+  margin-top: .8rem;
+  padding: .45rem .9rem;
+  border-radius: 8px;
+  display: none;
+  border: 1px solid transparent;
+}
+.section-result.show  { display: inline-block; }
+.section-result.all-ok  {
+  background: var(--correct-bg);
+  color: var(--correct);
+  border-color: var(--correct);
+}
+.section-result.partial {
+  background: rgba(251,191,36,.1);
+  color: #fbbf24;
+  border-color: rgba(251,191,36,.3);
+}
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+footer {
+  text-align: center;
+  font-size: .73rem;
+  color: var(--text2);
+  padding: 1.5rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ═══════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════ */
+@keyframes shake {
+  0%,100%{ transform: translateX(0); }
+  20%    { transform: translateX(-5px); }
+  40%    { transform: translateX(5px); }
+  60%    { transform: translateX(-4px); }
+  80%    { transform: translateX(4px); }
+}
+.shake { animation: shake .35s ease; }
+
+/* ═══════════════════════════════════════════
+   SCROLLBAR (dark)
+═══════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ═══════════════════════════════════════════
+   CELEBRATION / ENCOURAGEMENT OVERLAY
+═══════════════════════════════════════════ */
+#result-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(6px);
+}
+#result-overlay.show { display: flex; }
+
+/* canvas for fireworks — behind the box */
+#fireworks-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 7999;
+}
+
+#result-box {
+  position: relative;
+  background: var(--surface);
+  border-radius: 24px;
+  padding: 2.5rem 2.75rem;
+  text-align: center;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: var(--shadow);
+  animation: celebPop .4s cubic-bezier(.34,1.56,.64,1);
+  border: 2px solid transparent;
+}
+#result-box.celebrate { border-color: gold; box-shadow: 0 0 60px rgba(255,215,0,.25), var(--shadow); }
+#result-box.encourage { border-color: var(--accent); }
+
+@keyframes celebPop {
+  from { transform: scale(.5) translateY(40px); opacity: 0; }
+  to   { transform: scale(1)   translateY(0);    opacity: 1; }
+}
+
+.result-face {
+  font-size: 5rem;
+  line-height: 1;
+  margin-bottom: .5rem;
+  display: block;
+  animation: faceWiggle 1s ease infinite;
+}
+@keyframes faceWiggle {
+  0%,100% { transform: rotate(-8deg) scale(1); }
+  25%     { transform: rotate(8deg)  scale(1.1); }
+  50%     { transform: rotate(-5deg) scale(1); }
+  75%     { transform: rotate(5deg)  scale(1.08); }
+}
+.result-face.still { animation: none; }
+
+.result-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  margin-bottom: .4rem;
+  background: linear-gradient(135deg, #fbbf24, #f472b6, #7c88f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.result-title.encourage-title {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.result-score {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--text);
+  margin: .5rem 0;
+}
+.result-score span { color: var(--accent); }
+
+.result-msg {
+  font-size: .92rem;
+  color: var(--text2);
+  margin-bottom: 1.4rem;
+  line-height: 1.6;
+}
+
+.result-stars {
+  font-size: 1.6rem;
+  letter-spacing: .2rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.btn-result-close {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: .75rem 2.2rem;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 16px var(--accent-glow);
+  transition: opacity .15s, transform .1s;
+}
+.btn-result-close:hover { opacity: .9; transform: translateY(-1px); }
 </style>
 </head>
 <body oncontextmenu="return false" oncopy="return false" onpaste="return false" oncut="return false"
       onkeydown="blockKeys(event)">
 
-<!-- TAB ALERT -->
+<!-- ══ TAB ALERT ══════════════════════════════════ -->
 <div id="tab-alert">
   <div id="tab-alert-box">
     <div class="icon">⚠️</div>
@@ -508,7 +707,22 @@
   </div>
 </div>
 
-<!-- HEADER -->
+<!-- ══ FIREWORKS CANVAS ═══════════════════════════ -->
+<canvas id="fireworks-canvas"></canvas>
+
+<!-- ══ RESULT OVERLAY ═════════════════════════════ -->
+<div id="result-overlay">
+  <div id="result-box">
+    <span class="result-face" id="result-face">😊</span>
+    <div class="result-title" id="result-title">Great job!</div>
+    <div class="result-score" id="result-score">0 / 0</div>
+    <span class="result-stars" id="result-stars"></span>
+    <div class="result-msg" id="result-msg"></div>
+    <button class="btn-result-close" id="btn-result-close">¡Continuar! / Continue</button>
+  </div>
+</div>
+
+<!-- ══ HEADER ══════════════════════════════════════ -->
 <header>
   <div class="header-left">
     <h1>📅 Days of the Week</h1>
@@ -516,18 +730,16 @@
   </div>
   <div class="header-right">
     <div class="score-badge" id="total-score">⭐ 0 / 0</div>
-    <div id="tab-counter" title="Times you left this tab / Veces que saliste de esta pestaña">
+    <div id="tab-counter" title="Times you left this tab / Veces que saliste">
       👁 <span id="tab-count-num">0</span>
     </div>
-    <button class="theme-btn" id="theme-btn" title="Toggle theme">🌙</button>
+    <button class="theme-btn" id="theme-btn" title="Toggle theme">☀️</button>
   </div>
 </header>
 
 <main>
 
-  <!-- ══════════════════════════════════════
-       GLOSARIO
-  ══════════════════════════════════════ -->
+  <!-- ══ VOCABULARY ════════════════════════════════ -->
   <div class="section-card">
     <div class="section-header">
       <div class="section-num">📖</div>
@@ -539,10 +751,10 @@
     <div class="section-body">
       <div id="gloss-wrapper">
         <div class="gloss-grid" id="gloss-grid"></div>
-        <p style="margin-top:.85rem;font-size:.8rem;color:var(--text2);">
+        <p class="gloss-notes" style="margin-top:.85rem;">
           📌 <strong>Week order:</strong> Monday → Tuesday → Wednesday → Thursday → Friday → Saturday → Sunday
         </p>
-        <p style="margin-top:.3rem;font-size:.8rem;color:var(--text2);">
+        <p class="gloss-notes" style="margin-top:.35rem;">
           📌 <strong>Prepositions:</strong>
           <strong>after</strong> = después de &nbsp;|&nbsp;
           <strong>before</strong> = antes de &nbsp;|&nbsp;
@@ -560,15 +772,13 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       SECCIÓN 1 – FLASHCARD QUIZ
-  ══════════════════════════════════════ -->
+  <!-- ══ SECTION 1 – SPELL IT ══════════════════════ -->
   <div class="section-card" data-section="1">
     <div class="section-header">
       <div class="section-num">1</div>
       <div>
         <h2>Spell It! / ¡Escríbelo!</h2>
-        <div class="instr">Look at the color and number. Write the day. Press Enter to check. · Mira el color y número. Escribe el día. Presiona Enter para verificar.</div>
+        <div class="instr">Look at the color and emoji. Write the day in English. Press Enter to check. · Mira el color y emoji. Escribe el día. Presiona Enter para verificar.</div>
       </div>
     </div>
     <div class="section-body">
@@ -580,19 +790,17 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       SECCIÓN 2 – DRAG ORDER
-  ══════════════════════════════════════ -->
+  <!-- ══ SECTION 2 – DRAG ORDER ════════════════════ -->
   <div class="section-card">
     <div class="section-header">
       <div class="section-num">2</div>
       <div>
         <h2>Order the Week / Ordena la semana</h2>
-        <div class="instr">Drag the days in the correct order. · Arrastra los días en el orden correcto.</div>
+        <div class="instr">Drag the days into the correct order. · Arrastra los días en el orden correcto.</div>
       </div>
     </div>
     <div class="section-body">
-      <p class="drag-instruction">1 = Monday (first day) · 7 = Sunday (last day)</p>
+      <p class="drag-instruction">1 = Monday (first) · 7 = Sunday (last)</p>
       <div class="order-slots" id="order-slots"></div>
       <div class="day-bank" id="day-bank"></div>
       <div class="btn-row">
@@ -603,9 +811,7 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       SECCIÓN 3 – FILL IN THE BLANK
-  ══════════════════════════════════════ -->
+  <!-- ══ SECTION 3 – FILL IN THE BLANK ════════════ -->
   <div class="section-card">
     <div class="section-header">
       <div class="section-num">3</div>
@@ -623,9 +829,7 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       SECCIÓN 4 – MULTIPLE CHOICE
-  ══════════════════════════════════════ -->
+  <!-- ══ SECTION 4 – MULTIPLE CHOICE ══════════════ -->
   <div class="section-card">
     <div class="section-header">
       <div class="section-num">4</div>
@@ -645,26 +849,22 @@
 
 </main>
 
-<footer>
-  ESF 143 · Days of the Week A1 · English Practice
-</footer>
+<footer>ESF 143 · Days of the Week A1 · English Practice</footer>
 
 <script>
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 // DATA
-// ═══════════════════════════════════════════════════════
-
+// ═══════════════════════════════════════
 const DAYS = [
-  { name: 'Monday',    nameEs: 'Lunes',     abbr: 'MON', num: 1, color: '#f87171', emoji: '🔴' },
-  { name: 'Tuesday',   nameEs: 'Martes',    abbr: 'TUE', num: 2, color: '#fb923c', emoji: '🟠' },
-  { name: 'Wednesday', nameEs: 'Miércoles', abbr: 'WED', num: 3, color: '#facc15', emoji: '🟡' },
-  { name: 'Thursday',  nameEs: 'Jueves',    abbr: 'THU', num: 4, color: '#34d399', emoji: '🟢' },
-  { name: 'Friday',    nameEs: 'Viernes',   abbr: 'FRI', num: 5, color: '#a78bfa', emoji: '🟣' },
-  { name: 'Saturday',  nameEs: 'Sábado',    abbr: 'SAT', num: 6, color: '#818cf8', emoji: '🔵' },
-  { name: 'Sunday',    nameEs: 'Domingo',   abbr: 'SUN', num: 7, color: '#f472b6', emoji: '🩷' }
+  { name: 'Monday',    nameEs: 'Lunes',     abbr: 'MON', num: 1, color: '#ff6b6b', emoji: '🔴' },
+  { name: 'Tuesday',   nameEs: 'Martes',    abbr: 'TUE', num: 2, color: '#ff9f43', emoji: '🟠' },
+  { name: 'Wednesday', nameEs: 'Miércoles', abbr: 'WED', num: 3, color: '#f9ca24', emoji: '🟡' },
+  { name: 'Thursday',  nameEs: 'Jueves',    abbr: 'THU', num: 4, color: '#6bcb77', emoji: '🟢' },
+  { name: 'Friday',    nameEs: 'Viernes',   abbr: 'FRI', num: 5, color: '#c77dff', emoji: '🟣' },
+  { name: 'Saturday',  nameEs: 'Sábado',    abbr: 'SAT', num: 6, color: '#748ffc', emoji: '🔵' },
+  { name: 'Sunday',    nameEs: 'Domingo',   abbr: 'SUN', num: 7, color: '#ff6eb4', emoji: '🩷' }
 ];
 
-// Feedback messages pool
 const FB_CORRECT = [
   '🎉 Excellent! · ¡Excelente!',
   '⭐ Amazing! · ¡Increíble!',
@@ -673,83 +873,82 @@ const FB_CORRECT = [
   '✨ Brilliant! · ¡Brillante!'
 ];
 const FB_WRONG = [
-  '💪 Keep going, you can do it! · ¡Tú puedes, sigue intentando!',
-  '📚 Almost! Check the vocabulary. · ¡Casi! Revisa el vocabulario.',
-  '🌟 Try again, don\'t give up! · ¡Inténtalo de nuevo, no te rindas!',
+  '💪 Keep going! · ¡Tú puedes!',
+  '📚 Almost! Check the vocabulary. · ¡Casi! Revisa.',
+  '🌟 Try again! · ¡Inténtalo de nuevo!',
   '😊 One more try! · ¡Un intento más!'
 ];
 const FB_SECTION_PERFECT = [
-  '🏆 Amazing! Perfect score! · ¡Increíble! ¡Puntuación perfecta!',
-  '🎯 100%! You nailed it! · ¡100%! ¡Lo lograste!',
-  '🌟 Outstanding! All correct! · ¡Sobresaliente! ¡Todo correcto!'
+  '🏆 Amazing! Perfect score! · ¡Puntuación perfecta!',
+  '🎯 100%! You nailed it! · ¡100%!',
+  '🌟 Outstanding! All correct! · ¡Todo correcto!'
 ];
 const FB_SECTION_PARTIAL = [
-  '💪 Good effort! Review and try again. · ¡Buen esfuerzo! Revisa e intenta de nuevo.',
-  '📖 Almost there! Keep practising! · ¡Casi! ¡Sigue practicando!',
-  '😊 Not bad! You\'re getting better. · ¡Nada mal! Estás mejorando.'
+  '💪 Good effort! Review and try again. · ¡Buen esfuerzo!',
+  '📖 Almost there! Keep practising! · ¡Casi!',
+  "😊 Not bad! You're getting better. · ¡Mejorando!"
 ];
 function randFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-// Fill-in questions: "X comes [before/after] Y"
 const FILL_QUESTIONS = [
-  { sentence: ['Tuesday comes', '', 'Monday.'],       answer: 'after',  wrong: 'before',
-    explanation: 'Tuesday is day 2. Monday is day 1. Tuesday comes AFTER Monday. / Martes es el día 2. Lunes es el día 1.' },
-  { sentence: ['Wednesday comes', '', 'Thursday.'],   answer: 'before', wrong: 'after',
+  { sentence: ['Tuesday comes', '', 'Monday.'],     answer: 'after',  wrong: 'before',
+    explanation: 'Tuesday is day 2. Monday is day 1. Tuesday comes AFTER Monday. / Martes es el día 2. Lunes el día 1.' },
+  { sentence: ['Wednesday comes', '', 'Thursday.'], answer: 'before', wrong: 'after',
     explanation: 'Wednesday is day 3. Thursday is day 4. Wednesday comes BEFORE Thursday. / Miércoles es el día 3. Jueves el día 4.' },
-  { sentence: ['Friday comes', '', 'Saturday.'],      answer: 'before', wrong: 'after',
+  { sentence: ['Friday comes', '', 'Saturday.'],    answer: 'before', wrong: 'after',
     explanation: 'Friday is day 5. Saturday is day 6. Friday comes BEFORE Saturday. / Viernes es el día 5. Sábado el día 6.' },
-  { sentence: ['Sunday comes', '', 'Saturday.'],      answer: 'after',  wrong: 'before',
+  { sentence: ['Sunday comes', '', 'Saturday.'],    answer: 'after',  wrong: 'before',
     explanation: 'Sunday is day 7. Saturday is day 6. Sunday comes AFTER Saturday. / Domingo es el día 7. Sábado el día 6.' },
-  { sentence: ['Monday comes', '', 'Wednesday.'],     answer: 'before', wrong: 'after',
+  { sentence: ['Monday comes', '', 'Wednesday.'],   answer: 'before', wrong: 'after',
     explanation: 'Monday is day 1. Wednesday is day 3. Monday comes BEFORE Wednesday. / Lunes es el día 1. Miércoles el día 3.' },
-  { sentence: ['Thursday comes', '', 'Tuesday.'],     answer: 'after',  wrong: 'before',
+  { sentence: ['Thursday comes', '', 'Tuesday.'],   answer: 'after',  wrong: 'before',
     explanation: 'Thursday is day 4. Tuesday is day 2. Thursday comes AFTER Tuesday. / Jueves es el día 4. Martes el día 2.' }
 ];
 
-// Multiple choice: "which day is between X and Z?"
 const MC_QUESTIONS = [
   {
     q: 'Which day is between Monday and Wednesday? / ¿Qué día está entre lunes y miércoles?',
     correct: 'Tuesday',
     distractors: ['Thursday', 'Friday', 'Sunday'],
-    explanation: 'Monday → Tuesday → Wednesday. Tuesday (day 2) is between Monday (day 1) and Wednesday (day 3). / Martes está entre lunes y miércoles.'
+    explanation: 'Monday → Tuesday → Wednesday. Tuesday (day 2) is between Monday (1) and Wednesday (3).'
   },
   {
     q: 'Which day is between Wednesday and Friday? / ¿Qué día está entre miércoles y viernes?',
     correct: 'Thursday',
     distractors: ['Monday', 'Saturday', 'Tuesday'],
-    explanation: 'Wednesday → Thursday → Friday. Thursday (day 4) is between Wednesday (day 3) and Friday (day 5). / Jueves está entre miércoles y viernes.'
+    explanation: 'Wednesday → Thursday → Friday. Thursday (day 4) is between Wednesday (3) and Friday (5).'
   },
   {
     q: 'Which day is between Friday and Sunday? / ¿Qué día está entre viernes y domingo?',
     correct: 'Saturday',
     distractors: ['Monday', 'Wednesday', 'Thursday'],
-    explanation: 'Friday → Saturday → Sunday. Saturday (day 6) is between Friday (day 5) and Sunday (day 7). / Sábado está entre viernes y domingo.'
+    explanation: 'Friday → Saturday → Sunday. Saturday (day 6) is between Friday (5) and Sunday (7).'
   },
   {
     q: 'Which day is between Tuesday and Thursday? / ¿Qué día está entre martes y jueves?',
     correct: 'Wednesday',
     distractors: ['Monday', 'Friday', 'Saturday'],
-    explanation: 'Tuesday → Wednesday → Thursday. Wednesday (day 3) is between Tuesday (day 2) and Thursday (day 4). / Miércoles está entre martes y jueves.'
+    explanation: 'Tuesday → Wednesday → Thursday. Wednesday (day 3) is between Tuesday (2) and Thursday (4).'
   },
   {
-    q: 'Which day is between Sunday and Tuesday? / ¿Qué día está entre domingo y martes?  (Think of the week cycle!)',
+    q: 'Which day is between Sunday and Tuesday? (Think of the week cycle!) / ¿Entre domingo y martes?',
     correct: 'Monday',
     distractors: ['Friday', 'Saturday', 'Thursday'],
-    explanation: 'Sunday → Monday → Tuesday. Monday (day 1) is between Sunday and Tuesday in a weekly cycle. / Lunes está entre domingo y martes en el ciclo semanal.'
+    explanation: 'Sunday → Monday → Tuesday. Monday (day 1) is between Sunday and Tuesday in a weekly cycle.'
   }
 ];
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 // STATE
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 let s1Correct = 0;
-let s3Score = 0;
-let s4Score = 0;
+let s3Score   = 0;
+let s4Score   = 0;
+let celebrationShown = false;
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 // UTILS
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -761,17 +960,38 @@ function shuffle(arr) {
 
 function updateTotalScore() {
   const correct = s1Correct + s3Score + s4Score;
-  const total = DAYS.length + FILL_QUESTIONS.length + MC_QUESTIONS.length;
-  document.getElementById('total-score').textContent = `⭐ ${correct} / ${total}`;
+  const total   = DAYS.length + FILL_QUESTIONS.length + MC_QUESTIONS.length;
+  const el = document.getElementById('total-score');
+  if (el) el.textContent = `⭐ ${correct} / ${total}`;
+
+  if (!exercisesStarted) return;
+
+  const s1Done = document.querySelectorAll('#spell-grid input:disabled').length === DAYS.length;
+  const s3Done = (() => {
+    const sels = document.querySelectorAll('#fill-container select');
+    return sels.length === FILL_QUESTIONS.length && [...sels].every(s => s.value !== '');
+  })();
+  const s4Done = (() => {
+    const groups = document.querySelectorAll('#mc-container .mc-opts');
+    return groups.length === MC_QUESTIONS.length &&
+           [...groups].every(g => g.querySelector('button:disabled'));
+  })();
+
+  if (s1Done && s3Done && s4Done && !celebrationShown) {
+    celebrationShown = true;
+    const pct = Math.round((correct / total) * 100);
+    setTimeout(() => showResultOverlay(correct, total, pct), 600);
+  }
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 // GLOSSARY + START
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 let glossVisible = true;
 
 function buildGlossary() {
   const grid = document.getElementById('gloss-grid');
+  if (!grid) return;
   DAYS.forEach(d => {
     const chip = document.createElement('div');
     chip.className = 'day-chip';
@@ -782,17 +1002,21 @@ function buildGlossary() {
 }
 
 function startExercises() {
-  document.getElementById('gloss-wrapper').classList.add('hidden');
-  document.getElementById('btn-start').style.display = 'none';
-  document.getElementById('btn-show-gloss').style.display = 'inline-flex';
+  const wrapper = document.getElementById('gloss-wrapper');
+  const btnStart = document.getElementById('btn-start');
+  const btnGloss = document.getElementById('btn-show-gloss');
+  if (wrapper) wrapper.classList.add('hidden');
+  if (btnStart) btnStart.style.display = 'none';
+  if (btnGloss) btnGloss.style.display = 'inline-flex';
   glossVisible = false;
-  // Scroll smoothly to section 1
-  document.querySelector('[data-section="1"]').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const s1 = document.querySelector('[data-section="1"]');
+  if (s1) s1.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function toggleGloss() {
   const wrapper = document.getElementById('gloss-wrapper');
   const btn = document.getElementById('btn-show-gloss');
+  if (!wrapper || !btn) return;
   if (glossVisible) {
     wrapper.classList.add('hidden');
     btn.textContent = '📖 Show vocabulary / Ver vocabulario';
@@ -804,13 +1028,14 @@ function toggleGloss() {
   }
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 // SECTION 1 – SPELL IT
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 let s1Order = [];
 
 function buildSection1() {
   const grid = document.getElementById('spell-grid');
+  if (!grid) return;
   grid.innerHTML = '';
   s1Correct = 0;
   s1Order = shuffle(DAYS);
@@ -821,12 +1046,15 @@ function buildSection1() {
     card.style.background = d.color;
     card.dataset.idx = i;
 
+    const cardId = `spell-input-${i}`;
+    const fbId   = `spell-fb-${i}`;
+
     card.innerHTML = `
       <span class="sc-num">${d.emoji} ${d.nameEs}</span>
       <span class="sc-hint">_ _ _ _ _ _ _ _</span>
-      <input type="text" id="spell-input-${i}" maxlength="12"
+      <input type="text" id="${cardId}" maxlength="12"
              placeholder="Write in English…" autocomplete="off" spellcheck="false">
-      <div class="sc-feedback" id="spell-fb-${i}"></div>`;
+      <div class="sc-feedback" id="${fbId}"></div>`;
 
     grid.appendChild(card);
 
@@ -835,7 +1063,6 @@ function buildSection1() {
       if (e.key === 'Enter') checkSpell(i, d, card, inp);
     });
     inp.addEventListener('input', () => {
-      // Live: if they type the full correct word (case-insensitive), auto-check
       if (inp.value.trim().toLowerCase() === d.name.toLowerCase()) {
         checkSpell(i, d, card, inp);
       }
@@ -843,8 +1070,7 @@ function buildSection1() {
   });
 
   const res = document.getElementById('s1-result');
-  res.className = 'section-result';
-  res.textContent = '';
+  if (res) { res.className = 'section-result'; res.textContent = ''; }
   updateTotalScore();
 }
 
@@ -870,37 +1096,39 @@ function checkSpell(i, d, card, inp) {
     fb.className = 'sc-feedback err';
   }
 
-  // Check if all answered
-  const allAnswered = document.querySelectorAll('#spell-grid input:disabled').length;
-  if (allAnswered === DAYS.length) {
+  const allDone = document.querySelectorAll('#spell-grid input:disabled').length;
+  if (allDone === DAYS.length) {
     const res = document.getElementById('s1-result');
-    res.textContent = s1Correct === DAYS.length
-      ? randFrom(FB_SECTION_PERFECT)
-      : `${s1Correct}/7 — ${randFrom(FB_SECTION_PARTIAL)}`;
-    res.className = s1Correct === DAYS.length
-      ? 'section-result show all-ok' : 'section-result show partial';
+    if (res) {
+      res.textContent = s1Correct === DAYS.length
+        ? randFrom(FB_SECTION_PERFECT)
+        : `${s1Correct}/7 — ${randFrom(FB_SECTION_PARTIAL)}`;
+      res.className = s1Correct === DAYS.length
+        ? 'section-result show all-ok' : 'section-result show partial';
+    }
   }
   updateTotalScore();
 }
 
 function resetSection1() {
   s1Correct = 0;
+  celebrationShown = false;
   buildSection1();
   updateTotalScore();
 }
 
-// ═══════════════════════════════════════════════════════
-// SECTION 2 – DRAG & DROP ORDER
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
+// SECTION 2 – DRAG & DROP
+// ═══════════════════════════════════════
 let draggedPill = null;
 
 function buildSection2() {
   const slotsEl = document.getElementById('order-slots');
-  const bankEl = document.getElementById('day-bank');
+  const bankEl  = document.getElementById('day-bank');
+  if (!slotsEl || !bankEl) return;
   slotsEl.innerHTML = '';
-  bankEl.innerHTML = '';
+  bankEl.innerHTML  = '';
 
-  // Create 7 slots
   for (let i = 1; i <= 7; i++) {
     const slot = document.createElement('div');
     slot.className = 'order-slot';
@@ -910,17 +1138,14 @@ function buildSection2() {
     slotsEl.appendChild(slot);
   }
 
-  // Create shuffled pills in bank
   const shuffled = shuffle(DAYS);
   shuffled.forEach(d => {
-    const pill = createPill(d);
-    bankEl.appendChild(pill);
+    bankEl.appendChild(createPill(d));
   });
   initDropZone(bankEl);
 
-  document.getElementById('s2-result').className = 'section-result';
-  document.getElementById('s2-result').textContent = '';
-  // Clear slot states
+  const res = document.getElementById('s2-result');
+  if (res) { res.className = 'section-result'; res.textContent = ''; }
   document.querySelectorAll('.order-slot').forEach(s => {
     s.classList.remove('correct-slot', 'wrong-slot');
   });
@@ -930,7 +1155,7 @@ function createPill(d) {
   const pill = document.createElement('div');
   pill.className = 'drag-pill';
   pill.style.background = d.color;
-  pill.dataset.num = d.num;
+  pill.dataset.num  = d.num;
   pill.dataset.name = d.name;
   pill.draggable = true;
   pill.textContent = d.name;
@@ -962,24 +1187,17 @@ function initDropZone(zone) {
     const isBank = zone.id === 'day-bank';
 
     if (isSlot) {
-      const existingPill = zone.querySelector('.drag-pill');
-      if (existingPill) {
-        // Swap: send existing pill back to bank
-        document.getElementById('day-bank').appendChild(existingPill);
-      }
-      // Remove slot-label if slot was empty
+      const existing = zone.querySelector('.drag-pill');
+      if (existing) document.getElementById('day-bank').appendChild(existing);
       const lbl = zone.querySelector('.slot-label');
       if (lbl) zone.removeChild(lbl);
       zone.appendChild(draggedPill);
     } else if (isBank) {
       zone.appendChild(draggedPill);
-      // Restore slot label if slot is now empty
-      const sourceSlot = draggedPill.closest
-        ? document.querySelector(`.order-slot:not(:has(.drag-pill))`)
-        : null;
     }
+
     // Restore empty slot labels
-    document.querySelectorAll('.order-slot').forEach((s, idx) => {
+    document.querySelectorAll('.order-slot').forEach(s => {
       if (!s.querySelector('.drag-pill') && !s.querySelector('.slot-label')) {
         const lbl = document.createElement('span');
         lbl.className = 'slot-label';
@@ -996,10 +1214,7 @@ function checkSection2() {
   let correct = 0;
   slots.forEach(slot => {
     const pill = slot.querySelector('.drag-pill');
-    if (!pill) {
-      slot.classList.add('wrong-slot');
-      return;
-    }
+    if (!pill) { slot.classList.add('wrong-slot'); return; }
     const pos = parseInt(slot.dataset.pos);
     const num = parseInt(pill.dataset.num);
     if (pos === num) {
@@ -1012,6 +1227,7 @@ function checkSection2() {
     }
   });
   const res = document.getElementById('s2-result');
+  if (!res) return;
   if (correct === 7) {
     res.textContent = randFrom(FB_SECTION_PERFECT);
     res.className = 'section-result show all-ok';
@@ -1021,15 +1237,14 @@ function checkSection2() {
   }
 }
 
-function resetSection2() {
-  buildSection2();
-}
+function resetSection2() { celebrationShown = false; buildSection2(); }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 // SECTION 3 – FILL IN THE BLANK
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 function buildSection3() {
   const container = document.getElementById('fill-container');
+  if (!container) return;
   container.innerHTML = '';
   s3Score = 0;
 
@@ -1039,11 +1254,11 @@ function buildSection3() {
     item.className = 'fill-item';
     item.dataset.idx = i;
 
-    // Build sentence with select
     const opts = shuffle([q.answer, q.wrong]);
     item.innerHTML = `
       <span>${q.sentence[0]}</span>
-      <select id="fill-sel-${i}" data-answer="${q.answer}" data-explanation="${q.explanation}" data-idx="${i}">
+      <select id="fill-sel-${i}" data-answer="${q.answer}"
+              data-explanation="${q.explanation}" data-idx="${i}">
         <option value="">– choose –</option>
         ${opts.map(o => `<option value="${o}">${o}</option>`).join('')}
       </select>
@@ -1055,13 +1270,14 @@ function buildSection3() {
     sel.addEventListener('change', () => onFillChange(sel));
   });
 
-  document.getElementById('s3-result').className = 'section-result';
-  document.getElementById('s3-result').textContent = '';
+  const res = document.getElementById('s3-result');
+  if (res) { res.className = 'section-result'; res.textContent = ''; }
   updateTotalScore();
 }
 
 function onFillChange(sel) {
   const fb = document.getElementById(`fill-fb-${sel.dataset.idx}`);
+  if (!fb) return;
   if (!sel.value) { fb.textContent = ''; fb.className = 'fill-feedback'; return; }
 
   if (sel.value === sel.dataset.answer) {
@@ -1072,7 +1288,6 @@ function onFillChange(sel) {
     fb.className = 'fill-feedback err';
   }
 
-  // Recalculate section score
   let score = 0;
   document.querySelectorAll('#fill-container select').forEach(s => {
     if (s.value && s.value === s.dataset.answer) score++;
@@ -1081,25 +1296,29 @@ function onFillChange(sel) {
 
   const total = FILL_QUESTIONS.length;
   const res = document.getElementById('s3-result');
-  res.textContent = score === total
-    ? randFrom(FB_SECTION_PERFECT)
-    : `${score}/${total} — ${randFrom(FB_SECTION_PARTIAL)}`;
-  res.className = score === total ? 'section-result show all-ok' : 'section-result show partial';
-
+  if (res) {
+    res.textContent = score === total
+      ? randFrom(FB_SECTION_PERFECT)
+      : `${score}/${total} — ${randFrom(FB_SECTION_PARTIAL)}`;
+    res.className = score === total
+      ? 'section-result show all-ok' : 'section-result show partial';
+  }
   updateTotalScore();
 }
 
 function resetSection3() {
   s3Score = 0;
+  celebrationShown = false;
   buildSection3();
   updateTotalScore();
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 // SECTION 4 – MULTIPLE CHOICE
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 function buildSection4() {
   const container = document.getElementById('mc-container');
+  if (!container) return;
   container.innerHTML = '';
   s4Score = 0;
 
@@ -1117,14 +1336,13 @@ function buildSection4() {
     container.appendChild(item);
   });
 
-  // Attach listeners
   document.querySelectorAll('.mc-btn').forEach(btn => {
     const qi = parseInt(btn.dataset.qi);
     btn.addEventListener('click', () => onMcClick(btn, shuffled[qi].correct, shuffled[qi].explanation, qi));
   });
 
-  document.getElementById('s4-result').className = 'section-result';
-  document.getElementById('s4-result').textContent = '';
+  const res = document.getElementById('s4-result');
+  if (res) { res.className = 'section-result'; res.textContent = ''; }
   updateTotalScore();
 }
 
@@ -1135,35 +1353,42 @@ function onMcClick(btn, correct, explanation, qi) {
     if (b.dataset.val === correct) b.classList.add('correct');
     else if (b === btn) b.classList.add('wrong');
   });
-  document.getElementById(`mc-exp-${qi}`).classList.add('show');
+  const expEl = document.getElementById(`mc-exp-${qi}`);
+  if (expEl) expEl.classList.add('show');
 
-  if (btn.dataset.val === correct) s4Score++;
-  else { btn.classList.add('shake'); setTimeout(() => btn.classList.remove('shake'), 400); }
+  if (btn.dataset.val === correct) {
+    s4Score++;
+  } else {
+    btn.classList.add('shake');
+    setTimeout(() => btn.classList.remove('shake'), 400);
+  }
 
-  const total = MC_QUESTIONS.length;
-  const res = document.getElementById('s4-result');
-  let answered = 0;
-  document.querySelectorAll(`#mc-container .mc-opts`).forEach(grp => {
+  const total    = MC_QUESTIONS.length;
+  const res      = document.getElementById('s4-result');
+  let answered   = 0;
+  document.querySelectorAll('#mc-container .mc-opts').forEach(grp => {
     if (grp.querySelector('button:disabled')) answered++;
   });
   const allDone = answered === total;
-  res.textContent = allDone
-    ? (s4Score === total ? randFrom(FB_SECTION_PERFECT) : `${s4Score}/${total} — ${randFrom(FB_SECTION_PARTIAL)}`)
-    : `${s4Score}/${total} so far · ${s4Score}/${total} hasta ahora`;
-  res.className = (allDone && s4Score === total) ? 'section-result show all-ok' : 'section-result show partial';
-
+  if (res) {
+    res.textContent = allDone
+      ? (s4Score === total ? randFrom(FB_SECTION_PERFECT) : `${s4Score}/${total} — ${randFrom(FB_SECTION_PARTIAL)}`)
+      : `${s4Score}/${total} so far · ${s4Score}/${total} hasta ahora`;
+    res.className = (allDone && s4Score === total) ? 'section-result show all-ok' : 'section-result show partial';
+  }
   updateTotalScore();
 }
 
 function resetSection4() {
   s4Score = 0;
+  celebrationShown = false;
   buildSection4();
   updateTotalScore();
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 // KEYBOARD BLOCKER
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 function blockKeys(e) {
   const blocked = [
     e.ctrlKey && ['c','a','u','s','p','f','l','t','w','r'].includes(e.key.toLowerCase()),
@@ -1177,63 +1402,48 @@ function blockKeys(e) {
   }
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 // TAB VISIBILITY COUNTER
-// ═══════════════════════════════════════════════════════
-let tabLeaveCount = 0;
-let exercisesStarted = false; // only count after exercises begin
+// ═══════════════════════════════════════
+let tabLeaveCount    = 0;
+let exercisesStarted = false;
 
 const TAB_MESSAGES = [
-  { // 1st time
-    msg: 'Saliste de esta pestaña.<br><em>You left this tab.</em>',
-    subEs: '¡Mantén el foco!', subEn: 'Stay focused!'
-  },
-  { // 2nd time
-    msg: 'Segunda vez que sales. 👀<br><em>Second time you left.</em>',
-    subEs: '¡Recuerda que el maestro puede ver esto!',
-    subEn: 'Remember the teacher can see this!'
-  },
-  { // 3rd time
-    msg: '¡Ya van tres veces! 🚨<br><em>That\'s three times already!</em>',
-    subEs: '¡Échale más ganas, tú puedes!',
-    subEn: 'You can do it — keep trying!'
-  },
-  { // 4+ times (default)
-    msg: '¡Concentración! 🚨<br><em>Focus!</em>',
-    subEs: '¡Vuelve al ejercicio!',
-    subEn: 'Get back to the exercise!'
-  }
+  { msg: 'Saliste de esta pestaña.<br><em>You left this tab.</em>',
+    subEs: '¡Mantén el foco!', subEn: 'Stay focused!' },
+  { msg: 'Segunda vez que sales. 👀<br><em>Second time you left.</em>',
+    subEs: '¡El maestro puede ver esto!', subEn: 'The teacher can see this!' },
+  { msg: '¡Ya van tres veces! 🚨<br><em>Three times already!</em>',
+    subEs: '¡Échale más ganas!', subEn: 'You can do it — keep trying!' },
+  { msg: '¡Concentración! 🚨<br><em>Focus!</em>',
+    subEs: '¡Vuelve al ejercicio!', subEn: 'Get back to the exercise!' }
 ];
 
 function updateTabBadge() {
   const badge = document.getElementById('tab-counter');
   const num   = document.getElementById('tab-count-num');
+  if (!badge || !num) return;
   num.textContent = tabLeaveCount;
-
   badge.classList.remove('warn-1', 'warn-2', 'warn-3');
-  if (tabLeaveCount === 1) badge.classList.add('warn-1');
+  if (tabLeaveCount === 1)      badge.classList.add('warn-1');
   else if (tabLeaveCount === 2) badge.classList.add('warn-2');
-  else if (tabLeaveCount >= 3) badge.classList.add('warn-3');
+  else if (tabLeaveCount >= 3)  badge.classList.add('warn-3');
 }
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    // Page is being hidden — count only if exercises have started
     if (exercisesStarted) tabLeaveCount++;
     return;
   }
-  // They came back — show alert only if exercises have started
   if (!exercisesStarted || tabLeaveCount === 0) return;
-
   updateTabBadge();
 
   const idx = Math.min(tabLeaveCount - 1, TAB_MESSAGES.length - 1);
-  const m = TAB_MESSAGES[idx];
-  document.getElementById('tab-alert-count').textContent =
-    `Salidas / Exits: ${tabLeaveCount}`;
-  document.getElementById('tab-alert-msg').innerHTML =
-    `${m.msg}<br><br><strong>${m.subEs}</strong><br><em>${m.subEn}</em>`;
-
+  const m   = TAB_MESSAGES[idx];
+  const countEl = document.getElementById('tab-alert-count');
+  const msgEl   = document.getElementById('tab-alert-msg');
+  if (countEl) countEl.textContent = `Salidas / Exits: ${tabLeaveCount}`;
+  if (msgEl)   msgEl.innerHTML = `${m.msg}<br><br><strong>${m.subEs}</strong><br><em>${m.subEn}</em>`;
   document.getElementById('tab-alert').classList.add('show');
 });
 
@@ -1241,34 +1451,228 @@ document.getElementById('tab-alert-close').addEventListener('click', () => {
   document.getElementById('tab-alert').classList.remove('show');
 });
 
-// Hook into startExercises to begin counting
+// Intercept startExercises to begin counting
 const _origStart = startExercises;
 startExercises = function() {
   exercisesStarted = true;
   _origStart();
 };
 
-// ═══════════════════════════════════════════════════════
-// THEME TOGGLE
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
+// THEME TOGGLE  (dark = default)
+// ═══════════════════════════════════════
 const themeBtn = document.getElementById('theme-btn');
-function applyTheme(dark) {
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
-  themeBtn.textContent = dark ? '☀️' : '🌙';
-  try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch(e){}
-}
-themeBtn.addEventListener('click', () => {
-  applyTheme(document.documentElement.getAttribute('data-theme') !== 'dark');
-});
-// Load saved theme
-try {
-  const saved = localStorage.getItem('theme');
-  if (saved === 'dark') applyTheme(true);
-} catch(e){}
 
-// ═══════════════════════════════════════════════════════
+function applyTheme(light) {
+  document.documentElement.setAttribute('data-theme', light ? 'light' : '');
+  if (themeBtn) themeBtn.textContent = light ? '🌙' : '☀️';
+  try { localStorage.setItem('days-theme', light ? 'light' : 'dark'); } catch(e) {}
+}
+
+themeBtn.addEventListener('click', () => {
+  applyTheme(document.documentElement.getAttribute('data-theme') !== 'light');
+});
+
+// Load saved theme — default dark
+(function() {
+  try {
+    const saved = localStorage.getItem('days-theme');
+    if (saved === 'light') applyTheme(true);
+    // else stay dark (default)
+  } catch(e) {}
+})();
+
+
+// ═══════════════════════════════════════
+// CELEBRATION / ENCOURAGEMENT SYSTEM
+// ═══════════════════════════════════════
+
+// ── Fireworks ───────────────────────────
+const fwCanvas = document.getElementById('fireworks-canvas');
+const fwCtx    = fwCanvas ? fwCanvas.getContext('2d') : null;
+let fwParticles = [];
+let fwAnimId    = null;
+
+function resizeCanvas() {
+  if (!fwCanvas) return;
+  fwCanvas.width  = window.innerWidth;
+  fwCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function launchFirework() {
+  const x  = Math.random() * window.innerWidth;
+  const y  = Math.random() * window.innerHeight * 0.6;
+  const colors = ['#fbbf24','#f472b6','#7c88f7','#4ade80','#fb923c','#c77dff','#ff6b6b','#748ffc'];
+  const count  = 60 + Math.floor(Math.random() * 40);
+  for (let i = 0; i < count; i++) {
+    const angle  = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+    const speed  = 2 + Math.random() * 5;
+    fwParticles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      alpha: 1,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      radius: 2 + Math.random() * 2.5,
+      gravity: 0.07 + Math.random() * 0.05,
+      decay: 0.012 + Math.random() * 0.012
+    });
+  }
+}
+
+function animateFireworks() {
+  if (!fwCtx || !fwCanvas) return;
+  fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+  fwParticles.forEach(p => {
+    fwCtx.globalAlpha = p.alpha;
+    fwCtx.beginPath();
+    fwCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+    fwCtx.fillStyle = p.color;
+    fwCtx.fill();
+    p.x     += p.vx;
+    p.y     += p.vy;
+    p.vy    += p.gravity;
+    p.alpha -= p.decay;
+  });
+  fwCtx.globalAlpha = 1;
+  fwParticles = fwParticles.filter(p => p.alpha > 0);
+  fwAnimId = requestAnimationFrame(animateFireworks);
+}
+
+function startFireworks(duration) {
+  fwParticles = [];
+  launchFirework();
+  const interval = setInterval(launchFirework, 380);
+  animateFireworks();
+  setTimeout(() => {
+    clearInterval(interval);
+    // let remaining particles fade naturally — stop loop when empty
+    const waitFade = setInterval(() => {
+      if (fwParticles.length === 0) {
+        clearInterval(waitFade);
+        cancelAnimationFrame(fwAnimId);
+        if (fwCtx) fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+      }
+    }, 100);
+  }, duration);
+}
+
+// ── Fanfare (Web Audio API) ──────────────
+function playFanfare() {
+  try {
+    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+
+    // Notes: C5-E5-G5-C6 staggered
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    const times = [0, 0.18, 0.32, 0.48];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + times[i]);
+      g.gain.setValueAtTime(0, ctx.currentTime + times[i]);
+      g.gain.linearRampToValueAtTime(0.22, ctx.currentTime + times[i] + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + times[i] + 0.55);
+      osc.start(ctx.currentTime + times[i]);
+      osc.stop(ctx.currentTime + times[i] + 0.55);
+    });
+    // Chord swell at end
+    [523.25, 659.25, 783.99].forEach(freq => {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0, ctx.currentTime + 0.9);
+      g.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 1.05);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.9);
+      osc.start(ctx.currentTime + 0.9);
+      osc.stop(ctx.currentTime + 1.9);
+    });
+  } catch(e) { /* audio blocked — no problem */ }
+}
+
+// ── Gentle chime for encouragement ──────
+function playEncourageSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [392, 494, 587].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0, ctx.currentTime + i * 0.2);
+      g.gain.linearRampToValueAtTime(0.15, ctx.currentTime + i * 0.2 + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.2 + 0.5);
+      osc.start(ctx.currentTime + i * 0.2);
+      osc.stop(ctx.currentTime + i * 0.2 + 0.5);
+    });
+  } catch(e) {}
+}
+
+// ── Show overlay ─────────────────────────
+function showResultOverlay(correct, total, pct) {
+  const overlay  = document.getElementById('result-overlay');
+  const box      = document.getElementById('result-box');
+  const faceEl   = document.getElementById('result-face');
+  const titleEl  = document.getElementById('result-title');
+  const scoreEl  = document.getElementById('result-score');
+  const starsEl  = document.getElementById('result-stars');
+  const msgEl    = document.getElementById('result-msg');
+  if (!overlay) return;
+
+  if (pct >= 80) {
+    // ── CELEBRATION ──
+    const is100 = pct === 100;
+    faceEl.textContent  = is100 ? '🥳' : '😄';
+    faceEl.className    = 'result-face';
+    titleEl.textContent = is100 ? '🏆 Perfect Score! · ¡Puntaje perfecto!' : '🎉 Excellent! · ¡Excelente!';
+    titleEl.className   = 'result-title';
+    scoreEl.innerHTML   = `<span>${correct}</span> / ${total} &nbsp;(${pct}%)`;
+    starsEl.textContent = pct === 100 ? '⭐⭐⭐⭐⭐' : pct >= 90 ? '⭐⭐⭐⭐' : '⭐⭐⭐';
+    msgEl.innerHTML     = pct === 100
+      ? 'You answered every question correctly! Outstanding work! · ¡Respondiste todo correctamente! ¡Extraordinario!'
+      : 'You passed with a great score! Keep practising to reach 100%! · ¡Aprobaste con excelente puntaje!';
+    box.className = 'celebrate';
+    overlay.classList.add('show');
+    playFanfare();
+    startFireworks(3500);
+  } else {
+    // ── ENCOURAGEMENT ──
+    faceEl.textContent  = pct >= 60 ? '🙂' : '😅';
+    faceEl.className    = 'result-face still';
+    titleEl.textContent = '💪 Keep Practising! · ¡Sigue practicando!';
+    titleEl.className   = 'result-title encourage-title';
+    scoreEl.innerHTML   = `<span>${correct}</span> / ${total} &nbsp;(${pct}%)`;
+    starsEl.textContent = pct >= 60 ? '⭐⭐' : '⭐';
+    msgEl.innerHTML     = pct >= 60
+      ? "You're getting there! Review the vocabulary and try again. · ¡Vas bien! Repasa y vuelve a intentarlo."
+      : 'Practice makes perfect! Review the vocabulary section and try again. · ¡La práctica hace al maestro! Revisa el vocabulario.';
+    box.className = 'encourage';
+    overlay.classList.add('show');
+    playEncourageSound();
+  }
+}
+
+document.getElementById('btn-result-close').addEventListener('click', () => {
+  document.getElementById('result-overlay').classList.remove('show');
+});
+
+// Reset celebration flag when any section resets
+function resetCelebration() { celebrationShown = false; }
+
+// ═══════════════════════════════════════
 // INIT
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 buildGlossary();
 buildSection1();
 buildSection2();
