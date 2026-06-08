@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="es" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google" content="notranslate">
+<title>Days of the Week – A1</title>
+<style>
+  :root {
+    --bg: #f5f7ff;
+    --surface: #ffffff;
+    --surface2: #eef1fb;
+    --text: #1a1d2e;
+    --text2: #555870;
+    --border: #d0d4ef;
+    --accent: #3a4fd4;
+    --accent2: #6c63ff;
+    --correct: #16a34a;
+    --correct-bg: #dcfce7;
+    --wrong: #dc2626;
+    --wrong-bg: #fee2e2;
+    --shadow: 0 2px 12px rgba(60,70,180,.10);
+    --radius: 12px;
+
+    /* Day colors */
+    --mon: #f87171;
+    --tue: #fb923c;
+    --wed: #facc15;
+    --thu: #34d399;
+    --fri: #a78bfa;
+    --sat: #818cf8;
+    --sun: #f472b6;
+  }
+  [data-theme="dark"] {
+    --bg: #0f1123;
+    --surface: #1a1d35;
+    --surface2: #252847;
+    --text: #e8eaf6;
+    --text2: #9fa3c0;
+    --border: #353860;
+    --accent: #7c88f7;
+    --accent2: #a89cf8;
+    --correct: #4ade80;
+    --correct-bg: #14532d55;
+    --wrong: #f87171;
+    --wrong-bg: #7f1d1d55;
+    --shadow: 0 2px 12px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    transition: background .3s, color .3s;
+  }
+
+  /* ── ALERT DE PESTAÑA ── */
+  #tab-alert {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.82);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+  #tab-alert.show { display: flex; }
+  #tab-alert-box {
+    background: var(--surface);
+    border: 3px solid var(--wrong);
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    text-align: center;
+    max-width: 380px;
+    box-shadow: 0 8px 40px rgba(220,38,38,.3);
+  }
+  #tab-alert-box .icon { font-size: 3rem; margin-bottom: .5rem; }
+  #tab-alert-box h2 { color: var(--wrong); margin-bottom: .5rem; }
+  #tab-alert-box p { color: var(--text2); font-size: .95rem; margin-bottom: 1.2rem; }
+  #tab-alert-close {
+    background: var(--wrong);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: .6rem 2rem;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    padding: .9rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left h1 { font-size: 1.15rem; font-weight: 800; color: var(--accent); }
+  .header-left span { font-size: .78rem; color: var(--text2); }
+  .header-right { display: flex; align-items: center; gap: .75rem; }
+  .score-badge {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: .3rem .85rem;
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  /* Theme toggle */
+  .theme-btn {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    width: 38px; height: 38px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+  }
+  .theme-btn:hover { background: var(--border); }
+
+  /* ── MAIN ── */
+  main { max-width: 780px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+  /* ── SECTION CARDS ── */
+  .section-card {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .section-header {
+    background: var(--surface2);
+    padding: .75rem 1.2rem;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+  .section-header .section-num {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 28px; height: 28px;
+    font-weight: 800;
+    font-size: .85rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 1rem; font-weight: 700; }
+  .section-header .instr { font-size: .8rem; color: var(--text2); margin-left: .2rem; }
+  .section-body { padding: 1.2rem; }
+
+  /* ── GLOSSARY HIDE/SHOW ── */
+  #gloss-wrapper {
+    overflow: hidden;
+    max-height: 500px;
+    transition: max-height .5s ease, opacity .4s ease;
+    opacity: 1;
+  }
+  #gloss-wrapper.hidden {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  #gloss-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-top: .9rem;
+    flex-wrap: wrap;
+  }
+  .btn-start {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: .6rem 1.4rem;
+    font-size: .92rem;
+    font-weight: 800;
+    cursor: pointer;
+    min-height: 44px;
+    transition: opacity .15s, transform .1s;
+    box-shadow: 0 2px 8px rgba(60,70,180,.25);
+  }
+  .btn-start:hover { opacity: .88; transform: translateY(-1px); }
+  .btn-show-gloss {
+    background: var(--surface2);
+    color: var(--text2);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: .55rem 1.1rem;
+    font-size: .85rem;
+    font-weight: 700;
+    cursor: pointer;
+    min-height: 44px;
+    transition: border-color .15s;
+  }
+  .btn-show-gloss:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ── GLOSSARY ── */
+  .gloss-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: .6rem;
+  }
+  .day-chip {
+    border-radius: 10px;
+    padding: .55rem .6rem;
+    text-align: center;
+    font-weight: 800;
+    font-size: .88rem;
+    color: #1a1d2e;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
+  }
+  .day-chip .day-num { font-size: .7rem; font-weight: 600; opacity: .65; display: block; }
+
+  /* ── SPELL IT (S1) ── */
+  .spell-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: .85rem;
+  }
+  .spell-card {
+    border-radius: 12px;
+    padding: .9rem .75rem .75rem;
+    text-align: center;
+    border: 3px solid transparent;
+    transition: border-color .2s, box-shadow .2s;
+    position: relative;
+  }
+  .spell-card .sc-num {
+    font-size: .72rem; font-weight: 800; opacity: .65; margin-bottom: .25rem; display: block;
+  }
+  .spell-card .sc-emoji { font-size: 1.8rem; display: block; margin-bottom: .45rem; }
+  .spell-card .sc-hint {
+    font-size: .75rem; font-weight: 700; opacity: .7;
+    margin-bottom: .5rem; letter-spacing: .5px;
+  }
+  .spell-card input[type="text"] {
+    width: 100%;
+    background: rgba(255,255,255,.45);
+    border: 2px solid rgba(0,0,0,.18);
+    border-radius: 8px;
+    padding: .35rem .5rem;
+    font-size: .95rem;
+    font-weight: 800;
+    text-align: center;
+    color: #1a1d2e;
+    outline: none;
+    transition: border-color .15s;
+  }
+  [data-theme="dark"] .spell-card input[type="text"] {
+    background: rgba(0,0,0,.3);
+    color: #e8eaf6;
+    border-color: rgba(255,255,255,.25);
+  }
+  .spell-card input[type="text"]:focus { border-color: rgba(0,0,0,.5); }
+  .spell-card input[type="text"]:disabled { opacity: .8; cursor: default; }
+  .spell-card .sc-feedback {
+    font-size: .78rem; font-weight: 700;
+    margin-top: .4rem; min-height: 1.1rem;
+    padding: .2rem .4rem; border-radius: 6px;
+  }
+  .spell-card .sc-feedback.ok  { background: rgba(0,0,0,.15); color: #14532d; }
+  .spell-card .sc-feedback.err { background: rgba(0,0,0,.12); color: #7f1d1d; }
+  [data-theme="dark"] .spell-card .sc-feedback.ok  { color: #bbf7d0; }
+  [data-theme="dark"] .spell-card .sc-feedback.err { color: #fca5a5; }
+  .spell-card.correct-card { border-color: var(--correct) !important; box-shadow: 0 0 0 2px var(--correct-bg); }
+  .spell-card.wrong-card   { border-color: var(--wrong) !important;   box-shadow: 0 0 0 2px var(--wrong-bg);   }
+  .spell-card.correct-card input { border-color: var(--correct) !important; }
+  .spell-card.wrong-card   input { border-color: var(--wrong)   !important; }
+
+  /* ── DRAG & DROP ORDER (S2) ── */
+  .drag-instruction { font-size: .82rem; color: var(--text2); margin-bottom: .85rem; }
+  .day-bank {
+    display: flex; flex-wrap: wrap; gap: .5rem;
+    background: var(--surface2);
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: .75rem;
+    min-height: 52px;
+    margin-bottom: 1rem;
+  }
+  .order-slots {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: .4rem;
+    margin-bottom: .75rem;
+  }
+  @media(max-width:600px) {
+    .order-slots { grid-template-columns: repeat(4, 1fr); }
+  }
+  .order-slot {
+    min-height: 48px;
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .7rem; color: var(--text2);
+    transition: background .15s, border-color .15s;
+  }
+  .order-slot .slot-label { font-size: .65rem; color: var(--text2); }
+  .order-slot.drag-over { background: var(--surface2); border-color: var(--accent); }
+  .order-slot.correct-slot { border-color: var(--correct); background: var(--correct-bg); }
+  .order-slot.wrong-slot { border-color: var(--wrong); background: var(--wrong-bg); }
+  .drag-pill {
+    border-radius: 8px;
+    padding: .35rem .65rem;
+    font-size: .8rem;
+    font-weight: 800;
+    cursor: grab;
+    color: #1a1d2e;
+    transition: opacity .15s, transform .15s;
+    white-space: nowrap;
+  }
+  .drag-pill:active { cursor: grabbing; }
+  .drag-pill.dragging { opacity: .35; }
+
+  /* ── FILL-IN (S3) ── */
+  .fill-item {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: .85rem 1rem;
+    margin-bottom: .7rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .4rem;
+    font-size: .95rem;
+    font-weight: 600;
+  }
+  .fill-item select {
+    background: var(--surface);
+    color: var(--text);
+    border: 2px solid var(--accent);
+    border-radius: 6px;
+    padding: .25rem .5rem;
+    font-size: .9rem;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+  }
+  .fill-item select:disabled { opacity: .7; cursor: default; }
+  .fill-feedback {
+    font-size: .8rem;
+    font-weight: 700;
+    padding: .2rem .5rem;
+    border-radius: 6px;
+    margin-left: .3rem;
+  }
+  .fill-feedback.ok { background: var(--correct-bg); color: var(--correct); }
+  .fill-feedback.err { background: var(--wrong-bg); color: var(--wrong); }
+
+  /* ── MULTIPLE CHOICE (S4) ── */
+  .mc-item { margin-bottom: 1rem; }
+  .mc-q { font-weight: 700; margin-bottom: .5rem; font-size: .95rem; }
+  .mc-opts { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .mc-btn {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: .45rem .9rem;
+    font-size: .88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+    min-height: 44px;
+  }
+  .mc-btn:hover:not(:disabled) { border-color: var(--accent); background: var(--surface); }
+  .mc-btn.correct { background: var(--correct-bg); border-color: var(--correct); color: var(--correct); }
+  .mc-btn.wrong { background: var(--wrong-bg); border-color: var(--wrong); color: var(--wrong); }
+  .mc-btn:disabled { cursor: default; }
+  .mc-explanation {
+    font-size: .8rem;
+    color: var(--text2);
+    margin-top: .4rem;
+    padding: .35rem .6rem;
+    background: var(--surface2);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent);
+    display: none;
+  }
+  .mc-explanation.show { display: block; }
+
+  /* ── BUTTONS ── */
+  .btn-row { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1rem; }
+  .btn-check, .btn-reset-section {
+    border: none;
+    border-radius: 8px;
+    padding: .55rem 1.2rem;
+    font-size: .88rem;
+    font-weight: 700;
+    cursor: pointer;
+    min-height: 44px;
+    transition: opacity .15s;
+  }
+  .btn-check { background: var(--accent); color: #fff; }
+  .btn-check:hover { opacity: .88; }
+  .btn-reset-section { background: var(--surface2); color: var(--text); border: 2px solid var(--border); }
+  .btn-reset-section:hover { border-color: var(--accent); }
+
+  /* ── TAB COUNTER BADGE ── */
+  #tab-counter {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: .3rem .75rem;
+    font-size: .82rem;
+    font-weight: 800;
+    color: var(--text2);
+    transition: background .3s, border-color .3s, color .3s;
+    white-space: nowrap;
+  }
+  #tab-counter.warn-1 {
+    background: #fef9c3;
+    border-color: #ca8a04;
+    color: #78350f;
+  }
+  #tab-counter.warn-2 {
+    background: #fed7aa;
+    border-color: #ea580c;
+    color: #7c2d12;
+  }
+  #tab-counter.warn-3 {
+    background: var(--wrong-bg);
+    border-color: var(--wrong);
+    color: var(--wrong);
+    animation: pulse-badge 1.2s ease infinite;
+  }
+  @keyframes pulse-badge {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.08); }
+  }
+  [data-theme="dark"] #tab-counter.warn-1 { background:#422006aa; border-color:#ca8a04; color:#fde68a; }
+  [data-theme="dark"] #tab-counter.warn-2 { background:#431407aa; border-color:#ea580c; color:#fed7aa; }
+
+  /* Alert tab count line */
+  #tab-alert-count {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--wrong);
+    margin-bottom: .4rem;
+  }
+
+  /* Section result */
+  .section-result {
+    font-size: .85rem;
+    font-weight: 700;
+    margin-top: .7rem;
+    padding: .4rem .8rem;
+    border-radius: 8px;
+    display: none;
+  }
+  .section-result.show { display: inline-block; }
+  .section-result.all-ok { background: var(--correct-bg); color: var(--correct); }
+  .section-result.partial { background: #fef3c7; color: #92400e; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    font-size: .75rem;
+    color: var(--text2);
+    padding: 1.5rem 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── SHAKE ANIMATION ── */
+  @keyframes shake {
+    0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)}
+    40%{transform:translateX(5px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+  }
+  .shake { animation: shake .35s ease; }
+</style>
+</head>
+<body oncontextmenu="return false" oncopy="return false" onpaste="return false" oncut="return false"
+      onkeydown="blockKeys(event)">
+
+<!-- TAB ALERT -->
+<div id="tab-alert">
+  <div id="tab-alert-box">
+    <div class="icon">⚠️</div>
+    <h2>¡Alerta! / Warning!</h2>
+    <div id="tab-alert-count"></div>
+    <p id="tab-alert-msg">Saliste de esta pestaña durante el ejercicio.<br>
+       <em>You left this tab during the exercise.</em></p>
+    <button id="tab-alert-close">Volver / Return</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <h1>📅 Days of the Week</h1>
+    <span>Prepositions: after · before · between &nbsp;|&nbsp; Level A1</span>
+  </div>
+  <div class="header-right">
+    <div class="score-badge" id="total-score">⭐ 0 / 0</div>
+    <div id="tab-counter" title="Times you left this tab / Veces que saliste de esta pestaña">
+      👁 <span id="tab-count-num">0</span>
+    </div>
+    <button class="theme-btn" id="theme-btn" title="Toggle theme">🌙</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ══════════════════════════════════════
+       GLOSARIO
+  ══════════════════════════════════════ -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-num">📖</div>
+      <div>
+        <h2>Vocabulary / Vocabulario</h2>
+        <div class="instr">Los 7 días de la semana · The 7 days of the week</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div id="gloss-wrapper">
+        <div class="gloss-grid" id="gloss-grid"></div>
+        <p style="margin-top:.85rem;font-size:.8rem;color:var(--text2);">
+          📌 <strong>Week order:</strong> Monday → Tuesday → Wednesday → Thursday → Friday → Saturday → Sunday
+        </p>
+        <p style="margin-top:.3rem;font-size:.8rem;color:var(--text2);">
+          📌 <strong>Prepositions:</strong>
+          <strong>after</strong> = después de &nbsp;|&nbsp;
+          <strong>before</strong> = antes de &nbsp;|&nbsp;
+          <strong>between</strong> = entre
+        </p>
+      </div>
+      <div id="gloss-toggle-row">
+        <button class="btn-start" id="btn-start" onclick="startExercises()">
+          ▶ Start Exercises / Iniciar ejercicios
+        </button>
+        <button class="btn-show-gloss" id="btn-show-gloss" style="display:none" onclick="toggleGloss()">
+          📖 Show vocabulary / Ver vocabulario
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SECCIÓN 1 – FLASHCARD QUIZ
+  ══════════════════════════════════════ -->
+  <div class="section-card" data-section="1">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <h2>Spell It! / ¡Escríbelo!</h2>
+        <div class="instr">Look at the color and number. Write the day. Press Enter to check. · Mira el color y número. Escribe el día. Presiona Enter para verificar.</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="spell-grid" id="spell-grid"></div>
+      <div class="btn-row">
+        <button class="btn-reset-section" onclick="resetSection1()">🔄 Reset</button>
+      </div>
+      <div class="section-result" id="s1-result"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SECCIÓN 2 – DRAG ORDER
+  ══════════════════════════════════════ -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <h2>Order the Week / Ordena la semana</h2>
+        <div class="instr">Drag the days in the correct order. · Arrastra los días en el orden correcto.</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p class="drag-instruction">1 = Monday (first day) · 7 = Sunday (last day)</p>
+      <div class="order-slots" id="order-slots"></div>
+      <div class="day-bank" id="day-bank"></div>
+      <div class="btn-row">
+        <button class="btn-check" onclick="checkSection2()">✔ Check / Verificar</button>
+        <button class="btn-reset-section" onclick="resetSection2()">🔄 Reset</button>
+      </div>
+      <div class="section-result" id="s2-result"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SECCIÓN 3 – FILL IN THE BLANK
+  ══════════════════════════════════════ -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <h2>Before or After? / ¿Antes o después?</h2>
+        <div class="instr">Choose the correct preposition. · Elige la preposición correcta.</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div id="fill-container"></div>
+      <div class="btn-row">
+        <button class="btn-reset-section" onclick="resetSection3()">🔄 Reset</button>
+      </div>
+      <div class="section-result" id="s3-result"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SECCIÓN 4 – MULTIPLE CHOICE
+  ══════════════════════════════════════ -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div>
+        <h2>Between / Entre</h2>
+        <div class="instr">Choose the correct answer. · Elige la respuesta correcta.</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div id="mc-container"></div>
+      <div class="btn-row">
+        <button class="btn-reset-section" onclick="resetSection4()">🔄 Reset</button>
+      </div>
+      <div class="section-result" id="s4-result"></div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  ESF 143 · Days of the Week A1 · English Practice
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+
+const DAYS = [
+  { name: 'Monday',    nameEs: 'Lunes',     abbr: 'MON', num: 1, color: '#f87171', emoji: '🔴' },
+  { name: 'Tuesday',   nameEs: 'Martes',    abbr: 'TUE', num: 2, color: '#fb923c', emoji: '🟠' },
+  { name: 'Wednesday', nameEs: 'Miércoles', abbr: 'WED', num: 3, color: '#facc15', emoji: '🟡' },
+  { name: 'Thursday',  nameEs: 'Jueves',    abbr: 'THU', num: 4, color: '#34d399', emoji: '🟢' },
+  { name: 'Friday',    nameEs: 'Viernes',   abbr: 'FRI', num: 5, color: '#a78bfa', emoji: '🟣' },
+  { name: 'Saturday',  nameEs: 'Sábado',    abbr: 'SAT', num: 6, color: '#818cf8', emoji: '🔵' },
+  { name: 'Sunday',    nameEs: 'Domingo',   abbr: 'SUN', num: 7, color: '#f472b6', emoji: '🩷' }
+];
+
+// Feedback messages pool
+const FB_CORRECT = [
+  '🎉 Excellent! · ¡Excelente!',
+  '⭐ Amazing! · ¡Increíble!',
+  '🔥 You got it! · ¡Lo tienes!',
+  '💪 Perfect! · ¡Perfecto!',
+  '✨ Brilliant! · ¡Brillante!'
+];
+const FB_WRONG = [
+  '💪 Keep going, you can do it! · ¡Tú puedes, sigue intentando!',
+  '📚 Almost! Check the vocabulary. · ¡Casi! Revisa el vocabulario.',
+  '🌟 Try again, don\'t give up! · ¡Inténtalo de nuevo, no te rindas!',
+  '😊 One more try! · ¡Un intento más!'
+];
+const FB_SECTION_PERFECT = [
+  '🏆 Amazing! Perfect score! · ¡Increíble! ¡Puntuación perfecta!',
+  '🎯 100%! You nailed it! · ¡100%! ¡Lo lograste!',
+  '🌟 Outstanding! All correct! · ¡Sobresaliente! ¡Todo correcto!'
+];
+const FB_SECTION_PARTIAL = [
+  '💪 Good effort! Review and try again. · ¡Buen esfuerzo! Revisa e intenta de nuevo.',
+  '📖 Almost there! Keep practising! · ¡Casi! ¡Sigue practicando!',
+  '😊 Not bad! You\'re getting better. · ¡Nada mal! Estás mejorando.'
+];
+function randFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// Fill-in questions: "X comes [before/after] Y"
+const FILL_QUESTIONS = [
+  { sentence: ['Tuesday comes', '', 'Monday.'],       answer: 'after',  wrong: 'before',
+    explanation: 'Tuesday is day 2. Monday is day 1. Tuesday comes AFTER Monday. / Martes es el día 2. Lunes es el día 1.' },
+  { sentence: ['Wednesday comes', '', 'Thursday.'],   answer: 'before', wrong: 'after',
+    explanation: 'Wednesday is day 3. Thursday is day 4. Wednesday comes BEFORE Thursday. / Miércoles es el día 3. Jueves el día 4.' },
+  { sentence: ['Friday comes', '', 'Saturday.'],      answer: 'before', wrong: 'after',
+    explanation: 'Friday is day 5. Saturday is day 6. Friday comes BEFORE Saturday. / Viernes es el día 5. Sábado el día 6.' },
+  { sentence: ['Sunday comes', '', 'Saturday.'],      answer: 'after',  wrong: 'before',
+    explanation: 'Sunday is day 7. Saturday is day 6. Sunday comes AFTER Saturday. / Domingo es el día 7. Sábado el día 6.' },
+  { sentence: ['Monday comes', '', 'Wednesday.'],     answer: 'before', wrong: 'after',
+    explanation: 'Monday is day 1. Wednesday is day 3. Monday comes BEFORE Wednesday. / Lunes es el día 1. Miércoles el día 3.' },
+  { sentence: ['Thursday comes', '', 'Tuesday.'],     answer: 'after',  wrong: 'before',
+    explanation: 'Thursday is day 4. Tuesday is day 2. Thursday comes AFTER Tuesday. / Jueves es el día 4. Martes el día 2.' }
+];
+
+// Multiple choice: "which day is between X and Z?"
+const MC_QUESTIONS = [
+  {
+    q: 'Which day is between Monday and Wednesday? / ¿Qué día está entre lunes y miércoles?',
+    correct: 'Tuesday',
+    distractors: ['Thursday', 'Friday', 'Sunday'],
+    explanation: 'Monday → Tuesday → Wednesday. Tuesday (day 2) is between Monday (day 1) and Wednesday (day 3). / Martes está entre lunes y miércoles.'
+  },
+  {
+    q: 'Which day is between Wednesday and Friday? / ¿Qué día está entre miércoles y viernes?',
+    correct: 'Thursday',
+    distractors: ['Monday', 'Saturday', 'Tuesday'],
+    explanation: 'Wednesday → Thursday → Friday. Thursday (day 4) is between Wednesday (day 3) and Friday (day 5). / Jueves está entre miércoles y viernes.'
+  },
+  {
+    q: 'Which day is between Friday and Sunday? / ¿Qué día está entre viernes y domingo?',
+    correct: 'Saturday',
+    distractors: ['Monday', 'Wednesday', 'Thursday'],
+    explanation: 'Friday → Saturday → Sunday. Saturday (day 6) is between Friday (day 5) and Sunday (day 7). / Sábado está entre viernes y domingo.'
+  },
+  {
+    q: 'Which day is between Tuesday and Thursday? / ¿Qué día está entre martes y jueves?',
+    correct: 'Wednesday',
+    distractors: ['Monday', 'Friday', 'Saturday'],
+    explanation: 'Tuesday → Wednesday → Thursday. Wednesday (day 3) is between Tuesday (day 2) and Thursday (day 4). / Miércoles está entre martes y jueves.'
+  },
+  {
+    q: 'Which day is between Sunday and Tuesday? / ¿Qué día está entre domingo y martes?  (Think of the week cycle!)',
+    correct: 'Monday',
+    distractors: ['Friday', 'Saturday', 'Thursday'],
+    explanation: 'Sunday → Monday → Tuesday. Monday (day 1) is between Sunday and Tuesday in a weekly cycle. / Lunes está entre domingo y martes en el ciclo semanal.'
+  }
+];
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let s1Correct = 0;
+let s3Score = 0;
+let s4Score = 0;
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function updateTotalScore() {
+  const correct = s1Correct + s3Score + s4Score;
+  const total = DAYS.length + FILL_QUESTIONS.length + MC_QUESTIONS.length;
+  document.getElementById('total-score').textContent = `⭐ ${correct} / ${total}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// GLOSSARY + START
+// ═══════════════════════════════════════════════════════
+let glossVisible = true;
+
+function buildGlossary() {
+  const grid = document.getElementById('gloss-grid');
+  DAYS.forEach(d => {
+    const chip = document.createElement('div');
+    chip.className = 'day-chip';
+    chip.style.background = d.color;
+    chip.innerHTML = `<span class="day-num">${d.emoji} ${d.nameEs}</span>${d.name}`;
+    grid.appendChild(chip);
+  });
+}
+
+function startExercises() {
+  document.getElementById('gloss-wrapper').classList.add('hidden');
+  document.getElementById('btn-start').style.display = 'none';
+  document.getElementById('btn-show-gloss').style.display = 'inline-flex';
+  glossVisible = false;
+  // Scroll smoothly to section 1
+  document.querySelector('[data-section="1"]').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleGloss() {
+  const wrapper = document.getElementById('gloss-wrapper');
+  const btn = document.getElementById('btn-show-gloss');
+  if (glossVisible) {
+    wrapper.classList.add('hidden');
+    btn.textContent = '📖 Show vocabulary / Ver vocabulario';
+    glossVisible = false;
+  } else {
+    wrapper.classList.remove('hidden');
+    btn.textContent = '🙈 Hide vocabulary / Ocultar vocabulario';
+    glossVisible = true;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// SECTION 1 – SPELL IT
+// ═══════════════════════════════════════════════════════
+let s1Order = [];
+
+function buildSection1() {
+  const grid = document.getElementById('spell-grid');
+  grid.innerHTML = '';
+  s1Correct = 0;
+  s1Order = shuffle(DAYS);
+
+  s1Order.forEach((d, i) => {
+    const card = document.createElement('div');
+    card.className = 'spell-card';
+    card.style.background = d.color;
+    card.dataset.idx = i;
+
+    card.innerHTML = `
+      <span class="sc-num">${d.emoji} ${d.nameEs}</span>
+      <span class="sc-hint">_ _ _ _ _ _ _ _</span>
+      <input type="text" id="spell-input-${i}" maxlength="12"
+             placeholder="Write in English…" autocomplete="off" spellcheck="false">
+      <div class="sc-feedback" id="spell-fb-${i}"></div>`;
+
+    grid.appendChild(card);
+
+    const inp = card.querySelector('input');
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') checkSpell(i, d, card, inp);
+    });
+    inp.addEventListener('input', () => {
+      // Live: if they type the full correct word (case-insensitive), auto-check
+      if (inp.value.trim().toLowerCase() === d.name.toLowerCase()) {
+        checkSpell(i, d, card, inp);
+      }
+    });
+  });
+
+  const res = document.getElementById('s1-result');
+  res.className = 'section-result';
+  res.textContent = '';
+  updateTotalScore();
+}
+
+function checkSpell(i, d, card, inp) {
+  if (card.classList.contains('correct-card') || card.classList.contains('wrong-card')) return;
+  const val = inp.value.trim();
+  if (!val) return;
+
+  const fb = document.getElementById(`spell-fb-${i}`);
+  inp.disabled = true;
+
+  if (val.toLowerCase() === d.name.toLowerCase()) {
+    card.classList.add('correct-card');
+    fb.textContent = randFrom(FB_CORRECT);
+    fb.className = 'sc-feedback ok';
+    inp.value = d.name;
+    s1Correct++;
+  } else {
+    card.classList.add('wrong-card');
+    card.classList.add('shake');
+    setTimeout(() => card.classList.remove('shake'), 400);
+    fb.textContent = `❌ ${d.name} — ${randFrom(FB_WRONG)}`;
+    fb.className = 'sc-feedback err';
+  }
+
+  // Check if all answered
+  const allAnswered = document.querySelectorAll('#spell-grid input:disabled').length;
+  if (allAnswered === DAYS.length) {
+    const res = document.getElementById('s1-result');
+    res.textContent = s1Correct === DAYS.length
+      ? randFrom(FB_SECTION_PERFECT)
+      : `${s1Correct}/7 — ${randFrom(FB_SECTION_PARTIAL)}`;
+    res.className = s1Correct === DAYS.length
+      ? 'section-result show all-ok' : 'section-result show partial';
+  }
+  updateTotalScore();
+}
+
+function resetSection1() {
+  s1Correct = 0;
+  buildSection1();
+  updateTotalScore();
+}
+
+// ═══════════════════════════════════════════════════════
+// SECTION 2 – DRAG & DROP ORDER
+// ═══════════════════════════════════════════════════════
+let draggedPill = null;
+
+function buildSection2() {
+  const slotsEl = document.getElementById('order-slots');
+  const bankEl = document.getElementById('day-bank');
+  slotsEl.innerHTML = '';
+  bankEl.innerHTML = '';
+
+  // Create 7 slots
+  for (let i = 1; i <= 7; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'order-slot';
+    slot.dataset.pos = i;
+    slot.innerHTML = `<span class="slot-label">${i}</span>`;
+    initDropZone(slot);
+    slotsEl.appendChild(slot);
+  }
+
+  // Create shuffled pills in bank
+  const shuffled = shuffle(DAYS);
+  shuffled.forEach(d => {
+    const pill = createPill(d);
+    bankEl.appendChild(pill);
+  });
+  initDropZone(bankEl);
+
+  document.getElementById('s2-result').className = 'section-result';
+  document.getElementById('s2-result').textContent = '';
+  // Clear slot states
+  document.querySelectorAll('.order-slot').forEach(s => {
+    s.classList.remove('correct-slot', 'wrong-slot');
+  });
+}
+
+function createPill(d) {
+  const pill = document.createElement('div');
+  pill.className = 'drag-pill';
+  pill.style.background = d.color;
+  pill.dataset.num = d.num;
+  pill.dataset.name = d.name;
+  pill.draggable = true;
+  pill.textContent = d.name;
+  pill.addEventListener('dragstart', e => {
+    draggedPill = pill;
+    pill.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  pill.addEventListener('dragend', () => {
+    pill.classList.remove('dragging');
+    draggedPill = null;
+  });
+  return pill;
+}
+
+function initDropZone(zone) {
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    zone.classList.add('drag-over');
+    e.dataTransfer.dropEffect = 'move';
+  });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    if (!draggedPill) return;
+
+    const isSlot = zone.classList.contains('order-slot');
+    const isBank = zone.id === 'day-bank';
+
+    if (isSlot) {
+      const existingPill = zone.querySelector('.drag-pill');
+      if (existingPill) {
+        // Swap: send existing pill back to bank
+        document.getElementById('day-bank').appendChild(existingPill);
+      }
+      // Remove slot-label if slot was empty
+      const lbl = zone.querySelector('.slot-label');
+      if (lbl) zone.removeChild(lbl);
+      zone.appendChild(draggedPill);
+    } else if (isBank) {
+      zone.appendChild(draggedPill);
+      // Restore slot label if slot is now empty
+      const sourceSlot = draggedPill.closest
+        ? document.querySelector(`.order-slot:not(:has(.drag-pill))`)
+        : null;
+    }
+    // Restore empty slot labels
+    document.querySelectorAll('.order-slot').forEach((s, idx) => {
+      if (!s.querySelector('.drag-pill') && !s.querySelector('.slot-label')) {
+        const lbl = document.createElement('span');
+        lbl.className = 'slot-label';
+        lbl.textContent = s.dataset.pos;
+        s.appendChild(lbl);
+      }
+    });
+    zone.classList.remove('correct-slot', 'wrong-slot');
+  });
+}
+
+function checkSection2() {
+  const slots = document.querySelectorAll('.order-slot');
+  let correct = 0;
+  slots.forEach(slot => {
+    const pill = slot.querySelector('.drag-pill');
+    if (!pill) {
+      slot.classList.add('wrong-slot');
+      return;
+    }
+    const pos = parseInt(slot.dataset.pos);
+    const num = parseInt(pill.dataset.num);
+    if (pos === num) {
+      slot.classList.add('correct-slot');
+      slot.classList.remove('wrong-slot');
+      correct++;
+    } else {
+      slot.classList.add('wrong-slot');
+      slot.classList.remove('correct-slot');
+    }
+  });
+  const res = document.getElementById('s2-result');
+  if (correct === 7) {
+    res.textContent = randFrom(FB_SECTION_PERFECT);
+    res.className = 'section-result show all-ok';
+  } else {
+    res.textContent = `${correct}/7 — ${randFrom(FB_SECTION_PARTIAL)}`;
+    res.className = 'section-result show partial';
+  }
+}
+
+function resetSection2() {
+  buildSection2();
+}
+
+// ═══════════════════════════════════════════════════════
+// SECTION 3 – FILL IN THE BLANK
+// ═══════════════════════════════════════════════════════
+function buildSection3() {
+  const container = document.getElementById('fill-container');
+  container.innerHTML = '';
+  s3Score = 0;
+
+  const shuffled = shuffle(FILL_QUESTIONS);
+  shuffled.forEach((q, i) => {
+    const item = document.createElement('div');
+    item.className = 'fill-item';
+    item.dataset.idx = i;
+
+    // Build sentence with select
+    const opts = shuffle([q.answer, q.wrong]);
+    item.innerHTML = `
+      <span>${q.sentence[0]}</span>
+      <select id="fill-sel-${i}" data-answer="${q.answer}" data-explanation="${q.explanation}" data-idx="${i}">
+        <option value="">– choose –</option>
+        ${opts.map(o => `<option value="${o}">${o}</option>`).join('')}
+      </select>
+      <span>${q.sentence[2]}</span>
+      <span class="fill-feedback" id="fill-fb-${i}"></span>`;
+    container.appendChild(item);
+
+    const sel = document.getElementById(`fill-sel-${i}`);
+    sel.addEventListener('change', () => onFillChange(sel));
+  });
+
+  document.getElementById('s3-result').className = 'section-result';
+  document.getElementById('s3-result').textContent = '';
+  updateTotalScore();
+}
+
+function onFillChange(sel) {
+  const fb = document.getElementById(`fill-fb-${sel.dataset.idx}`);
+  if (!sel.value) { fb.textContent = ''; fb.className = 'fill-feedback'; return; }
+
+  if (sel.value === sel.dataset.answer) {
+    fb.textContent = randFrom(FB_CORRECT);
+    fb.className = 'fill-feedback ok';
+  } else {
+    fb.textContent = `❌ "${sel.dataset.answer}" — ${sel.dataset.explanation}`;
+    fb.className = 'fill-feedback err';
+  }
+
+  // Recalculate section score
+  let score = 0;
+  document.querySelectorAll('#fill-container select').forEach(s => {
+    if (s.value && s.value === s.dataset.answer) score++;
+  });
+  s3Score = score;
+
+  const total = FILL_QUESTIONS.length;
+  const res = document.getElementById('s3-result');
+  res.textContent = score === total
+    ? randFrom(FB_SECTION_PERFECT)
+    : `${score}/${total} — ${randFrom(FB_SECTION_PARTIAL)}`;
+  res.className = score === total ? 'section-result show all-ok' : 'section-result show partial';
+
+  updateTotalScore();
+}
+
+function resetSection3() {
+  s3Score = 0;
+  buildSection3();
+  updateTotalScore();
+}
+
+// ═══════════════════════════════════════════════════════
+// SECTION 4 – MULTIPLE CHOICE
+// ═══════════════════════════════════════════════════════
+function buildSection4() {
+  const container = document.getElementById('mc-container');
+  container.innerHTML = '';
+  s4Score = 0;
+
+  const shuffled = shuffle(MC_QUESTIONS);
+  shuffled.forEach((q, i) => {
+    const item = document.createElement('div');
+    item.className = 'mc-item';
+    const opts = shuffle([q.correct, ...q.distractors.slice(0,3)]);
+    item.innerHTML = `
+      <div class="mc-q">${i+1}. ${q.q}</div>
+      <div class="mc-opts" id="mc-opts-${i}">
+        ${opts.map(o => `<button class="mc-btn" data-val="${o}" data-qi="${i}">${o}</button>`).join('')}
+      </div>
+      <div class="mc-explanation" id="mc-exp-${i}">${q.explanation}</div>`;
+    container.appendChild(item);
+  });
+
+  // Attach listeners
+  document.querySelectorAll('.mc-btn').forEach(btn => {
+    const qi = parseInt(btn.dataset.qi);
+    btn.addEventListener('click', () => onMcClick(btn, shuffled[qi].correct, shuffled[qi].explanation, qi));
+  });
+
+  document.getElementById('s4-result').className = 'section-result';
+  document.getElementById('s4-result').textContent = '';
+  updateTotalScore();
+}
+
+function onMcClick(btn, correct, explanation, qi) {
+  const opts = document.querySelectorAll(`#mc-opts-${qi} .mc-btn`);
+  opts.forEach(b => {
+    b.disabled = true;
+    if (b.dataset.val === correct) b.classList.add('correct');
+    else if (b === btn) b.classList.add('wrong');
+  });
+  document.getElementById(`mc-exp-${qi}`).classList.add('show');
+
+  if (btn.dataset.val === correct) s4Score++;
+  else { btn.classList.add('shake'); setTimeout(() => btn.classList.remove('shake'), 400); }
+
+  const total = MC_QUESTIONS.length;
+  const res = document.getElementById('s4-result');
+  let answered = 0;
+  document.querySelectorAll(`#mc-container .mc-opts`).forEach(grp => {
+    if (grp.querySelector('button:disabled')) answered++;
+  });
+  const allDone = answered === total;
+  res.textContent = allDone
+    ? (s4Score === total ? randFrom(FB_SECTION_PERFECT) : `${s4Score}/${total} — ${randFrom(FB_SECTION_PARTIAL)}`)
+    : `${s4Score}/${total} so far · ${s4Score}/${total} hasta ahora`;
+  res.className = (allDone && s4Score === total) ? 'section-result show all-ok' : 'section-result show partial';
+
+  updateTotalScore();
+}
+
+function resetSection4() {
+  s4Score = 0;
+  buildSection4();
+  updateTotalScore();
+}
+
+// ═══════════════════════════════════════════════════════
+// KEYBOARD BLOCKER
+// ═══════════════════════════════════════════════════════
+function blockKeys(e) {
+  const blocked = [
+    e.ctrlKey && ['c','a','u','s','p','f','l','t','w','r'].includes(e.key.toLowerCase()),
+    e.key === 'F12',
+    e.ctrlKey && e.shiftKey && ['i','j','c'].includes(e.key.toLowerCase())
+  ];
+  if (blocked.some(Boolean)) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB VISIBILITY COUNTER
+// ═══════════════════════════════════════════════════════
+let tabLeaveCount = 0;
+let exercisesStarted = false; // only count after exercises begin
+
+const TAB_MESSAGES = [
+  { // 1st time
+    msg: 'Saliste de esta pestaña.<br><em>You left this tab.</em>',
+    subEs: '¡Mantén el foco!', subEn: 'Stay focused!'
+  },
+  { // 2nd time
+    msg: 'Segunda vez que sales. 👀<br><em>Second time you left.</em>',
+    subEs: '¡Recuerda que el maestro puede ver esto!',
+    subEn: 'Remember the teacher can see this!'
+  },
+  { // 3rd time
+    msg: '¡Ya van tres veces! 🚨<br><em>That\'s three times already!</em>',
+    subEs: '¡Échale más ganas, tú puedes!',
+    subEn: 'You can do it — keep trying!'
+  },
+  { // 4+ times (default)
+    msg: '¡Concentración! 🚨<br><em>Focus!</em>',
+    subEs: '¡Vuelve al ejercicio!',
+    subEn: 'Get back to the exercise!'
+  }
+];
+
+function updateTabBadge() {
+  const badge = document.getElementById('tab-counter');
+  const num   = document.getElementById('tab-count-num');
+  num.textContent = tabLeaveCount;
+
+  badge.classList.remove('warn-1', 'warn-2', 'warn-3');
+  if (tabLeaveCount === 1) badge.classList.add('warn-1');
+  else if (tabLeaveCount === 2) badge.classList.add('warn-2');
+  else if (tabLeaveCount >= 3) badge.classList.add('warn-3');
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // Page is being hidden — count only if exercises have started
+    if (exercisesStarted) tabLeaveCount++;
+    return;
+  }
+  // They came back — show alert only if exercises have started
+  if (!exercisesStarted || tabLeaveCount === 0) return;
+
+  updateTabBadge();
+
+  const idx = Math.min(tabLeaveCount - 1, TAB_MESSAGES.length - 1);
+  const m = TAB_MESSAGES[idx];
+  document.getElementById('tab-alert-count').textContent =
+    `Salidas / Exits: ${tabLeaveCount}`;
+  document.getElementById('tab-alert-msg').innerHTML =
+    `${m.msg}<br><br><strong>${m.subEs}</strong><br><em>${m.subEn}</em>`;
+
+  document.getElementById('tab-alert').classList.add('show');
+});
+
+document.getElementById('tab-alert-close').addEventListener('click', () => {
+  document.getElementById('tab-alert').classList.remove('show');
+});
+
+// Hook into startExercises to begin counting
+const _origStart = startExercises;
+startExercises = function() {
+  exercisesStarted = true;
+  _origStart();
+};
+
+// ═══════════════════════════════════════════════════════
+// THEME TOGGLE
+// ═══════════════════════════════════════════════════════
+const themeBtn = document.getElementById('theme-btn');
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+  themeBtn.textContent = dark ? '☀️' : '🌙';
+  try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch(e){}
+}
+themeBtn.addEventListener('click', () => {
+  applyTheme(document.documentElement.getAttribute('data-theme') !== 'dark');
+});
+// Load saved theme
+try {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') applyTheme(true);
+} catch(e){}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+buildGlossary();
+buildSection1();
+buildSection2();
+buildSection3();
+buildSection4();
+updateTotalScore();
+</script>
+</body>
+</html>
