@@ -133,7 +133,8 @@ body{user-select:none;-webkit-user-select:none}
 
 /* Controls */
 .game-controls{display:flex;gap:8px;justify-content:center;margin:10px 0}
-.ctrl-btn{border:1.5px solid var(--brd2);border-radius:var(--r);padding:8px 18px;background:var(--bg2);color:var(--txt);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+.ctrl-btn{border:1.5px solid var(--brd2);border-radius:var(--r);padding:8px 18px;background:var(--bg2);color:var(--txt);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,border-color .15s,transform .1s;outline:none}
+.ctrl-btn:focus{outline:none}
 .ctrl-btn:hover{background:var(--bg3);border-color:var(--acc)}
 .ctrl-btn:active{transform:scale(.95)}
 .ctrl-btn:disabled{opacity:.4;cursor:default}
@@ -208,6 +209,34 @@ body{user-select:none;-webkit-user-select:none}
 .new-record{display:none;background:var(--acc-dim);border:1px solid var(--acc);border-radius:var(--r);padding:7px 18px;color:var(--acc);font-weight:700;font-size:.88rem}
 .new-record.visible{display:block}
 .result-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+/* ════════════════════════════
+   CAMPAIGN MAP
+════════════════════════════ */
+#screen-map{gap:0;padding:12px;overflow-y:auto;justify-content:flex-start}
+.map-header{width:100%;max-width:520px;display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-shrink:0}
+.map-title{font-size:1.3rem;font-weight:900;color:var(--acc)}
+.map-sub{font-size:.8rem;color:var(--txt2)}
+.map-progress{font-size:.78rem;color:var(--txt3);margin-left:auto}
+.world-section{width:100%;max-width:520px;margin-bottom:18px;flex-shrink:0}
+.world-label{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.world-label::after{content:'';flex:1;height:1px;background:var(--brd)}
+.levels-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.lvl-btn{border-radius:var(--r);border:1.5px solid var(--brd);background:var(--bg2);padding:8px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:transform .12s,border-color .15s;position:relative}
+.lvl-btn:hover:not(.locked){transform:translateY(-2px);border-color:var(--brd2)}
+.lvl-btn.locked{opacity:.4;cursor:not-allowed}
+.lvl-btn.completed{border-color:var(--green)}
+.lvl-btn.current{border-color:var(--acc);background:var(--acc-dim)}
+.lvl-num{font-size:.85rem;font-weight:800;color:var(--txt)}
+.lvl-stars{font-size:.7rem;min-height:14px}
+.lvl-tag{font-size:.62rem;color:var(--txt3);text-align:center;line-height:1.2}
+.lvl-lock{font-size:.9rem}
+
+/* Level result overlay extras */
+.lvl-result-acc{font-size:2rem;font-weight:900;text-align:center;margin:8px 0}
+.acc-pass{color:var(--green)}
+.acc-fail{color:var(--red)}
+.lvl-result-stars{font-size:1.8rem;display:flex;justify-content:center;gap:6px;margin-bottom:8px}
 </style>
 </head>
 <body oncontextmenu="return false" oncopy="return false" onpaste="return false" oncut="return false">
@@ -227,9 +256,52 @@ body{user-select:none;-webkit-user-select:none}
   </div>
   <div class="hs-badge">Best Score: <span id="menu-hs">0</span></div>
   <div class="menu-btns">
-    <button class="btn btn-primary" onclick="startGame()">▶ Play</button>
+    <button class="btn btn-primary" onclick="showMapScreen()">🗺 Campaign</button>
+    <button class="btn btn-ghost" onclick="startFreePlay()">▶ Free Play</button>
     <div style="display:flex;gap:8px;justify-content:center">
       <button class="theme-btn" onclick="toggleTheme()">🌙 / ☀️</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ CAMPAIGN MAP ═══════ -->
+<div id="screen-map" class="screen">
+  <div class="map-header">
+    <div>
+      <div class="map-title">🗺 Campaign</div>
+      <div class="map-sub">15 levels · 3 worlds</div>
+    </div>
+    <div class="map-progress" id="map-progress">0 / 15</div>
+  </div>
+  <div id="map-worlds"></div>
+  <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-shrink:0">
+    <button class="btn btn-ghost btn-sm" onclick="showScreen('menu')">← Back</button>
+    <button class="btn btn-ghost btn-sm" id="reset-btn" onclick="confirmResetProgress()" style="margin-left:auto;color:var(--red);border-color:var(--red);opacity:.7">🗑 Reset Progress</button>
+  </div>
+  <div id="reset-confirm" style="display:none;background:var(--red-dim);border:1px solid var(--red);border-radius:var(--r);padding:10px 14px;margin-top:8px;font-size:.82rem;color:var(--txt);text-align:center;flex-shrink:0">
+    Delete all campaign progress? This cannot be undone.
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+      <button class="btn btn-sm" style="background:var(--red);color:#fff;border:none" onclick="doResetProgress()">Yes, delete</button>
+      <button class="btn btn-ghost btn-sm" onclick="cancelResetProgress()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ LEVEL RESULT OVERLAY ═══════ -->
+<div class="overlay" id="overlay-lvl-result">
+  <div class="overlay-box" style="max-width:440px;width:95%">
+    <div class="overlay-title" id="lvl-res-title">Level Complete!</div>
+    <div class="lvl-result-stars" id="lvl-res-stars"></div>
+    <div class="lvl-result-acc" id="lvl-res-acc"></div>
+    <div class="round-result-list" id="lvl-rr-list"></div>
+    <div class="round-score-summary">
+      <span class="rss-earned" id="lvl-rss-earned">+0</span>
+      <span class="rss-lost" id="lvl-rss-lost">-0</span>
+      <span class="rss-total" id="lvl-rss-total">0 pts</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-ghost" style="flex:1" id="lvl-retry-btn" onclick="retryLevel()">🔄 Retry</button>
+      <button class="btn btn-primary" style="flex:1" id="lvl-next-btn" onclick="levelNext()">Next →</button>
     </div>
   </div>
 </div>
@@ -260,7 +332,7 @@ body{user-select:none;-webkit-user-select:none}
       <span class="rss-lost" id="rss-lost">-0</span>
       <span class="rss-total" id="rss-total">0 pts</span>
     </div>
-    <button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="nextRound()">Next Round →</button>
+    <button class="btn btn-primary" style="margin-top:14px;width:100%" id="rr-next-btn" onclick="nextRound()">Next Round →</button>
   </div>
 </div>
 
@@ -298,9 +370,9 @@ body{user-select:none;-webkit-user-select:none}
       <div class="word-grid" id="word-grid"></div>
     </div>
     <div class="game-controls">
-      <button class="ctrl-btn" id="btn-left" onclick="moveClaw(-1)">←</button>
-      <button class="ctrl-btn ctrl-grab" id="btn-grab" onclick="doGrab()">GRAB</button>
-      <button class="ctrl-btn" id="btn-right" onclick="moveClaw(1)">→</button>
+      <button class="ctrl-btn" id="btn-left" onclick="moveClaw(-1)" onmouseup="this.blur()">←</button>
+      <button class="ctrl-btn ctrl-grab" id="btn-grab" onclick="doGrab()" onmouseup="this.blur()">GRAB</button>
+      <button class="ctrl-btn" id="btn-right" onclick="moveClaw(1)" onmouseup="this.blur()">→</button>
     </div>
     <div class="drop-btns" id="drop-btns">
       <button class="drop-btn drop-a" id="drop-a-btn" onclick="dropWord('a')">← <span id="drop-a-label">A</span></button>
@@ -324,7 +396,7 @@ body{user-select:none;-webkit-user-select:none}
     </div>
   </div>
   <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-shrink:0">
-    <button class="btn btn-ghost btn-sm" onclick="endGame()">🏠 Menu</button>
+    <button class="btn btn-ghost btn-sm" onclick="state.campaignMode?goMapFromGame():endGame()">🏠 Menu</button>
   </div>
 </div>
 
@@ -472,6 +544,11 @@ function renderMenu(){
   },1200);
 }
 
+function showMapScreen(){
+  renderMap();
+  showScreen('map');
+}
+
 // ═══════════════════════════════════
 // BUILD ROUND
 // ═══════════════════════════════════
@@ -506,13 +583,20 @@ function buildRound(){
 // ═══════════════════════════════════
 function renderHUD(){
   el('hud-score').textContent=state.score;
-  el('hud-round').textContent='Round '+state.round;
+  if(state.campaignMode){
+    const lv=CAMPAIGN_LEVELS[state.campaignLevelIdx];
+    el('hud-round').textContent='Level '+lv.id+' · '+lv.name;
+  } else {
+    el('hud-round').textContent='Round '+state.round;
+  }
   const livesEl=el('hud-lives');
   livesEl.innerHTML='';
-  for(let i=0;i<3;i++){
-    const h=document.createElement('div');
-    h.className='heart'+(i>=state.lives?' lost':'');
-    livesEl.appendChild(h);
+  if(!state.campaignMode){
+    for(let i=0;i<3;i++){
+      const h=document.createElement('div');
+      h.className='heart'+(i>=state.lives?' lost':'');
+      livesEl.appendChild(h);
+    }
   }
 }
 
@@ -792,9 +876,13 @@ function endRound(){
     },i*150+200);
   });
 
-  // Build result list
+  // Route to correct result screen
   setTimeout(()=>{
-    showRoundResult(evaluated,earned,lost);
+    if(state.campaignMode){
+      endCampaignLevel(evaluated,earned,lost);
+    } else {
+      showRoundResult(evaluated,earned,lost);
+    }
   },evaluated.length*150+400);
 }
 
@@ -839,6 +927,10 @@ function showRoundResult(evaluated,earned,lost){
 
 function nextRound(){
   el('overlay-round').classList.remove('active');
+  if(state.campaignMode){
+    // Campaign: single round per level — this shouldn't normally be called
+    showScreen('map'); renderMap(); return;
+  }
   state.round++;
   buildRound();
   renderHUD();
@@ -927,9 +1019,15 @@ document.addEventListener('keydown',e=>{
   switch(e.key){
     case'ArrowLeft': e.preventDefault(); moveClaw(-1); break;
     case'ArrowRight': e.preventDefault(); moveClaw(1); break;
-    case'ArrowDown':
-    case' ': e.preventDefault();
+    case'ArrowDown': e.preventDefault();
       if(state.phase==='idle') doGrab();
+      break;
+    case' ': e.preventDefault();
+      if(state.phase==='idle'){
+        const gb=el('btn-grab');
+        if(gb){gb.style.transform='scale(.95)';setTimeout(()=>gb.style.transform='',120);}
+        doGrab();
+      }
       break;
     case'a':case'A': if(state.phase==='holding'){e.preventDefault();dropWord('a');}break;
     case's':case'S': if(state.phase==='holding'){e.preventDefault();dropWord('c');}break;
@@ -937,6 +1035,284 @@ document.addEventListener('keydown',e=>{
     case'Enter': if(state.phase==='holding'){e.preventDefault();dropWord('c');}break;
   }
 });
+
+// ═══════════════════════════════════
+// CAMPAIGN LEVELS
+// ═══════════════════════════════════
+const CAMPAIGN_LEVELS = [
+  // World 1 — Basics (5 levels)
+  {id:1,  world:1, name:'Colors vs Numbers',    pair:0, distractors:2, timeSec:45},
+  {id:2,  world:1, name:'Supplies vs Days',     pair:1, distractors:2, timeSec:45},
+  {id:3,  world:1, name:'Greetings vs Farewells',pair:2,distractors:2, timeSec:45},
+  {id:4,  world:1, name:'Colors vs Days',       pair:3, distractors:2, timeSec:45},
+  {id:5,  world:1, name:'Supplies vs Greetings',pair:4, distractors:2, timeSec:40},
+  // World 2 — Groups (5 levels)
+  {id:6,  world:2, name:'Warm vs Cool Colors',  pair:5, distractors:3, timeSec:35},
+  {id:7,  world:2, name:'Weekday vs Weekend',   pair:6, distractors:3, timeSec:35},
+  {id:8,  world:2, name:'Writing Tools vs Other',pair:7,distractors:3, timeSec:35},
+  {id:9,  world:2, name:'Even vs Odd Numbers',  pair:8, distractors:3, timeSec:35},
+  {id:10, world:2, name:'Colors vs Supplies',   pair:9, distractors:3, timeSec:30},
+  // World 3 — Mixed (5 levels)
+  {id:11, world:3, name:'Numbers vs Days',      pair:10,distractors:4, timeSec:25},
+  {id:12, world:3, name:'Warm Colors vs Even',  pair:5, distractors:4, timeSec:25},
+  {id:13, world:3, name:'Weekday vs Greeting',  pair:6, distractors:4, timeSec:25},
+  {id:14, world:3, name:'Writing vs Farewell',  pair:7, distractors:4, timeSec:22},
+  {id:15, world:3, name:'Grand Finale',         pair:8, distractors:4, timeSec:20},
+];
+const WORLD_NAMES={1:'World 1 — Basics',2:'World 2 — Groups',3:'World 3 — Mixed'};
+const PASS_ACCURACY=60; // % needed to pass
+
+// campaign progress stored in state
+// state.campaign = { progress:[{stars,score},...], currentLevelId }
+
+function loadCampaignProgress(){
+  try{
+    const raw=localStorage.getItem('wc_camp');
+    if(raw){const d=JSON.parse(raw);state.campaign=d;}
+  }catch(e){}
+  if(!state.campaign){
+    state.campaign={progress:Array(15).fill(null),currentLevelId:1};
+  }
+}
+
+function saveCampaignProgress(){
+  try{localStorage.setItem('wc_camp',JSON.stringify(state.campaign));}catch(e){}
+}
+
+function getLevelStars(idx){
+  // idx 0-based
+  const p=state.campaign.progress[idx];
+  return p?p.stars:0;
+}
+
+function isLevelUnlocked(idx){
+  if(idx===0) return true;
+  return state.campaign.progress[idx-1]!==null;
+}
+
+// ── Map render ──
+function renderMap(){
+  const worlds=el('map-worlds');
+  worlds.innerHTML='';
+  const completed=state.campaign.progress.filter(p=>p!==null).length;
+  el('map-progress').textContent=completed+' / 15';
+
+  const byWorld={1:[],2:[],3:[]};
+  CAMPAIGN_LEVELS.forEach((lv,i)=>byWorld[lv.world].push({lv,i}));
+
+  [1,2,3].forEach(w=>{
+    const sec=document.createElement('div');
+    sec.className='world-section';
+    const lbl=document.createElement('div');
+    lbl.className='world-label';
+    lbl.textContent=WORLD_NAMES[w];
+    sec.appendChild(lbl);
+    const grid=document.createElement('div');
+    grid.className='levels-grid';
+
+    byWorld[w].forEach(({lv,i})=>{
+      const btn=document.createElement('button');
+      const unlocked=isLevelUnlocked(i);
+      const prog=state.campaign.progress[i];
+      const isCurrent=state.campaign.currentLevelId===lv.id;
+      btn.className='lvl-btn'+(unlocked?'':' locked')+(prog?' completed':'')+(isCurrent?' current':'');
+
+      const stars=getLevelStars(i);
+      const starsStr=stars>0?'⭐'.repeat(stars)+'☆'.repeat(3-stars):'☆☆☆';
+
+      btn.innerHTML=`<span class="lvl-num">${lv.id}</span><span class="lvl-stars">${prog?starsStr:''}</span><span class="lvl-tag">${unlocked?lv.name.split(' ').slice(0,2).join(' '):'🔒'}</span>`;
+
+      if(unlocked){
+        btn.addEventListener('click',()=>startCampaignLevel(i));
+      }
+      grid.appendChild(btn);
+    });
+    sec.appendChild(grid);
+    worlds.appendChild(sec);
+  });
+}
+
+// ── Start a campaign level ──
+function startCampaignLevel(idx){
+  clearInterval(demoTimer);
+  clearTimers();
+
+  const lv=CAMPAIGN_LEVELS[idx];
+  state.campaignMode=true;
+  state.campaignLevelIdx=idx;
+  state.round=1; state.score=0;
+  state.roundsPlayed=0; state.totalCorrect=0; state.totalWords=0;
+  state.phase='idle'; state.colIdx=1;
+
+  // Use fixed pair from level definition
+  state.pair=PAIRS[lv.pair];
+
+  el('claw-cable').style.height='46px';
+  el('claw-fingers').classList.remove('closed');
+  el('claw-payload').classList.remove('visible');
+  el('drop-btns').classList.remove('visible');
+  stopGrabTimer();
+
+  buildCampaignRound(lv);
+  renderHUD();
+  renderBinHeaders();
+  renderGrid();
+  positionClaw();
+  el('hud-round').textContent='Level '+lv.id+' · '+lv.name;
+  el('game-status').textContent='Move the claw and press GRAB';
+  showScreen('game');
+  el('overlay-intro').classList.add('active');
+}
+
+function buildCampaignRound(lv){
+  clearTimers();
+  const {a,b}=state.pair;
+  const nD=lv.distractors;
+
+  const classifiableA=shuffle(ALL_WORDS.filter(w=>a.fn(w))).slice(0,4);
+  const classifiableB=shuffle(ALL_WORDS.filter(w=>b.fn(w))).slice(0,4);
+  const distractorPool=shuffle(ALL_WORDS.filter(w=>!a.fn(w)&&!b.fn(w)));
+  const distractors=distractorPool.slice(0,nD);
+
+  const allWords=shuffle([...classifiableA,...classifiableB,...distractors]);
+  state.stacks=[[],[],[],[]];
+  allWords.forEach((w,i)=>state.stacks[i%4].push({...w,isDistractor:!a.fn(w)&&!b.fn(w)}));
+
+  state.deposits=[];
+  state.phase='idle';
+  state.colIdx=1;
+  state.roundTimeSec=lv.timeSec;
+  state.roundTimeLeft=lv.timeSec;
+}
+
+// Override endRound to handle campaign mode
+const _endRoundOrig=null; // patched below
+
+function endCampaignLevel(evaluated,earned,lost){
+  clearTimers();
+  const acc=state.totalWords>0?Math.round(state.totalCorrect/state.totalWords*100):0;
+  const passed=acc>=PASS_ACCURACY;
+  const stars=acc>=90?3:acc>=70?2:acc>=PASS_ACCURACY?1:0;
+  const lv=CAMPAIGN_LEVELS[state.campaignLevelIdx];
+
+  // Save progress if passed (keep best stars)
+  if(passed){
+    const prev=state.campaign.progress[state.campaignLevelIdx];
+    const bestStars=prev?Math.max(prev.stars,stars):stars;
+    state.campaign.progress[state.campaignLevelIdx]={stars:bestStars,score:state.score};
+    // Unlock next
+    if(state.campaignLevelIdx+1<15 && !state.campaign.progress[state.campaignLevelIdx+1]){
+      // just unlocked — leave as null (unlocked = prev completed)
+    }
+    state.campaign.currentLevelId=Math.min(15,lv.id+1);
+    saveCampaignProgress();
+  }
+
+  // Build level result list (reuse rr-list)
+  const list=el('lvl-rr-list');
+  list.innerHTML='';
+  evaluated.forEach(dep=>{
+    const item=document.createElement('div');
+    let icon='',cls='',info='',pts='';
+    if(dep.result==='correct'){cls='rr-correct';icon='✅';info=`→ ${dep.bin==='a'?state.pair.a.label:state.pair.b.label}`;pts='+10';}
+    else if(dep.result==='distractor-ok'){cls='rr-correct';icon='✅';info='→ Others';pts='+5';}
+    else if(dep.result==='wrong'&&dep.bin==='c'){cls='rr-wrong';icon='❌';const c=state.pair.a.fn(dep.word)?state.pair.a.label:state.pair.b.label;info=`Should be: ${c}`;pts='-8';}
+    else if(dep.result==='wrong'){cls='rr-wrong';icon='❌';const c=state.pair.a.fn(dep.word)?state.pair.a.label:state.pair.b.label;info=`Should be: ${c}`;pts='-8';}
+    else{cls='rr-distractor';icon='⚠️';info='→ Others';pts='-5';}
+    if(dep.auto){cls='rr-auto';icon='⏱';info='Auto-dropped';pts=pts;}
+    item.className='rr-item '+cls;
+    item.innerHTML=`<span class="rr-icon">${icon}</span><span class="rr-word">${dep.word.w}</span><span class="rr-info">${info}</span><span class="rr-pts">${pts}</span>`;
+    list.appendChild(item);
+  });
+
+  el('lvl-rss-earned').textContent='+'+earned;
+  el('lvl-rss-lost').textContent='-'+lost;
+  el('lvl-rss-total').textContent=state.score+' pts';
+
+  const accEl=el('lvl-res-acc');
+  accEl.textContent=acc+'% accuracy';
+  accEl.className='lvl-result-acc '+(passed?'acc-pass':'acc-fail');
+
+  const starsEl=el('lvl-res-stars');
+  starsEl.innerHTML='';
+  [0,1,2].forEach(i=>{
+    const s=document.createElement('span');
+    s.textContent=i<stars?'⭐':'☆';
+    s.style.opacity='0';
+    starsEl.appendChild(s);
+    setTimeout(()=>{s.style.opacity='1';s.style.animation='starPop .4s cubic-bezier(.34,1.5,.64,1)';},i*250+150);
+  });
+
+  el('lvl-res-title').textContent=passed?'Level '+lv.id+' Complete! 🎉':'Not quite... Try again?';
+  const nextBtn=el('lvl-next-btn');
+  if(passed && lv.id<15){
+    nextBtn.textContent='Next Level →';nextBtn.disabled=false;
+  } else if(passed && lv.id===15){
+    nextBtn.textContent='🏆 Finished!';nextBtn.disabled=false;
+  } else {
+    nextBtn.textContent='Next Level →';nextBtn.disabled=true;
+  }
+  el('overlay-lvl-result').classList.add('active');
+}
+
+function retryLevel(){
+  el('overlay-lvl-result').classList.remove('active');
+  startCampaignLevel(state.campaignLevelIdx);
+}
+
+function levelNext(){
+  el('overlay-lvl-result').classList.remove('active');
+  const lv=CAMPAIGN_LEVELS[state.campaignLevelIdx];
+  if(lv.id>=15){showScreen('map');renderMap();return;}
+  startCampaignLevel(state.campaignLevelIdx+1);
+}
+
+function goMapFromGame(){
+  clearTimers();
+  el('overlay-round').classList.remove('active');
+  el('overlay-lvl-result').classList.remove('active');
+  showScreen('map');
+  renderMap();
+}
+
+function confirmResetProgress(){
+  const c=el('reset-confirm');
+  if(c) c.style.display='block';
+}
+function cancelResetProgress(){
+  const c=el('reset-confirm');
+  if(c) c.style.display='none';
+}
+function doResetProgress(){
+  state.campaign={progress:Array(15).fill(null),currentLevelId:1};
+  try{localStorage.removeItem('wc_camp');}catch(e){}
+  cancelResetProgress();
+  renderMap();
+}
+
+// startGame kept as alias for Free Play (result screen replay button)
+function startGame(){ startFreePlay(); }
+function startFreePlay(){
+  clearInterval(demoTimer);
+  clearTimers();
+  state.campaignMode=false;
+  state.round=1; state.score=0; state.lives=3;
+  state.roundsPlayed=0; state.totalCorrect=0; state.totalWords=0;
+  state.phase='idle'; state.colIdx=1;
+  el('claw-cable').style.height='46px';
+  el('claw-fingers').classList.remove('closed');
+  el('claw-payload').classList.remove('visible');
+  el('drop-btns').classList.remove('visible');
+  stopGrabTimer();
+  buildRound();
+  renderHUD();
+  renderBinHeaders();
+  renderGrid();
+  positionClaw();
+  el('game-status').textContent='Move the claw and press GRAB';
+  showScreen('game');
+  el('overlay-intro').classList.add('active');
+}
 
 // ═══════════════════════════════════
 // INIT
@@ -948,6 +1324,9 @@ document.addEventListener('keydown',e=>{
     const theme=localStorage.getItem('wc_theme');
     if(theme) document.documentElement.setAttribute('data-theme',theme);
   }catch(e){}
+  state.campaignMode=false;
+  state.campaignLevelIdx=0;
+  loadCampaignProgress();
   showScreen('menu');
 })();
 </script>
