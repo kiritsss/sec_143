@@ -724,6 +724,22 @@
   .btn-replay.show { opacity: 1; transform: translateY(0); }
   .btn-replay:hover { transform: scale(1.05); }
 
+  .btn-menu {
+    padding: 0.65rem 2rem;
+    font-size: 0.95rem; font-weight: 700;
+    border: 2px solid var(--card-border);
+    border-radius: 50px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: border-color 0.2s, color 0.2s, transform 0.15s;
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.4s 0.15s, transform 0.4s 0.15s, border-color 0.2s, color 0.2s;
+  }
+  .btn-menu.show { opacity: 1; transform: translateY(0); }
+  .btn-menu:hover { border-color: var(--text-dim); color: var(--text); transform: scale(1.04); }
+
   /* Confetti */
   .confetti-piece {
     position: fixed;
@@ -921,6 +937,7 @@
     </div>
   </div>
   <button class="btn-replay" id="btnReplay" onclick="replayGame()">🔄 PLAY AGAIN</button>
+  <button class="btn-menu" id="btnMenu" onclick="goToMenu()">← Menú</button>
 </div>
 
 <!-- ══════════════════ INSTRUCTIONS OVERLAY ════════════ -->
@@ -1634,6 +1651,16 @@ function replayGame() {
   startGame();
 }
 
+function goToMenu() {
+  document.querySelectorAll('.confetti-piece, .particle').forEach(p => p.remove());
+  state.phase = 'idle';
+  // Restaurar acento del modo seleccionado en el menú
+  const mode = MODES[state.modeKey];
+  setAccent(mode.accent);
+  document.documentElement.style.setProperty('--mode-color', mode.accent);
+  showScreen('titleScreen');
+}
+
 /* ═══════════════════════════════════════════════════════════
    RESULTS
 ═══════════════════════════════════════════════════════════ */
@@ -1653,6 +1680,8 @@ function renderResults() {
   if (statWrong) statWrong.classList.remove('show');
   if (statFast) statFast.classList.remove('show');
   if (btnReplay) btnReplay.classList.remove('show');
+  const btnMenu = document.getElementById('btnMenu');
+  if (btnMenu) btnMenu.classList.remove('show');
   if (star1) star1.classList.remove('lit');
   if (star2) star2.classList.remove('lit');
   if (star3) star3.classList.remove('lit');
@@ -1686,6 +1715,9 @@ function renderResults() {
 
   // Replay button
   setTimeout(() => { if (btnReplay) btnReplay.classList.add('show'); }, 1400);
+
+  // Menu button (ligero retraso extra para escalonar)
+  setTimeout(() => { if (btnMenu) btnMenu.classList.add('show'); }, 1600);
 
   // Sound + confetti
   if (pct >= 0.70) {
