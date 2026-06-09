@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="es" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memorama — ESF 143</title>
+<style>
+/* ═══════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════ */
+:root {
+  --bg:        #0f0f1a;
+  --bg2:       #1a1a2e;
+  --bg3:       #16213e;
+  --surface:   #1f2a4a;
+  --surface2:  #263354;
+  --border:    #2e4080;
+  --text:      #e8eaf6;
+  --text2:     #9fa8da;
+  --accent:    #7c4dff;
+  --accent2:   #651fff;
+  --gold:      #ffd740;
+  --green:     #69f0ae;
+  --red:       #ff5252;
+  --card-back: #1e2d5a;
+  --card-front:#263354;
+  --overlay:   rgba(10,10,25,0.82);
+  --radius:    14px;
+  --shadow:    0 8px 32px rgba(0,0,0,0.5);
+  --transition: 0.22s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="light"] {
+  --bg:        #f0f2ff;
+  --bg2:       #e8eaff;
+  --bg3:       #dde0ff;
+  --surface:   #ffffff;
+  --surface2:  #eef0ff;
+  --border:    #b0baf8;
+  --text:      #1a1a3e;
+  --text2:     #4a5080;
+  --accent:    #5c35e8;
+  --accent2:   #4527a0;
+  --gold:      #f9a825;
+  --green:     #1b8a57;
+  --red:       #d32f2f;
+  --card-back: #c5caf5;
+  --card-front:#ffffff;
+  --overlay:   rgba(180,185,230,0.85);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; min-height: 100vh;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* ═══════════════════════════════════════════
+   UTILITY
+═══════════════════════════════════════════ */
+.hidden { display: none !important; }
+.screen { width: 100%; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; position: relative; }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: transform var(--transition), box-shadow var(--transition), background var(--transition), opacity var(--transition);
+}
+button:active { transform: scale(.96) !important; }
+
+/* ═══════════════════════════════════════════
+   CORNER BUTTONS (theme + help)
+═══════════════════════════════════════════ */
+.corner-btns {
+  position: fixed; top: 1rem; right: 1rem;
+  display: flex; gap: .5rem; z-index: 100;
+}
+.corner-btn {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--surface); border: 1.5px solid var(--border);
+  color: var(--text); font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow);
+}
+.corner-btn:hover { transform: scale(1.12); background: var(--accent); color: #fff; }
+
+/* ═══════════════════════════════════════════
+   FLOATING PARTICLES (menu background)
+═══════════════════════════════════════════ */
+#particles {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.particle {
+  position: absolute;
+  width: 38px; height: 52px;
+  border-radius: 8px;
+  background: var(--card-back);
+  border: 1.5px solid var(--border);
+  opacity: .18;
+  animation: floatCard linear infinite;
+}
+@keyframes floatCard {
+  0%   { transform: translateY(110vh) rotate(0deg); }
+  100% { transform: translateY(-20vh) rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════
+   MENU SCREEN
+═══════════════════════════════════════════ */
+#screen-menu { position: relative; z-index: 1; gap: 2rem; }
+
+.menu-title {
+  font-size: clamp(2.2rem, 6vw, 3.8rem);
+  font-weight: 900;
+  text-align: center;
+  color: var(--gold);
+  text-shadow: 0 0 40px rgba(255,215,64,.4);
+  animation: titleFloat 3s ease-in-out infinite;
+  letter-spacing: -.02em;
+  line-height: 1.1;
+}
+.menu-subtitle {
+  text-align: center;
+  color: var(--text2);
+  font-size: .95rem;
+  margin-top: -.5rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+@keyframes titleFloat {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+.menu-section { display: flex; flex-direction: column; gap: .6rem; align-items: center; width: 100%; max-width: 420px; }
+.menu-label { font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: var(--text2); }
+
+.toggle-group { display: flex; gap: .6rem; flex-wrap: wrap; justify-content: center; }
+.toggle-btn {
+  padding: .6rem 1.4rem;
+  border-radius: 50px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  color: var(--text2);
+  font-size: .9rem; font-weight: 600;
+}
+.toggle-btn:hover { border-color: var(--accent); color: var(--text); transform: translateY(-2px); }
+.toggle-btn.active {
+  background: var(--accent); border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(124,77,255,.45);
+  transform: translateY(-2px);
+}
+.toggle-btn.active:hover { transform: translateY(-3px) scale(1.04); }
+
+.btn-play {
+  margin-top: .5rem;
+  padding: 1rem 3rem;
+  border-radius: 50px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  font-size: 1.2rem; font-weight: 800;
+  letter-spacing: .04em;
+  box-shadow: 0 6px 28px rgba(124,77,255,.5);
+  animation: playPulse 2s ease-in-out infinite;
+}
+.btn-play:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 10px 36px rgba(124,77,255,.65); animation: none; }
+@keyframes playPulse {
+  0%,100% { box-shadow: 0 6px 28px rgba(124,77,255,.5); }
+  50%      { box-shadow: 0 6px 40px rgba(124,77,255,.8); }
+}
+
+/* ═══════════════════════════════════════════
+   SETUP SCREEN (2 players)
+═══════════════════════════════════════════ */
+#screen-setup { gap: 1.5rem; }
+.setup-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  width: 100%; max-width: 420px;
+  display: flex; flex-direction: column; gap: 1.2rem;
+}
+.setup-title { font-size: 1.5rem; font-weight: 800; text-align: center; }
+.setup-player { display: flex; align-items: center; gap: .8rem; }
+.player-color {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 2px solid var(--border); flex-shrink: 0;
+}
+.setup-input {
+  flex: 1; padding: .6rem .9rem;
+  border-radius: 8px;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  font-family: inherit; font-size: .95rem;
+  transition: border-color var(--transition);
+  -webkit-user-select: text; user-select: text;
+}
+.setup-input:focus { outline: none; border-color: var(--accent); }
+.btn-start-game {
+  width: 100%; padding: .9rem;
+  border-radius: 50px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; font-size: 1rem; font-weight: 700;
+}
+.btn-start-game:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124,77,255,.5); }
+.btn-back-menu {
+  background: transparent; color: var(--text2); font-size: .9rem;
+  padding: .4rem; text-decoration: underline;
+}
+.btn-back-menu:hover { color: var(--text); }
+
+/* ═══════════════════════════════════════════
+   GAME SCREEN
+═══════════════════════════════════════════ */
+#screen-game { justify-content: flex-start; padding-top: 1rem; }
+
+/* Header */
+.game-header {
+  width: 100%; max-width: 900px;
+  display: flex; align-items: center; gap: .8rem;
+  flex-wrap: wrap; justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.game-header-left { display: flex; align-items: center; gap: .8rem; }
+.btn-pause {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--surface); border: 1.5px solid var(--border);
+  color: var(--text); font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow);
+}
+.btn-pause:hover { background: var(--accent); color: #fff; transform: scale(1.1); }
+
+.hud-chip {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  padding: .35rem .9rem;
+  font-size: .85rem; font-weight: 700;
+  display: flex; align-items: center; gap: .4rem;
+  white-space: nowrap;
+}
+.hud-chip span { color: var(--gold); }
+.hud-chip.active-turn { border-color: var(--accent); box-shadow: 0 0 12px rgba(124,77,255,.4); }
+
+.player-score-hud {
+  display: flex; gap: .5rem;
+}
+.pscore {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  padding: .35rem .9rem;
+  font-size: .85rem; font-weight: 700;
+  display: flex; align-items: center; gap: .5rem;
+  transition: all var(--transition);
+}
+.pscore.active { border-color: var(--accent); box-shadow: 0 0 14px rgba(124,77,255,.45); }
+.pscore .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* Grid */
+.card-grid {
+  display: grid;
+  gap: clamp(.4rem, 1vw, .8rem);
+  width: 100%; max-width: 900px;
+  perspective: 1000px;
+}
+.card-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.card-grid.cols-6 { grid-template-columns: repeat(6, 1fr); }
+
+.card-wrapper {
+  aspect-ratio: 2/3;
+  cursor: pointer;
+  perspective: 600px;
+}
+.card-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform .45s cubic-bezier(.4,0,.2,1);
+  border-radius: var(--radius);
+}
+.card-wrapper.flipped .card-inner { transform: rotateY(180deg); }
+.card-wrapper.matched .card-inner { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute; inset: 0;
+  border-radius: var(--radius);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: .5rem;
+  font-weight: 700;
+  text-align: center;
+  overflow: hidden;
+}
+.card-back-face {
+  background: var(--card-back);
+  border: 2px solid var(--border);
+  font-size: 1.5rem;
+}
+.card-back-face::after { content: '🃏'; font-size: 1.8rem; opacity: .6; }
+.card-front-face {
+  background: var(--card-front);
+  border: 2px solid var(--accent);
+  transform: rotateY(180deg);
+  font-size: clamp(.7rem, 2vw, 1rem);
+  color: var(--text);
+  gap: .3rem;
+}
+.card-front-face .card-category {
+  font-size: .62rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text2);
+  opacity: .8;
+}
+.card-front-face .card-word { font-size: clamp(.75rem, 2.2vw, 1.05rem); }
+
+/* Card hover lift */
+.card-wrapper:not(.matched):not(.flipped):hover .card-inner {
+  transform: rotateY(5deg) translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0,0,0,.4);
+}
+
+/* Matched glow */
+.card-wrapper.matched .card-face.card-front-face {
+  border-color: var(--green);
+  box-shadow: 0 0 18px rgba(105,240,174,.35);
+  animation: matchedPulse 1.8s ease-in-out infinite;
+}
+@keyframes matchedPulse {
+  0%,100% { box-shadow: 0 0 10px rgba(105,240,174,.3); }
+  50%      { box-shadow: 0 0 24px rgba(105,240,174,.6); }
+}
+
+/* Shake on mismatch */
+.card-wrapper.shake .card-inner {
+  animation: shake .5s ease;
+}
+@keyframes shake {
+  0%,100% { transform: rotateY(180deg) translateX(0); }
+  20%      { transform: rotateY(180deg) translateX(-8px); }
+  40%      { transform: rotateY(180deg) translateX(8px); }
+  60%      { transform: rotateY(180deg) translateX(-5px); }
+  80%      { transform: rotateY(180deg) translateX(5px); }
+}
+
+/* Stagger entrance */
+.card-wrapper.entering {
+  animation: cardEntrance .4s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes cardEntrance {
+  from { transform: translateY(-40px) scale(.6); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Match burst particles */
+.burst {
+  position: fixed;
+  pointer-events: none;
+  z-index: 200;
+  width: 0; height: 0;
+}
+.burst-dot {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  animation: burstOut .6s ease-out forwards;
+}
+@keyframes burstOut {
+  from { transform: translate(0,0) scale(1); opacity: 1; }
+  to   { transform: var(--tx, translate(40px,-40px)) scale(0); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════
+   OVERLAYS
+═══════════════════════════════════════════ */
+.overlay {
+  position: fixed; inset: 0;
+  background: var(--overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  animation: overlayIn .22s ease;
+}
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.overlay-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  width: 100%; max-width: 380px;
+  display: flex; flex-direction: column; gap: 1rem;
+  box-shadow: var(--shadow);
+  animation: overlayCardIn .28s cubic-bezier(.4,0,.2,1);
+}
+@keyframes overlayCardIn {
+  from { transform: scale(.88); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.overlay-title {
+  font-size: 1.4rem; font-weight: 800; text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+}
+.overlay-close {
+  position: absolute; top: .8rem; right: .8rem;
+  background: transparent; color: var(--text2);
+  font-size: 1.3rem; line-height: 1;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.overlay-close:hover { background: var(--bg2); color: var(--text); }
+
+.overlay-btn {
+  width: 100%; padding: .85rem;
+  border-radius: 50px;
+  font-size: .95rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+}
+.overlay-btn.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; box-shadow: 0 4px 18px rgba(124,77,255,.4);
+}
+.overlay-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(124,77,255,.6); }
+.overlay-btn.secondary {
+  background: var(--surface2); border: 1.5px solid var(--border);
+  color: var(--text);
+}
+.overlay-btn.secondary:hover { border-color: var(--accent); transform: translateY(-1px); }
+.overlay-btn.danger {
+  background: transparent; border: 1.5px solid var(--red);
+  color: var(--red);
+}
+.overlay-btn.danger:hover { background: var(--red); color: #fff; transform: translateY(-1px); }
+
+/* Sound sliders */
+.sound-row {
+  display: flex; align-items: center; gap: .8rem;
+}
+.sound-label { width: 28px; text-align: center; font-size: 1.1rem; }
+.sound-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 5px; border-radius: 3px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+.sound-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px rgba(124,77,255,.5);
+  cursor: pointer;
+  transition: transform .15s;
+}
+.sound-slider::-webkit-slider-thumb:hover { transform: scale(1.3); }
+.sound-val { width: 30px; text-align: right; font-size: .8rem; color: var(--text2); font-weight: 700; }
+
+/* Instruction list */
+.instructions-list {
+  list-style: none;
+  display: flex; flex-direction: column; gap: .6rem;
+}
+.instructions-list li {
+  display: flex; align-items: flex-start; gap: .6rem;
+  font-size: .9rem; line-height: 1.5;
+  color: var(--text2);
+}
+.instructions-list li .instr-num {
+  flex-shrink: 0;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .75rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: .15rem;
+}
+.instr-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.instr-table td { padding: .35rem .5rem; border-bottom: 1px solid var(--border); }
+.instr-table td:first-child { color: var(--gold); font-weight: 700; }
+.instr-table td:last-child { color: var(--text2); }
+
+.overlay-divider { border: none; border-top: 1px solid var(--border); margin: .2rem 0; }
+
+/* Confirm dialog */
+.confirm-msg { text-align: center; color: var(--text2); font-size: .92rem; line-height: 1.6; }
+.confirm-btns { display: flex; gap: .6rem; }
+.confirm-btns .overlay-btn { flex: 1; }
+
+/* ═══════════════════════════════════════════
+   RESULT SCREEN
+═══════════════════════════════════════════ */
+#screen-result { gap: 1.5rem; position: relative; overflow: hidden; }
+
+.result-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem 2.5rem;
+  width: 100%; max-width: 420px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 1.2rem;
+  box-shadow: var(--shadow);
+  animation: resultCardIn .5s cubic-bezier(.4,0,.2,1);
+}
+@keyframes resultCardIn {
+  from { transform: scale(.7) translateY(40px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);     opacity: 1; }
+}
+
+.result-title { font-size: 1.7rem; font-weight: 900; text-align: center; }
+
+.stars-row {
+  display: flex; gap: .4rem;
+  font-size: 2.4rem;
+  min-height: 3.2rem;
+}
+.star { opacity: 0; display: inline-block; }
+.star.pop { animation: starPop .4s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes starPop {
+  0%   { opacity: 0; transform: scale(0); }
+  60%  { opacity: 1; transform: scale(1.35); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.result-stats {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: .6rem; width: 100%;
+}
+.stat-chip {
+  background: var(--bg2);
+  border-radius: 10px;
+  padding: .7rem; text-align: center;
+}
+.stat-chip .sv { font-size: 1.3rem; font-weight: 800; color: var(--gold); }
+.stat-chip .sk { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text2); }
+
+.duo-scores {
+  display: flex; gap: 1rem; width: 100%; justify-content: center;
+}
+.duo-score-card {
+  flex: 1;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem; text-align: center;
+  transition: all var(--transition);
+}
+.duo-score-card.winner {
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(255,215,64,.35);
+}
+.duo-score-card .dsname { font-size: .85rem; font-weight: 700; }
+.duo-score-card .dsscore { font-size: 2rem; font-weight: 900; color: var(--gold); }
+.duo-score-card .dscrown { font-size: 1.4rem; }
+
+.result-btns { display: flex; flex-direction: column; gap: .6rem; width: 100%; }
+.result-btn {
+  width: 100%; padding: .9rem;
+  border-radius: 50px;
+  font-size: .95rem; font-weight: 700;
+}
+.result-btn.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; box-shadow: 0 4px 18px rgba(124,77,255,.4);
+}
+.result-btn.primary:hover { transform: translateY(-2px); }
+.result-btn.secondary {
+  background: var(--surface2); border: 1.5px solid var(--border); color: var(--text);
+}
+.result-btn.secondary:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+/* Confetti */
+.confetti-piece {
+  position: fixed;
+  top: -12px;
+  width: 10px; height: 14px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 400;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* CEFR badge */
+.cefr-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem; font-weight: 800;
+  letter-spacing: .08em;
+  padding: .2rem .6rem; border-radius: 50px;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .card-grid.cols-6 { grid-template-columns: repeat(4, 1fr); }
+  .game-header { flex-direction: column; align-items: flex-start; }
+  .overlay-card { padding: 1.4rem; }
+  .result-card { padding: 1.4rem 1.2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .1ms !important; }
+}
+</style>
+</head>
+<body oncontextmenu="return false" oncopy="return false" onpaste="return false" oncut="return false" data-theme="dark">
+
+<!-- Particles background -->
+<div id="particles"></div>
+
+<!-- Corner buttons -->
+<div class="corner-btns">
+  <button class="corner-btn" id="btn-help" title="Instrucciones" aria-label="Instrucciones">❓</button>
+  <button class="corner-btn" id="btn-theme" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
+</div>
+
+<!-- ═══════════════ MENU ═══════════════ -->
+<div id="screen-menu" class="screen">
+  <div class="menu-title">🃏 Memorama</div>
+  <div class="menu-subtitle">ESF 143 · Inglés A1</div>
+
+  <div class="menu-section">
+    <div class="menu-label">Modo de juego</div>
+    <div class="toggle-group">
+      <button class="toggle-btn active" data-mode="solo">👤 Solitario</button>
+      <button class="toggle-btn" data-mode="duo">👥 2 Jugadores</button>
+    </div>
+  </div>
+
+  <div class="menu-section">
+    <div class="menu-label">Dificultad</div>
+    <div class="toggle-group">
+      <button class="toggle-btn active" data-diff="easy">🟢 Fácil <small>(8 parejas)</small></button>
+      <button class="toggle-btn" data-diff="normal">🟡 Normal <small>(12 parejas)</small></button>
+      <button class="toggle-btn" data-diff="hard">🔴 Difícil <small>(16 parejas)</small></button>
+    </div>
+  </div>
+
+  <button class="btn-play" id="btn-play">▶ Jugar</button>
+
+  <button class="overlay-btn secondary" id="btn-sound-menu" style="max-width:220px;margin-top:.5rem;">
+    🔊 Ajustes de sonido
+  </button>
+</div>
+
+<!-- ═══════════════ SETUP (duo) ═══════════════ -->
+<div id="screen-setup" class="screen hidden">
+  <div class="setup-card">
+    <div class="setup-title">👥 Nombres de jugadores</div>
+    <div class="setup-player">
+      <div class="player-color" style="background:#7c4dff;"></div>
+      <input class="setup-input" id="input-p1" type="text" maxlength="16" placeholder="Jugador 1" autocomplete="off">
+    </div>
+    <div class="setup-player">
+      <div class="player-color" style="background:#ff5252;"></div>
+      <input class="setup-input" id="input-p2" type="text" maxlength="16" placeholder="Jugador 2" autocomplete="off">
+    </div>
+    <button class="btn-start-game" id="btn-start-game">🎮 ¡Empezar partida!</button>
+    <button class="btn-back-menu" id="btn-back-from-setup">← Volver al menú</button>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME ═══════════════ -->
+<div id="screen-game" class="screen hidden">
+  <div class="game-header">
+    <div class="game-header-left">
+      <button class="btn-pause" id="btn-pause">⏸</button>
+      <div class="hud-chip" id="hud-pairs">🃏 Parejas: <span id="hud-found">0</span>/<span id="hud-total">0</span></div>
+      <div class="hud-chip" id="hud-timer">⏱ <span id="hud-time">0:00</span></div>
+      <div class="cefr-badge">A1</div>
+    </div>
+    <div class="player-score-hud" id="player-score-hud"></div>
+  </div>
+  <div class="card-grid" id="card-grid"></div>
+</div>
+
+<!-- ═══════════════ RESULT ═══════════════ -->
+<div id="screen-result" class="screen hidden">
+  <div class="result-card">
+    <div class="result-title" id="result-title">🎉 ¡Completado!</div>
+    <div class="stars-row" id="stars-row"></div>
+    <div id="result-solo-stats" class="result-stats hidden">
+      <div class="stat-chip"><div class="sv" id="res-time">0:00</div><div class="sk">Tiempo</div></div>
+      <div class="stat-chip"><div class="sv" id="res-attempts">0</div><div class="sk">Intentos</div></div>
+      <div class="stat-chip"><div class="sv" id="res-pairs">0</div><div class="sk">Parejas</div></div>
+      <div class="stat-chip"><div class="sv" id="res-errors">0</div><div class="sk">Errores</div></div>
+    </div>
+    <div id="result-duo-scores" class="duo-scores hidden"></div>
+    <div class="result-btns">
+      <button class="result-btn primary" id="btn-replay">🔄 Jugar de nuevo</button>
+      <button class="result-btn secondary" id="btn-result-menu">🏠 Menú principal</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ OVERLAY: PAUSE ═══════════════ -->
+<div id="overlay-pause" class="overlay hidden">
+  <div class="overlay-card" style="position:relative;">
+    <div class="overlay-title">⏸ Pausa</div>
+    <button class="overlay-btn primary" id="btn-resume">▶ Continuar</button>
+    <button class="overlay-btn secondary" id="btn-restart-pause">🔄 Reiniciar partida</button>
+    <button class="overlay-btn secondary" id="btn-sound-pause">🔊 Ajustes de sonido</button>
+    <button class="overlay-btn secondary" id="btn-help-pause">❓ Instrucciones</button>
+    <button class="overlay-btn danger" id="btn-menu-pause">🏠 Menú principal</button>
+  </div>
+</div>
+
+<!-- ═══════════════ OVERLAY: SOUND ═══════════════ -->
+<div id="overlay-sound" class="overlay hidden">
+  <div class="overlay-card" style="position:relative;">
+    <button class="overlay-close" id="btn-close-sound">✕</button>
+    <div class="overlay-title">🔊 Sonido</div>
+    <div class="sound-row">
+      <div class="sound-label">🎵</div>
+      <input class="sound-slider" type="range" min="0" max="100" value="70" id="slider-music">
+      <div class="sound-val" id="val-music">70</div>
+    </div>
+    <div class="sound-row">
+      <div class="sound-label">🔊</div>
+      <input class="sound-slider" type="range" min="0" max="100" value="70" id="slider-sfx">
+      <div class="sound-val" id="val-sfx">70</div>
+    </div>
+    <div class="sound-row">
+      <div class="sound-label">🎶</div>
+      <input class="sound-slider" type="range" min="0" max="100" value="70" id="slider-jingle">
+      <div class="sound-val" id="val-jingle">70</div>
+    </div>
+    <div style="font-size:.75rem;color:var(--text2);text-align:center;line-height:1.5;">
+      🎵 Música &nbsp;·&nbsp; 🔊 Efectos &nbsp;·&nbsp; 🎶 Jingles
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ OVERLAY: INSTRUCTIONS ═══════════════ -->
+<div id="overlay-instructions" class="overlay hidden">
+  <div class="overlay-card" style="position:relative;max-height:90vh;overflow-y:auto;">
+    <button class="overlay-close" id="btn-close-instructions">✕</button>
+    <div class="overlay-title">❓ ¿Cómo jugar?</div>
+    <ul class="instructions-list">
+      <li><span class="instr-num">1</span><span>Haz clic en una carta para voltearla y ver la palabra en inglés o español.</span></li>
+      <li><span class="instr-num">2</span><span>Haz clic en una segunda carta. Si forman pareja (inglés ↔ español), quedan descubiertas.</span></li>
+      <li><span class="instr-num">3</span><span>Si no coinciden, se voltean de regreso. ¡Memoriza su posición!</span></li>
+      <li><span class="instr-num">4</span><span>Encuentra todas las parejas para ganar.</span></li>
+    </ul>
+    <hr class="overlay-divider">
+    <table class="instr-table">
+      <tr><td>🟢 Fácil</td><td>8 parejas · 4×4</td></tr>
+      <tr><td>🟡 Normal</td><td>12 parejas · 4×6</td></tr>
+      <tr><td>🔴 Difícil</td><td>16 parejas · 4×8</td></tr>
+    </table>
+    <hr class="overlay-divider">
+    <div style="font-size:.82rem;color:var(--text2);">
+      <strong style="color:var(--text);">Modo 2 Jugadores:</strong> quien encuentre una pareja vuelve a jugar. Si no coinciden, pasa el turno. Gana quien encuentre más parejas.
+    </div>
+    <button class="overlay-btn primary" id="btn-close-instructions-ok">¡Entendido!</button>
+  </div>
+</div>
+
+<!-- ═══════════════ OVERLAY: CONFIRM ═══════════════ -->
+<div id="overlay-confirm" class="overlay hidden">
+  <div class="overlay-card" style="position:relative;gap:1.2rem;">
+    <div class="overlay-title" id="confirm-title">⚠️ ¿Estás seguro?</div>
+    <div class="confirm-msg" id="confirm-msg">¿Seguro? Se perderá el progreso de esta partida.</div>
+    <div class="confirm-btns">
+      <button class="overlay-btn secondary confirm-btns" id="btn-confirm-cancel" style="flex:1;">Cancelar</button>
+      <button class="overlay-btn danger" id="btn-confirm-ok" style="flex:1;">Salir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ════════════════════════════════════════
+   CONTENT DATA
+════════════════════════════════════════ */
+const CATEGORIES = {
+  COLORS:    ['blue','green','brown','grey','red','white','pink','yellow','black','beige','purple','orange','aqua','navy'],
+  NUMBERS:   ['one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'],
+  SUPPLIES:  ['scissors','backpack','books','ruler','pencil','eraser','crayons','glue','paper','folder','pen','desk','stapler'],
+  DAYS:      ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+  GREETINGS: ['Hello','Hi','Good morning','Good day','How are you?'],
+  FAREWELLS: ['Bye','Goodbye','See you later','See you soon','Take care','See you!']
+};
+
+const TRANSLATIONS = {
+  // Colors
+  blue:'azul', green:'verde', brown:'café/marrón', grey:'gris', red:'rojo', white:'blanco',
+  pink:'rosa', yellow:'amarillo', black:'negro', beige:'beige', purple:'morado',
+  orange:'naranja', aqua:'aguamarina', navy:'azul marino',
+  // Numbers
+  one:'uno', two:'dos', three:'tres', four:'cuatro', five:'cinco', six:'seis',
+  seven:'siete', eight:'ocho', nine:'nueve', ten:'diez', eleven:'once', twelve:'doce',
+  thirteen:'trece', fourteen:'catorce', fifteen:'quince', sixteen:'dieciséis',
+  seventeen:'diecisiete', eighteen:'dieciocho', nineteen:'diecinueve', twenty:'veinte',
+  // Supplies
+  scissors:'tijeras', backpack:'mochila', books:'libros', ruler:'regla', pencil:'lápiz',
+  eraser:'goma', crayons:'crayones', glue:'pegamento', paper:'papel', folder:'carpeta',
+  pen:'bolígrafo', desk:'escritorio', stapler:'engrapadora',
+  // Days
+  Monday:'lunes', Tuesday:'martes', Wednesday:'miércoles', Thursday:'jueves',
+  Friday:'viernes', Saturday:'sábado', Sunday:'domingo',
+  // Greetings
+  'Hello':'Hola', 'Hi':'¡Hola!', 'Good morning':'Buenos días',
+  'Good day':'Buen día', 'How are you?':'¿Cómo estás?',
+  // Farewells
+  'Bye':'Adiós', 'Goodbye':'Hasta luego', 'See you later':'Nos vemos después',
+  'See you soon':'Hasta pronto', 'Take care':'Cuídate', 'See you!':'¡Nos vemos!'
+};
+
+const CATEGORY_LABELS = {
+  COLORS:'Color', NUMBERS:'Número', SUPPLIES:'Útil', DAYS:'Día', GREETINGS:'Saludo', FAREWELLS:'Despedida'
+};
+
+const DIFFICULTY = { easy: 8, normal: 12, hard: 16 };
+
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+const state = {
+  phase: 'menu',       // 'menu'|'setup'|'playing'|'paused'|'results'
+  mode: 'solo',        // 'solo'|'duo'
+  difficulty: 'easy',
+  players: [],         // [{ name, color, score }]
+  currentPlayer: 0,
+  deck: [],            // [{ id, wordKey, isEN, category, pairId }]
+  flipped: [],         // indices of currently flipped cards (max 2)
+  matched: [],         // pair ids matched
+  attempts: 0,
+  errors: 0,
+  timer: null,
+  elapsed: 0,
+  locked: false,       // prevent clicks during mismatch timeout
+  audio: { music: 70, sfx: 70, jingle: 70 },
+  prevOverlay: null,   // for back-navigation between overlays
+  confirmCallback: null
+};
+
+/* ════════════════════════════════════════
+   AUDIO ENGINE (Web Audio API)
+════════════════════════════════════════ */
+let audioCtx = null;
+let musicGain, sfxGain, jingleGain;
+let musicSource = null;
+let musicNodes = [];
+
+function initAudio() {
+  if (audioCtx) {
+    // Contexto ya existe — solo asegurarse de que esté activo
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().then(() => { updateGains(); });
+    }
+    return;
+  }
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    musicGain  = audioCtx.createGain();
+    sfxGain    = audioCtx.createGain();
+    jingleGain = audioCtx.createGain();
+    musicGain.connect(audioCtx.destination);
+    sfxGain.connect(audioCtx.destination);
+    jingleGain.connect(audioCtx.destination);
+    // Reanudar si el navegador lo creó suspendido
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().then(() => { updateGains(); startMusic(); });
+    } else {
+      updateGains();
+      startMusic();
+    }
+  } catch(e) { audioCtx = null; }
+}
+
+function updateGains() {
+  if (!audioCtx || audioCtx.state === 'suspended') return;
+  const t = audioCtx.currentTime;
+  musicGain.gain.setTargetAtTime(state.audio.music / 100 * 0.35, t, 0.05);
+  sfxGain.gain.setTargetAtTime(state.audio.sfx   / 100 * 0.6,  t, 0.05);
+  jingleGain.gain.setTargetAtTime(state.audio.jingle/100 * 0.7, t, 0.05);
+}
+
+function playOsc(freq, type, dur, gain, startTime, dest) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const g   = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, startTime);
+  g.gain.setValueAtTime(gain, startTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
+  osc.connect(g); g.connect(dest || audioCtx.destination);
+  osc.start(startTime);
+  osc.stop(startTime + dur + 0.01);
+}
+
+function startMusic() {
+  if (!audioCtx) return;
+  stopMusic();
+  // Simple upbeat arpeggio loop: C4-E4-G4-B4 at 110 BPM
+  const notes = [261.63, 329.63, 392.00, 493.88, 392.00, 329.63, 261.63, 220.00];
+  const beatLen = 60 / 110 / 2;
+  let t = audioCtx.currentTime + 0.1;
+
+  function scheduleLoop() {
+    if (!audioCtx) return;
+    for (let i = 0; i < notes.length; i++) {
+      playOsc(notes[i], 'triangle', beatLen * 0.7, 0.45, t + i * beatLen, musicGain);
+      // bass note
+      if (i % 4 === 0) playOsc(notes[i] / 2, 'sine', beatLen * 1.8, 0.3, t + i * beatLen, musicGain);
+    }
+    t += notes.length * beatLen;
+    const delay = (t - audioCtx.currentTime - 0.05) * 1000;
+    state.timer && clearTimeout(state._musicLoop);
+    state._musicLoop = setTimeout(scheduleLoop, Math.max(delay, 10));
+  }
+  scheduleLoop();
+}
+
+function stopMusic() {
+  clearTimeout(state._musicLoop);
+}
+
+function pauseMusic() { if (audioCtx) musicGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1); }
+function resumeMusic() { if (audioCtx) musicGain.gain.setTargetAtTime(state.audio.music / 100 * 0.35, audioCtx.currentTime, 0.1); }
+
+function sfxFlip() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  playOsc(1200, 'sine', 0.06, 0.3, t, sfxGain);
+}
+function sfxMatch() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  [523.25, 659.25, 783.99].forEach((f, i) => playOsc(f, 'triangle', 0.18, 0.5, t + i * 0.09, sfxGain));
+}
+function sfxMismatch() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  playOsc(300, 'sawtooth', 0.12, 0.35, t, sfxGain);
+  playOsc(220, 'sawtooth', 0.2,  0.35, t + 0.12, sfxGain);
+}
+function sfxTurn() {
+  if (!audioCtx) return;
+  playOsc(440, 'sine', 0.08, 0.25, audioCtx.currentTime, sfxGain);
+}
+function sfxHover() {
+  if (!audioCtx) return;
+  playOsc(880, 'sine', 0.04, 0.1 * (state.audio.sfx / 100), audioCtx.currentTime, sfxGain);
+}
+function jingleWin() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+    playOsc(f, 'triangle', 0.3, 0.6, t + i * 0.12, jingleGain);
+  });
+}
+
+/* ════════════════════════════════════════
+   FISHER-YATES SHUFFLE
+════════════════════════════════════════ */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ════════════════════════════════════════
+   DECK GENERATION
+════════════════════════════════════════ */
+function buildDeck(n) {
+  // Flatten all words with category tag
+  let pool = [];
+  for (const [cat, words] of Object.entries(CATEGORIES)) {
+    words.forEach(w => pool.push({ word: w, cat }));
+  }
+  pool = shuffle(pool).slice(0, n);
+  const cards = [];
+  pool.forEach((item, i) => {
+    // Card A: English
+    cards.push({ id: i * 2,     wordKey: item.word, isEN: true,  category: item.cat, pairId: i });
+    // Card B: Spanish translation
+    cards.push({ id: i * 2 + 1, wordKey: item.word, isEN: false, category: item.cat, pairId: i });
+  });
+  return shuffle(cards);
+}
+
+/* ════════════════════════════════════════
+   SCREEN NAVIGATION
+════════════════════════════════════════ */
+const screens = {
+  menu:    document.getElementById('screen-menu'),
+  setup:   document.getElementById('screen-setup'),
+  game:    document.getElementById('screen-game'),
+  result:  document.getElementById('screen-result'),
+};
+
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.add('hidden'));
+  screens[name].classList.remove('hidden');
+  state.phase = name === 'game' ? 'playing' : name;
+}
+
+/* ════════════════════════════════════════
+   PARTICLES
+════════════════════════════════════════ */
+function initParticles() {
+  const cont = document.getElementById('particles');
+  cont.innerHTML = '';
+  for (let i = 0; i < 14; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.animationDuration = (8 + Math.random() * 14) + 's';
+    p.style.animationDelay    = (-Math.random() * 20) + 's';
+    p.style.transform = `rotate(${Math.random() * 360}deg)`;
+    cont.appendChild(p);
+  }
+}
+
+/* ════════════════════════════════════════
+   RENDER GAME
+════════════════════════════════════════ */
+function renderGame() {
+  const grid = document.getElementById('card-grid');
+  const cols = state.difficulty === 'easy' ? 4 : state.difficulty === 'normal' ? 6 : 8;
+  grid.className = 'card-grid cols-' + (cols > 6 ? 6 : cols);
+  // For hard mode on small screens use 4 cols too (CSS overrides)
+  if (state.difficulty === 'hard') grid.style.gridTemplateColumns = 'repeat(8, 1fr)';
+  else if (state.difficulty === 'normal') grid.style.gridTemplateColumns = 'repeat(6, 1fr)';
+  else grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+
+  grid.innerHTML = '';
+  state.deck.forEach((card, idx) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'card-wrapper entering';
+    wrapper.dataset.idx = idx;
+    wrapper.style.animationDelay = (idx * 0.04) + 's';
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+
+    const back = document.createElement('div');
+    back.className = 'card-face card-back-face';
+
+    const front = document.createElement('div');
+    front.className = 'card-face card-front-face';
+    const catLabel = document.createElement('div');
+    catLabel.className = 'card-category';
+    catLabel.textContent = CATEGORY_LABELS[card.category] || card.category;
+    const wordEl = document.createElement('div');
+    wordEl.className = 'card-word';
+    wordEl.textContent = card.isEN ? card.wordKey : (TRANSLATIONS[card.wordKey] || card.wordKey);
+    front.appendChild(catLabel);
+    front.appendChild(wordEl);
+
+    inner.appendChild(back);
+    inner.appendChild(front);
+    wrapper.appendChild(inner);
+
+    wrapper.addEventListener('click', () => onCardClick(idx));
+    wrapper.addEventListener('mouseenter', sfxHover);
+    grid.appendChild(wrapper);
+  });
+
+  renderHUD();
+}
+
+function renderHUD() {
+  document.getElementById('hud-found').textContent = state.matched.length;
+  document.getElementById('hud-total').textContent = state.deck.length / 2;
+  const timerEl = document.getElementById('hud-timer');
+  timerEl.classList.toggle('hidden', state.mode === 'duo');
+
+  const hub = document.getElementById('player-score-hud');
+  hub.innerHTML = '';
+  if (state.mode === 'duo') {
+    state.players.forEach((p, i) => {
+      const div = document.createElement('div');
+      div.className = 'pscore' + (state.currentPlayer === i ? ' active' : '');
+      div.id = 'pscore-' + i;
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.style.background = p.color;
+      div.appendChild(dot);
+      div.insertAdjacentHTML('beforeend', `<span>${p.name}: <strong>${p.score}</strong></span>`);
+      hub.appendChild(div);
+    });
+  }
+}
+
+function updateHUD() {
+  document.getElementById('hud-found').textContent = state.matched.length;
+  if (state.mode === 'duo') {
+    state.players.forEach((p, i) => {
+      const el = document.getElementById('pscore-' + i);
+      if (!el) return;
+      el.className = 'pscore' + (state.currentPlayer === i ? ' active' : '');
+      el.querySelector('strong').textContent = p.score;
+    });
+  }
+}
+
+/* ════════════════════════════════════════
+   TIMER
+════════════════════════════════════════ */
+function startTimer() {
+  if (state.mode !== 'solo') return;
+  clearInterval(state.timer);
+  state.timer = setInterval(() => {
+    state.elapsed++;
+    const m = Math.floor(state.elapsed / 60);
+    const s = state.elapsed % 60;
+    const el = document.getElementById('hud-time');
+    if (el) el.textContent = m + ':' + String(s).padStart(2, '0');
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(state.timer);
+  state.timer = null;
+}
+
+/* ════════════════════════════════════════
+   CARD CLICK LOGIC
+════════════════════════════════════════ */
+function onCardClick(idx) {
+  if (state.locked) return;
+  if (state.phase !== 'playing') return;
+  if (state.flipped.includes(idx)) return;
+  if (state.matched.includes(state.deck[idx].pairId)) return;
+
+  const wrappers = document.querySelectorAll('.card-wrapper');
+  const wrapper = wrappers[idx];
+
+  sfxFlip();
+  wrapper.classList.add('flipped');
+  state.flipped.push(idx);
+
+  if (state.flipped.length === 2) {
+    state.attempts++;
+    const [a, b] = state.flipped;
+    const cardA = state.deck[a];
+    const cardB = state.deck[b];
+
+    if (cardA.pairId === cardB.pairId && cardA.isEN !== cardB.isEN) {
+      // MATCH
+      state.matched.push(cardA.pairId);
+      if (state.mode === 'duo') state.players[state.currentPlayer].score++;
+      sfxMatch();
+      wrappers[a].classList.add('matched');
+      wrappers[b].classList.add('matched');
+      burstAt(wrappers[a]);
+      burstAt(wrappers[b]);
+      state.flipped = [];
+      updateHUD();
+      if (state.matched.length === state.deck.length / 2) {
+        setTimeout(endGame, 600);
+      }
+    } else {
+      // MISMATCH
+      state.errors++;
+      state.locked = true;
+      sfxMismatch();
+      wrappers[a].classList.add('shake');
+      wrappers[b].classList.add('shake');
+      setTimeout(() => {
+        wrappers[a].classList.remove('flipped', 'shake');
+        wrappers[b].classList.remove('flipped', 'shake');
+        state.flipped = [];
+        state.locked = false;
+        // Switch turn in duo mode
+        if (state.mode === 'duo') {
+          state.currentPlayer = (state.currentPlayer + 1) % 2;
+          sfxTurn();
+          updateHUD();
+        }
+      }, 900);
+    }
+  }
+}
+
+/* ════════════════════════════════════════
+   BURST PARTICLES
+════════════════════════════════════════ */
+function burstAt(el) {
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top  + rect.height / 2;
+  const colors = ['#ffd740','#69f0ae','#7c4dff','#ff5252','#40c4ff'];
+  const burst = document.createElement('div');
+  burst.className = 'burst';
+  burst.style.left = cx + 'px';
+  burst.style.top  = cy + 'px';
+  for (let i = 0; i < 10; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'burst-dot';
+    dot.style.background = colors[i % colors.length];
+    const angle = (i / 10) * Math.PI * 2;
+    const dist  = 35 + Math.random() * 30;
+    dot.style.setProperty('--tx', `translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px)`);
+    dot.style.animationDelay = (Math.random() * 0.1) + 's';
+    burst.appendChild(dot);
+  }
+  document.body.appendChild(burst);
+  setTimeout(() => burst.remove(), 700);
+}
+
+/* ════════════════════════════════════════
+   CONFETTI
+════════════════════════════════════════ */
+function spawnConfetti() {
+  const colors = ['#ffd740','#7c4dff','#69f0ae','#ff5252','#40c4ff','#ff80ab'];
+  for (let i = 0; i < 48; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left     = Math.random() * 100 + 'vw';
+    p.style.background = colors[i % colors.length];
+    p.style.width    = (6 + Math.random() * 8) + 'px';
+    p.style.height   = (8 + Math.random() * 10) + 'px';
+    p.style.animationDuration = (1.4 + Math.random() * 1.6) + 's';
+    p.style.animationDelay   = (Math.random() * 0.8) + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 3500);
+  }
+}
+
+/* ════════════════════════════════════════
+   END GAME
+════════════════════════════════════════ */
+function endGame() {
+  stopTimer();
+  clearTimeout(state._musicLoop);
+  state.phase = 'results';
+  jingleWin();
+  spawnConfetti();
+  showScreen('result');
+  renderResult();
+}
+
+function renderResult() {
+  const m = Math.floor(state.elapsed / 60);
+  const s = state.elapsed % 60;
+  const timeStr = m + ':' + String(s).padStart(2, '0');
+
+  if (state.mode === 'solo') {
+    document.getElementById('result-title').textContent = '🎉 ¡Completado!';
+    document.getElementById('result-solo-stats').classList.remove('hidden');
+    document.getElementById('result-duo-scores').classList.add('hidden');
+    document.getElementById('res-time').textContent = timeStr;
+    document.getElementById('res-attempts').textContent = state.attempts;
+    document.getElementById('res-pairs').textContent = state.matched.length;
+    document.getElementById('res-errors').textContent = state.errors;
+    // Stars
+    const errors = state.errors;
+    const stars = errors <= 1 ? 3 : errors <= 4 ? 2 : 1;
+    renderStars(stars);
+  } else {
+    document.getElementById('result-solo-stats').classList.add('hidden');
+    document.getElementById('result-duo-scores').classList.remove('hidden');
+    const [p1, p2] = state.players;
+    const winner = p1.score > p2.score ? 0 : p2.score > p1.score ? 1 : -1;
+    document.getElementById('result-title').textContent =
+      winner === -1 ? '🤝 ¡Empate!' : `🏆 ¡${state.players[winner].name} gana!`;
+    const cont = document.getElementById('result-duo-scores');
+    cont.innerHTML = '';
+    state.players.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'duo-score-card' + (winner === i ? ' winner' : '');
+      card.innerHTML = `
+        <div class="dscrown">${winner === i ? '👑' : '&nbsp;'}</div>
+        <div class="dsname" style="color:${p.color}">${p.name}</div>
+        <div class="dsscore">${p.score}</div>
+      `;
+      cont.appendChild(card);
+    });
+    renderStars(0);
+  }
+}
+
+function renderStars(count) {
+  const row = document.getElementById('stars-row');
+  row.innerHTML = '';
+  if (count === 0) return;
+  for (let i = 0; i < 3; i++) {
+    const s = document.createElement('span');
+    s.className = 'star';
+    s.textContent = i < count ? '⭐' : '☆';
+    row.appendChild(s);
+    if (i < count) {
+      setTimeout(() => s.classList.add('pop'), 300 + i * 200);
+    } else {
+      s.style.opacity = '.3';
+      s.style.animationDelay = (300 + i * 200) + 'ms';
+    }
+  }
+}
+
+/* ════════════════════════════════════════
+   START / RESTART
+════════════════════════════════════════ */
+function startGame() {
+  const n = DIFFICULTY[state.difficulty];
+  state.deck      = buildDeck(n);
+  state.flipped   = [];
+  state.matched   = [];
+  state.attempts  = 0;
+  state.errors    = 0;
+  state.elapsed   = 0;
+  state.locked    = false;
+  state.currentPlayer = 0;
+
+  if (state.mode === 'duo') {
+    state.players.forEach(p => p.score = 0);
+  }
+
+  showScreen('game');
+  renderGame();
+  startTimer();
+  startMusic();
+}
+
+/* ════════════════════════════════════════
+   PAUSE / RESUME
+════════════════════════════════════════ */
+function pauseGame() {
+  if (state.phase !== 'playing') return;
+  state.phase = 'paused';
+  stopTimer();
+  pauseMusic();
+  document.getElementById('overlay-pause').classList.remove('hidden');
+}
+
+function resumeGame() {
+  document.getElementById('overlay-pause').classList.add('hidden');
+  state.phase = 'playing';
+  startTimer();
+  resumeMusic();
+}
+
+/* ════════════════════════════════════════
+   CONFIRM DIALOG
+════════════════════════════════════════ */
+function showConfirm(msg, onOk) {
+  document.getElementById('confirm-msg').textContent = msg;
+  state.confirmCallback = onOk;
+  document.getElementById('overlay-confirm').classList.remove('hidden');
+}
+
+/* ════════════════════════════════════════
+   OVERLAY HELPERS
+════════════════════════════════════════ */
+function openSound(fromOverlay) {
+  state.prevOverlay = fromOverlay || null;
+  document.getElementById('overlay-sound').classList.remove('hidden');
+}
+function closeSound() {
+  document.getElementById('overlay-sound').classList.add('hidden');
+  if (state.prevOverlay === 'pause') {
+    document.getElementById('overlay-pause').classList.remove('hidden');
+  }
+  state.prevOverlay = null;
+}
+
+function openInstructions(fromOverlay) {
+  state.prevOverlay = fromOverlay || null;
+  document.getElementById('overlay-instructions').classList.remove('hidden');
+}
+function closeInstructions() {
+  document.getElementById('overlay-instructions').classList.add('hidden');
+  if (state.prevOverlay === 'pause') {
+    document.getElementById('overlay-pause').classList.remove('hidden');
+  }
+  state.prevOverlay = null;
+}
+
+/* ════════════════════════════════════════
+   LOAD / SAVE AUDIO PREFS
+════════════════════════════════════════ */
+function loadAudioPrefs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('memorama-audio'));
+    if (saved) {
+      state.audio.music  = saved.music  ?? 70;
+      state.audio.sfx    = saved.sfx    ?? 70;
+      state.audio.jingle = saved.jingle ?? 70;
+    }
+  } catch(e) {}
+  document.getElementById('slider-music').value   = state.audio.music;
+  document.getElementById('slider-sfx').value     = state.audio.sfx;
+  document.getElementById('slider-jingle').value  = state.audio.jingle;
+  document.getElementById('val-music').textContent   = state.audio.music;
+  document.getElementById('val-sfx').textContent     = state.audio.sfx;
+  document.getElementById('val-jingle').textContent  = state.audio.jingle;
+}
+
+function saveAudioPrefs() {
+  try {
+    localStorage.setItem('memorama-audio', JSON.stringify(state.audio));
+  } catch(e) {}
+}
+
+/* ════════════════════════════════════════
+   THEME
+════════════════════════════════════════ */
+function loadTheme() {
+  try {
+    const t = localStorage.getItem('memorama-theme') || 'dark';
+    document.body.setAttribute('data-theme', t);
+    document.getElementById('btn-theme').textContent = t === 'dark' ? '🌙' : '☀️';
+  } catch(e) {}
+}
+function toggleTheme() {
+  const current = document.body.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', next);
+  document.getElementById('btn-theme').textContent = next === 'dark' ? '🌙' : '☀️';
+  try { localStorage.setItem('memorama-theme', next); } catch(e) {}
+}
+
+/* ════════════════════════════════════════
+   EVENT LISTENERS
+════════════════════════════════════════ */
+
+// Theme toggle
+document.getElementById('btn-theme').addEventListener('click', () => { initAudio(); toggleTheme(); });
+
+// Help buttons
+document.getElementById('btn-help').addEventListener('click', () => { initAudio(); openInstructions(null); });
+document.getElementById('btn-close-instructions').addEventListener('click', closeInstructions);
+document.getElementById('btn-close-instructions-ok').addEventListener('click', closeInstructions);
+document.getElementById('btn-help-pause').addEventListener('click', () => {
+  document.getElementById('overlay-pause').classList.add('hidden');
+  openInstructions('pause');
+});
+
+// Mode toggles
+document.querySelectorAll('[data-mode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    initAudio();
+    document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode = btn.dataset.mode;
+  });
+});
+
+// Difficulty toggles
+document.querySelectorAll('[data-diff]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    initAudio();
+    document.querySelectorAll('[data-diff]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.difficulty = btn.dataset.diff;
+  });
+});
+
+// Play button
+document.getElementById('btn-play').addEventListener('click', () => {
+  initAudio();
+  if (state.mode === 'duo') {
+    showScreen('setup');
+    document.getElementById('input-p1').focus();
+  } else {
+    state.players = [{ name: 'Jugador', color: '#7c4dff', score: 0 }];
+    startGame();
+  }
+});
+
+// Setup screen
+document.getElementById('btn-back-from-setup').addEventListener('click', () => showScreen('menu'));
+document.getElementById('btn-start-game').addEventListener('click', () => {
+  const n1 = document.getElementById('input-p1').value.trim() || 'Jugador 1';
+  const n2 = document.getElementById('input-p2').value.trim() || 'Jugador 2';
+  state.players = [
+    { name: n1, color: '#7c4dff', score: 0 },
+    { name: n2, color: '#ff5252', score: 0 }
+  ];
+  startGame();
+});
+
+// Pause
+document.getElementById('btn-pause').addEventListener('click', () => { initAudio(); pauseGame(); });
+document.getElementById('btn-resume').addEventListener('click', resumeGame);
+
+document.getElementById('btn-restart-pause').addEventListener('click', () => {
+  showConfirm('Se perderá el progreso de esta partida. ¿Reiniciar?', () => {
+    document.getElementById('overlay-pause').classList.add('hidden');
+    startGame();
+  });
+});
+
+document.getElementById('btn-menu-pause').addEventListener('click', () => {
+  showConfirm('¿Seguro? Se perderá el progreso de esta partida.', () => {
+    stopTimer();
+    stopMusic();
+    document.getElementById('overlay-pause').classList.add('hidden');
+    document.getElementById('overlay-confirm').classList.add('hidden');
+    showScreen('menu');
+    startMusic();
+  });
+});
+
+// Sound overlay
+document.getElementById('btn-sound-menu').addEventListener('click', () => { initAudio(); openSound(null); });
+document.getElementById('btn-sound-pause').addEventListener('click', () => {
+  initAudio();
+  document.getElementById('overlay-pause').classList.add('hidden');
+  openSound('pause');
+});
+document.getElementById('btn-close-sound').addEventListener('click', closeSound);
+
+['music','sfx','jingle'].forEach(key => {
+  const slider = document.getElementById('slider-' + key);
+  const valEl  = document.getElementById('val-' + key);
+  slider.addEventListener('input', () => {
+    state.audio[key] = parseInt(slider.value);
+    valEl.textContent = slider.value;
+    saveAudioPrefs();
+    if (!audioCtx) { initAudio(); return; }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().then(updateGains);
+    } else {
+      updateGains();
+    }
+  });
+});
+
+// Confirm dialog
+document.getElementById('btn-confirm-cancel').addEventListener('click', () => {
+  document.getElementById('overlay-confirm').classList.add('hidden');
+  state.confirmCallback = null;
+});
+document.getElementById('btn-confirm-ok').addEventListener('click', () => {
+  document.getElementById('overlay-confirm').classList.add('hidden');
+  if (state.confirmCallback) { state.confirmCallback(); state.confirmCallback = null; }
+});
+
+// Result screen
+document.getElementById('btn-replay').addEventListener('click', () => {
+  startGame();
+});
+document.getElementById('btn-result-menu').addEventListener('click', () => {
+  showScreen('menu');
+  startMusic();
+});
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+loadTheme();
+loadAudioPrefs();
+initParticles();
+</script>
+</body>
+</html>
