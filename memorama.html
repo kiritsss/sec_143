@@ -256,20 +256,81 @@ button:active { transform: scale(.96) !important; }
 .hud-chip span { color: var(--gold); }
 .hud-chip.active-turn { border-color: var(--accent); box-shadow: 0 0 12px rgba(124,77,255,.4); }
 
+/* Panel lateral fijo de jugadores */
 .player-score-hud {
-  display: flex; gap: .5rem;
+  position: fixed;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+  z-index: 90;
+  pointer-events: none;
 }
 .pscore {
   background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 50px;
-  padding: .35rem .9rem;
-  font-size: .85rem; font-weight: 700;
-  display: flex; align-items: center; gap: .5rem;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: .7rem 1rem;
+  font-size: .88rem; font-weight: 700;
+  display: flex; flex-direction: column; align-items: center; gap: .35rem;
   transition: all var(--transition);
+  opacity: .38;
+  transform: scale(.9) translateX(10px);
+  filter: grayscale(.5);
+  min-width: 90px;
+  text-align: center;
 }
-.pscore.active { border-color: var(--accent); box-shadow: 0 0 14px rgba(124,77,255,.45); }
-.pscore .dot { width: 10px; height: 10px; border-radius: 50%; }
+.pscore.active {
+  border-color: var(--gold);
+  background: var(--surface2);
+  box-shadow: 0 0 0 3px rgba(255,215,64,.25), 0 6px 24px rgba(255,215,64,.35);
+  opacity: 1;
+  transform: scale(1.05) translateX(0);
+  filter: none;
+  animation: turnPulse 1.4s ease-in-out infinite;
+}
+@keyframes turnPulse {
+  0%,100% { box-shadow: 0 0 0 3px rgba(255,215,64,.25), 0 6px 24px rgba(255,215,64,.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(255,215,64,.5),  0 6px 32px rgba(255,215,64,.6); }
+}
+.pscore .dot {
+  width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+}
+.pscore .pscore-name {
+  font-size: .78rem; color: var(--text2);
+  white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; max-width: 80px;
+}
+.pscore .pscore-score {
+  font-size: 1.6rem; font-weight: 900; color: var(--gold); line-height: 1;
+}
+.pscore .turn-arrow {
+  font-size: .75rem; color: var(--gold); display: none;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.pscore.active .turn-arrow {
+  display: block;
+  animation: arrowPulse .9s ease-in-out infinite alternate;
+}
+@keyframes arrowPulse {
+  from { opacity: .6; transform: scale(.95); }
+  to   { opacity: 1;  transform: scale(1.05); }
+}
+/* En móvil: mover a la parte inferior central */
+@media (max-width: 600px) {
+  .player-score-hud {
+    position: fixed;
+    right: auto; top: auto;
+    bottom: .8rem; left: 50%;
+    transform: translateX(-50%);
+    flex-direction: row;
+    gap: .6rem;
+  }
+  .pscore { flex-direction: row; min-width: unset; padding: .5rem .9rem; }
+  .pscore .pscore-score { font-size: 1.1rem; }
+}
 
 /* Grid */
 .card-grid {
@@ -360,13 +421,111 @@ button:active { transform: scale(.96) !important; }
   80%      { transform: rotateY(180deg) translateX(5px); }
 }
 
-/* Stagger entrance */
-.card-wrapper.entering {
-  animation: cardEntrance .4s cubic-bezier(.4,0,.2,1) both;
+/* ══ DEAL ANIMATION — 3 actos ════════════════════ */
+
+/* Estado pre-animación */
+.card-wrapper.deal-pending {
+  opacity: 0;
+  pointer-events: none;
 }
-@keyframes cardEntrance {
-  from { transform: translateY(-40px) scale(.6); opacity: 0; }
-  to   { transform: translateY(0) scale(1); opacity: 1; }
+
+/* Mazo central (elemento temporal) */
+#deal-pile {
+  position: fixed;
+  pointer-events: none;
+  z-index: 500;
+  transform-style: preserve-3d;
+}
+.pile-card {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  background: var(--card-back);
+  border: 2px solid var(--border);
+  backface-visibility: hidden;
+}
+.pile-card::after { content: '🃏'; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; opacity: .5; }
+
+/* Acto 1 — cada carta original cae al centro del mazo */
+.card-wrapper.gathering {
+  animation: gatherCard var(--gather-dur,.5s) cubic-bezier(.4,0,.2,1) both;
+  animation-delay: var(--gather-delay,0s);
+}
+@keyframes gatherCard {
+  0%   { opacity: 1; transform: translate(0,0) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--gx,0px), var(--gy,0px))
+                     scale(.5) rotate(var(--gr,0deg)); }
+}
+
+/* Acto 2 — abanico: las pile-cards se despliegan y recogen */
+.pile-card.fan-left {
+  animation: fanLeft .38s cubic-bezier(.4,0,.2,1) both;
+}
+.pile-card.fan-right {
+  animation: fanRight .38s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes fanLeft {
+  0%   { transform: translateX(0) rotate(0deg); }
+  40%  { transform: translateX(-60px) rotate(-18deg) translateY(-10px); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+@keyframes fanRight {
+  0%   { transform: translateX(0) rotate(0deg); }
+  40%  { transform: translateX(60px) rotate(18deg) translateY(-10px); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+.pile-card.fan-left2 {
+  animation: fanLeft2 .38s cubic-bezier(.4,0,.2,1) both;
+}
+.pile-card.fan-right2 {
+  animation: fanRight2 .38s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes fanLeft2 {
+  0%   { transform: translateX(0) rotate(0deg); }
+  40%  { transform: translateX(-28px) rotate(-9deg) translateY(-5px); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+@keyframes fanRight2 {
+  0%   { transform: translateX(0) rotate(0deg); }
+  40%  { transform: translateX(28px) rotate(9deg) translateY(-5px); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+
+/* Bounce del mazo entre cortes */
+.pile-card.pile-bounce {
+  animation: pileBounce .25s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes pileBounce {
+  0%,100% { transform: translateY(0) scale(1); }
+  50%     { transform: translateY(-10px) scale(1.04); }
+}
+
+/* Acto 3 — vuelo en arco desde el mazo hasta la celda */
+.card-wrapper.flying {
+  animation: flyCard var(--fly-dur,.65s) cubic-bezier(.22,1.3,.6,1) both;
+  animation-delay: var(--fly-delay,0s);
+}
+@keyframes flyCard {
+  0%   { opacity:0; transform: translate(var(--fx,0px),var(--fy,0px))
+                    scale(.3) rotate(var(--fspin,180deg)); }
+  15%  { opacity:1; }
+  55%  { transform: translate(var(--fmx,0px),var(--fmy,0px))
+                    scale(.85) rotate(calc(var(--fspin,180deg) * .5)); }
+  82%  { transform: translate(0,0) scale(1.12) rotate(0deg); }
+  100% { transform: translate(0,0) scale(1)    rotate(0deg); opacity:1; }
+}
+
+/* Flash de cara al aterrizar */
+.card-wrapper.flash-face .card-inner {
+  animation: flashFace .44s ease-in-out forwards;
+}
+@keyframes flashFace {
+  0%   { transform: rotateY(0deg); }
+  35%  { transform: rotateY(90deg); }
+  65%  { transform: rotateY(90deg); }
+  100% { transform: rotateY(0deg); }
 }
 
 /* Match burst particles */
@@ -659,7 +818,8 @@ button:active { transform: scale(.96) !important; }
   <div class="menu-section">
     <div class="menu-label">Dificultad</div>
     <div class="toggle-group">
-      <button class="toggle-btn active" data-diff="easy">🟢 Fácil <small>(8 parejas)</small></button>
+      <button class="toggle-btn active" data-diff="superEasy">⚪ Súper Fácil <small>(6 parejas)</small></button>
+      <button class="toggle-btn" data-diff="easy">🟢 Fácil <small>(8 parejas)</small></button>
       <button class="toggle-btn" data-diff="normal">🟡 Normal <small>(12 parejas)</small></button>
       <button class="toggle-btn" data-diff="hard">🔴 Difícil <small>(16 parejas)</small></button>
     </div>
@@ -698,10 +858,11 @@ button:active { transform: scale(.96) !important; }
       <div class="hud-chip" id="hud-timer">⏱ <span id="hud-time">0:00</span></div>
       <div class="cefr-badge">A1</div>
     </div>
-    <div class="player-score-hud" id="player-score-hud"></div>
   </div>
   <div class="card-grid" id="card-grid"></div>
 </div>
+<!-- Panel lateral fijo de jugadores (duo) -->
+<div class="player-score-hud hidden" id="player-score-hud"></div>
 
 <!-- ═══════════════ RESULT ═══════════════ -->
 <div id="screen-result" class="screen hidden">
@@ -773,13 +934,14 @@ button:active { transform: scale(.96) !important; }
     </ul>
     <hr class="overlay-divider">
     <table class="instr-table">
+      <tr><td>⚪ Súper Fácil</td><td>6 parejas · 3×4</td></tr>
       <tr><td>🟢 Fácil</td><td>8 parejas · 4×4</td></tr>
       <tr><td>🟡 Normal</td><td>12 parejas · 4×6</td></tr>
       <tr><td>🔴 Difícil</td><td>16 parejas · 4×8</td></tr>
     </table>
     <hr class="overlay-divider">
     <div style="font-size:.82rem;color:var(--text2);">
-      <strong style="color:var(--text);">Modo 2 Jugadores:</strong> quien encuentre una pareja vuelve a jugar. Si no coinciden, pasa el turno. Gana quien encuentre más parejas.
+      <strong style="color:var(--text);">Modo 2 Jugadores:</strong> el turno pasa después de cada intento, ya sea que encuentres una pareja o no. Gana quien encuentre más parejas.
     </div>
     <button class="overlay-btn primary" id="btn-close-instructions-ok">¡Entendido!</button>
   </div>
@@ -841,7 +1003,7 @@ const CATEGORY_LABELS = {
   COLORS:'Color', NUMBERS:'Número', SUPPLIES:'Útil', DAYS:'Día', GREETINGS:'Saludo', FAREWELLS:'Despedida'
 };
 
-const DIFFICULTY = { easy: 8, normal: 12, hard: 16 };
+const DIFFICULTY = { superEasy: 6, easy: 8, normal: 12, hard: 16 };
 
 /* ════════════════════════════════════════
    STATE
@@ -849,7 +1011,7 @@ const DIFFICULTY = { easy: 8, normal: 12, hard: 16 };
 const state = {
   phase: 'menu',       // 'menu'|'setup'|'playing'|'paused'|'results'
   mode: 'solo',        // 'solo'|'duo'
-  difficulty: 'easy',
+  difficulty: 'superEasy',
   players: [],         // [{ name, color, score }]
   currentPlayer: 0,
   deck: [],            // [{ id, wordKey, isEN, category, pairId }]
@@ -995,8 +1157,67 @@ function shuffle(arr) {
 }
 
 /* ════════════════════════════════════════
-   DECK GENERATION
+   DECK GENERATION + CONSTRAINED SHUFFLE
 ════════════════════════════════════════ */
+
+// Columnas por dificultad (debe coincidir con renderGame)
+function colsForDifficulty(diff) {
+  if (diff === 'hard')      return 8;
+  if (diff === 'normal')    return 6;
+  return 4; // easy, superEasy
+}
+
+// Distancia Manhattan entre dos índices en el grid
+function manhattanDist(idxA, idxB, cols) {
+  const rA = Math.floor(idxA / cols), cA = idxA % cols;
+  const rB = Math.floor(idxB / cols), cB = idxB % cols;
+  return Math.abs(rA - rB) + Math.abs(cA - cB);
+}
+
+// Evalúa qué tan bueno es un arreglo de cartas para la dificultad dada.
+// Devuelve el número de parejas que violan la restricción de zona media.
+function countViolations(cards, cols) {
+  const total = cards.length;
+  const rows  = Math.ceil(total / cols);
+  const maxDist = (rows - 1) + (cols - 1); // distancia Manhattan máxima posible
+  const minOk = Math.floor(maxDist * 0.25);
+  const maxOk = Math.ceil(maxDist * 0.75);
+
+  // Índice de posición de cada pairId
+  const positions = {};
+  cards.forEach((card, idx) => {
+    if (!positions[card.pairId]) positions[card.pairId] = [];
+    positions[card.pairId].push(idx);
+  });
+
+  let violations = 0;
+  for (const [, [posA, posB]] of Object.entries(positions)) {
+    const d = manhattanDist(posA, posB, cols);
+    if (d < minOk || d > maxOk) violations++;
+  }
+  return violations;
+}
+
+// Shuffle con restricción de zona media.
+// Intenta hasta MAX_TRIES veces; si no logra 0 violaciones, usa el mejor resultado.
+function shuffleConstrained(cards, diff) {
+  const cols     = colsForDifficulty(diff);
+  const MAX_TRIES = 120;
+  let best       = null;
+  let bestScore  = Infinity;
+
+  for (let t = 0; t < MAX_TRIES; t++) {
+    const candidate = shuffle(cards);
+    const violations = countViolations(candidate, cols);
+    if (violations < bestScore) {
+      best      = candidate;
+      bestScore = violations;
+    }
+    if (bestScore === 0) break; // perfecto, salir temprano
+  }
+  return best;
+}
+
 function buildDeck(n) {
   // Flatten all words with category tag
   let pool = [];
@@ -1011,7 +1232,7 @@ function buildDeck(n) {
     // Card B: Spanish translation
     cards.push({ id: i * 2 + 1, wordKey: item.word, isEN: false, category: item.cat, pairId: i });
   });
-  return shuffle(cards);
+  return shuffleConstrained(cards, state.difficulty);
 }
 
 /* ════════════════════════════════════════
@@ -1052,19 +1273,22 @@ function initParticles() {
 ════════════════════════════════════════ */
 function renderGame() {
   const grid = document.getElementById('card-grid');
-  const cols = state.difficulty === 'easy' ? 4 : state.difficulty === 'normal' ? 6 : 8;
-  grid.className = 'card-grid cols-' + (cols > 6 ? 6 : cols);
-  // For hard mode on small screens use 4 cols too (CSS overrides)
-  if (state.difficulty === 'hard') grid.style.gridTemplateColumns = 'repeat(8, 1fr)';
-  else if (state.difficulty === 'normal') grid.style.gridTemplateColumns = 'repeat(6, 1fr)';
-  else grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+  // Grid: superEasy=3x4(12 celdas), easy=4x4, normal=4x6, hard=4x8
+  if (state.difficulty === 'hard') {
+    grid.style.gridTemplateColumns = 'repeat(8, 1fr)';
+  } else if (state.difficulty === 'normal') {
+    grid.style.gridTemplateColumns = 'repeat(6, 1fr)';
+  } else if (state.difficulty === 'superEasy') {
+    grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+  } else {
+    grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+  }
 
   grid.innerHTML = '';
   state.deck.forEach((card, idx) => {
     const wrapper = document.createElement('div');
-    wrapper.className = 'card-wrapper entering';
+    wrapper.className = 'card-wrapper deal-pending';
     wrapper.dataset.idx = idx;
-    wrapper.style.animationDelay = (idx * 0.04) + 's';
 
     const inner = document.createElement('div');
     inner.className = 'card-inner';
@@ -1093,6 +1317,209 @@ function renderGame() {
   });
 
   renderHUD();
+  // Disparar animación de reparto en el siguiente frame
+  // para garantizar que el grid ya tiene dimensiones en el DOM
+  requestAnimationFrame(() => requestAnimationFrame(() => animateDeal(grid)));
+}
+
+/* ════════════════════════════════════════
+   DEAL ANIMATION
+════════════════════════════════════════ */
+/* ════════════════════════════════════════
+   DEAL ANIMATION — 3 ACTOS
+════════════════════════════════════════ */
+
+function delay(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+// Crea el mazo visual centrado sobre el grid
+function createDealPile(grid) {
+  const old = document.getElementById('deal-pile');
+  if (old) old.remove();
+
+  const rect   = grid.getBoundingClientRect();
+  const pile   = document.createElement('div');
+  pile.id      = 'deal-pile';
+  const cw     = Math.min(rect.width / (state.difficulty === 'hard' ? 8 : state.difficulty === 'normal' ? 6 : 4), 90);
+  const ch     = cw * 1.5;
+  pile.style.cssText = [
+    'width:'  + cw + 'px',
+    'height:' + ch + 'px',
+    'left:'   + (rect.left + rect.width  / 2 - cw / 2) + 'px',
+    'top:'    + (rect.top  + rect.height / 2 - ch / 2) + 'px',
+  ].join(';');
+
+  // Crear 6 pile-cards apiladas con offset leve para efecto 3D
+  for (let i = 0; i < 6; i++) {
+    const pc = document.createElement('div');
+    pc.className = 'pile-card';
+    pc.style.transform = 'translateY(' + (-i * 1.5) + 'px) rotate(' + ((Math.random() * 6 - 3).toFixed(1)) + 'deg)';
+    pile.appendChild(pc);
+  }
+  document.body.appendChild(pile);
+  return pile;
+}
+
+// Acto 1: cartas vuelan desde sus celdas al mazo central
+async function actGather(grid, wrappers, pile) {
+  const pRect  = pile.getBoundingClientRect();
+  const pileCX = pRect.left + pRect.width  / 2;
+  const pileCY = pRect.top  + pRect.height / 2;
+  const total  = wrappers.length;
+  const gatherDur   = 0.45;
+  const gatherStagger = Math.min(30, 400 / total);
+
+  wrappers.forEach((w, idx) => {
+    const r   = w.getBoundingClientRect();
+    const cx  = r.left + r.width  / 2;
+    const cy  = r.top  + r.height / 2;
+    const gx  = (pileCX - cx).toFixed(1);
+    const gy  = (pileCY - cy).toFixed(1);
+    const gr  = (Math.random() * 40 - 20).toFixed(1);
+    w.style.setProperty('--gx', gx + 'px');
+    w.style.setProperty('--gy', gy + 'px');
+    w.style.setProperty('--gr', gr + 'deg');
+    w.style.setProperty('--gather-dur',   gatherDur + 's');
+    w.style.setProperty('--gather-delay', (idx * gatherStagger / 1000).toFixed(3) + 's');
+    w.classList.remove('deal-pending');
+    w.classList.add('gathering');
+  });
+
+  await delay((total - 1) * gatherStagger + gatherDur * 1000 + 80);
+}
+
+// Acto 2: barajeo — 3 cortes de abanico con sonido
+async function actShuffle(pile) {
+  const pileCards = Array.from(pile.querySelectorAll('.pile-card'));
+  const half      = Math.floor(pileCards.length / 2);
+  const fanDur    = 380;
+
+  for (let cut = 0; cut < 3; cut++) {
+    // Asignar clases de abanico
+    pileCards.forEach((pc, i) => {
+      pc.className = 'pile-card';
+      void pc.offsetWidth; // reflow
+      if (i < half) {
+        pc.classList.add(i < half / 2 ? 'fan-left' : 'fan-left2');
+      } else {
+        pc.classList.add(i < half + half / 2 ? 'fan-right2' : 'fan-right');
+      }
+      pc.style.animationDelay = (i * 18 / 1000).toFixed(3) + 's';
+    });
+    sfxFlip();
+    await delay(fanDur + 80);
+
+    // Bounce de recogida
+    pileCards.forEach(pc => {
+      pc.className = 'pile-card pile-bounce';
+      void pc.offsetWidth;
+    });
+    await delay(280);
+  }
+  // Pequeño bounce final antes del reparto
+  pileCards.forEach(pc => {
+    pc.className = 'pile-card pile-bounce';
+    pc.style.animationDuration = '.18s';
+  });
+  await delay(200);
+}
+
+// Acto 3: reparto desde el mazo a cada celda con arco y rotación
+async function actDeal(grid, wrappers, pile) {
+  const pRect  = pile.getBoundingClientRect();
+  const pileCX = pRect.left + pRect.width  / 2;
+  const pileCY = pRect.top  + pRect.height / 2;
+
+  const staggerMap = { superEasy: 70, easy: 60, normal: 48, hard: 36 };
+  const stagger    = staggerMap[state.difficulty] || 55;
+  const flyDur     = 0.65;
+
+  // Ocultar pile apenas empieza el reparto
+  pile.style.opacity = '0';
+
+  wrappers.forEach((w, idx) => {
+    const r   = w.getBoundingClientRect();
+    const cx  = r.left + r.width  / 2;
+    const cy  = r.top  + r.height / 2;
+
+    // Vector desde celda hasta mazo
+    const fx  = (pileCX - cx).toFixed(1);
+    const fy  = (pileCY - cy).toFixed(1);
+
+    // Punto medio del arco: perpendicular al vector, desplazado 30%
+    const len = Math.hypot(pileCX - cx, pileCY - cy);
+    const nx  = -(pileCY - cy) / (len || 1); // normal unitaria
+    const ny  =  (pileCX - cx) / (len || 1);
+    const arc = Math.min(len * 0.35, 80);
+    const fmx = ((pileCX - cx) * 0.5 + nx * arc - (pileCX - cx)).toFixed(1);
+    const fmy = ((pileCY - cy) * 0.5 + ny * arc - (pileCY - cy)).toFixed(1);
+
+    // Rotación aleatoria en vuelo (180–360°)
+    const spin = (180 + Math.random() * 180).toFixed(0);
+
+    w.style.setProperty('--fx',      fx   + 'px');
+    w.style.setProperty('--fy',      fy   + 'px');
+    w.style.setProperty('--fmx',     fmx  + 'px');
+    w.style.setProperty('--fmy',     fmy  + 'px');
+    w.style.setProperty('--fspin',   spin + 'deg');
+    w.style.setProperty('--fly-dur', flyDur + 's');
+    w.style.setProperty('--fly-delay', (idx * stagger / 1000).toFixed(3) + 's');
+
+    w.classList.remove('gathering');
+    w.classList.add('flying');
+
+    // SFX suave al aterrizar
+    setTimeout(() => {
+      if (audioCtx && sfxGain) {
+        const savedVol = sfxGain.gain.value;
+        sfxGain.gain.setTargetAtTime(savedVol * 0.15, audioCtx.currentTime, 0.01);
+        sfxFlip();
+        sfxGain.gain.setTargetAtTime(savedVol, audioCtx.currentTime + 0.08, 0.01);
+      }
+    }, idx * stagger + flyDur * 1000 * 0.82);
+  });
+
+  const flyTotal = (wrappers.length - 1) * stagger + flyDur * 1000;
+  await delay(flyTotal + 100);
+
+  // Flash de cara en todas (reveal dramático)
+  wrappers.forEach(w => w.classList.add('flash-face'));
+  await delay(480);
+
+  // Limpiar clases de animación
+  wrappers.forEach(w => {
+    w.classList.remove('flying', 'flash-face', 'gathering');
+    ['--gx','--gy','--gr','--gather-dur','--gather-delay',
+     '--fx','--fy','--fmx','--fmy','--fspin','--fly-dur','--fly-delay'].forEach(v => w.style.removeProperty(v));
+  });
+}
+
+// Orquestador principal
+async function animateDeal(grid) {
+  const wrappers = Array.from(grid.querySelectorAll('.card-wrapper'));
+  if (wrappers.length === 0) { state.locked = false; startTimer(); startMusic(); return; }
+
+  // prefers-reduced-motion: saltar animación
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    wrappers.forEach(w => w.classList.remove('deal-pending'));
+    state.locked = false; startTimer(); startMusic(); return;
+  }
+
+  const pile = createDealPile(grid);
+
+  // Acto 1
+  await actGather(grid, wrappers, pile);
+  // Acto 2
+  await actShuffle(pile);
+  // Acto 3
+  await actDeal(grid, wrappers, pile);
+
+  // Limpiar mazo temporal
+  pile.remove();
+
+  // Habilitar interacción
+  state.locked = false;
+  startTimer();
+  startMusic();
 }
 
 function renderHUD() {
@@ -1104,6 +1531,7 @@ function renderHUD() {
   const hub = document.getElementById('player-score-hud');
   hub.innerHTML = '';
   if (state.mode === 'duo') {
+    hub.classList.remove('hidden');
     state.players.forEach((p, i) => {
       const div = document.createElement('div');
       div.className = 'pscore' + (state.currentPlayer === i ? ' active' : '');
@@ -1111,10 +1539,23 @@ function renderHUD() {
       const dot = document.createElement('div');
       dot.className = 'dot';
       dot.style.background = p.color;
+      const name = document.createElement('div');
+      name.className = 'pscore-name';
+      name.textContent = p.name;
+      const score = document.createElement('div');
+      score.className = 'pscore-score';
+      score.textContent = p.score;
+      const arrow = document.createElement('div');
+      arrow.className = 'turn-arrow';
+      arrow.textContent = '▶ Tu turno';
       div.appendChild(dot);
-      div.insertAdjacentHTML('beforeend', `<span>${p.name}: <strong>${p.score}</strong></span>`);
+      div.appendChild(name);
+      div.appendChild(score);
+      div.appendChild(arrow);
       hub.appendChild(div);
     });
+  } else {
+    hub.classList.add('hidden');
   }
 }
 
@@ -1125,7 +1566,8 @@ function updateHUD() {
       const el = document.getElementById('pscore-' + i);
       if (!el) return;
       el.className = 'pscore' + (state.currentPlayer === i ? ' active' : '');
-      el.querySelector('strong').textContent = p.score;
+      const scoreEl = el.querySelector('.pscore-score');
+      if (scoreEl) scoreEl.textContent = p.score;
     });
   }
 }
@@ -1182,6 +1624,7 @@ function onCardClick(idx) {
       burstAt(wrappers[a]);
       burstAt(wrappers[b]);
       state.flipped = [];
+      // Duo: match = sigue jugando el mismo jugador
       updateHUD();
       if (state.matched.length === state.deck.length / 2) {
         setTimeout(endGame, 600);
@@ -1198,7 +1641,6 @@ function onCardClick(idx) {
         wrappers[b].classList.remove('flipped', 'shake');
         state.flipped = [];
         state.locked = false;
-        // Switch turn in duo mode
         if (state.mode === 'duo') {
           state.currentPlayer = (state.currentPlayer + 1) % 2;
           sfxTurn();
@@ -1343,10 +1785,10 @@ function startGame() {
     state.players.forEach(p => p.score = 0);
   }
 
+  state.locked = true; // se libera al terminar animateDeal
   showScreen('game');
   renderGame();
-  startTimer();
-  startMusic();
+  // startTimer y startMusic se llaman desde animateDeal al terminar
 }
 
 /* ════════════════════════════════════════
@@ -1370,8 +1812,9 @@ function resumeGame() {
 /* ════════════════════════════════════════
    CONFIRM DIALOG
 ════════════════════════════════════════ */
-function showConfirm(msg, onOk) {
+function showConfirm(msg, onOk, okLabel) {
   document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('btn-confirm-ok').textContent = okLabel || 'Salir';
   state.confirmCallback = onOk;
   document.getElementById('overlay-confirm').classList.remove('hidden');
 }
@@ -1514,8 +1957,10 @@ document.getElementById('btn-resume').addEventListener('click', resumeGame);
 document.getElementById('btn-restart-pause').addEventListener('click', () => {
   showConfirm('Se perderá el progreso de esta partida. ¿Reiniciar?', () => {
     document.getElementById('overlay-pause').classList.add('hidden');
+    document.getElementById('overlay-confirm').classList.add('hidden');
+    stopTimer();
     startGame();
-  });
+  }, '🔄 Reiniciar');
 });
 
 document.getElementById('btn-menu-pause').addEventListener('click', () => {
