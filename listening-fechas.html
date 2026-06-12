@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google" content="notranslate">
+<title>Listening: Dates in English — ESF 143</title>
+<style>
+:root{
+  --bg:#12141c; --card:#1c2030; --card2:#242a3d; --text:#e8eaf2; --sub:#9aa3b8;
+  --accent:#5b8def; --accent2:#f0a500; --ok:#3ec97e; --bad:#e85d6a;
+  --border:#39415c; --shadow:rgba(0,0,0,.4);
+}
+.light{
+  --bg:#f2f4f9; --card:#ffffff; --card2:#e9edf6; --text:#1d2333; --sub:#5a6478;
+  --accent:#2f6bd8; --accent2:#c77f00; --ok:#1d9e5c; --bad:#cc3946;
+  --border:#c6cede; --shadow:rgba(60,70,100,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  min-height:100vh; padding:1rem;
+  -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
+  transition:background .25s,color .25s;
+}
+.wrap{max-width:760px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:.8rem;margin-bottom:1rem;flex-wrap:wrap}
+.h-left{display:flex;align-items:center;gap:.7rem}
+.h-logo{font-size:2rem}
+.h-title{font-size:1.25rem;font-weight:800}
+.h-sub{font-size:.8rem;color:var(--sub)}
+.btn{
+  border:none;border-radius:10px;padding:.65rem 1.1rem;font-size:1rem;font-weight:700;
+  cursor:pointer;background:var(--accent);color:#fff;transition:filter .15s,transform .1s,opacity .15s;
+  min-height:44px;
+}
+.btn:hover:not(:disabled){filter:brightness(1.12)}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-ghost{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+.btn-small{padding:.4rem .8rem;font-size:.85rem;min-height:36px}
+#tts-banner{
+  display:flex;align-items:center;gap:.7rem;background:var(--card2);
+  border:1px solid var(--border);border-radius:12px;padding:.8rem 1rem;margin-bottom:1rem;font-size:.9rem;
+}
+#tts-banner.hidden{display:none}
+.spinner{width:18px;height:18px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:1.3rem;box-shadow:0 6px 18px var(--shadow);margin-bottom:1rem;
+}
+.screen{display:none}
+.screen.active{display:block;animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* MENU */
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+@media(max-width:560px){.menu-grid{grid-template-columns:1fr}}
+.menu-btn{
+  background:var(--card2);border:2px solid var(--border);border-radius:14px;padding:1rem;
+  cursor:pointer;text-align:left;color:var(--text);transition:border-color .15s,transform .12s;
+}
+.menu-btn:hover{border-color:var(--accent);transform:translateY(-2px)}
+.menu-btn .m-ico{font-size:1.7rem}
+.menu-btn .m-name{font-weight:800;margin:.3rem 0 .15rem}
+.menu-btn .m-desc{font-size:.8rem;color:var(--sub)}
+.menu-btn .m-score{font-size:.8rem;font-weight:700;color:var(--ok);margin-top:.35rem;min-height:1em}
+/* EXERCISE COMMON */
+.ex-top{display:flex;justify-content:space-between;align-items:center;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap}
+.ex-progress{font-size:.85rem;color:var(--sub);font-weight:700}
+.audio-zone{display:flex;flex-direction:column;align-items:center;gap:.55rem;margin:1rem 0 1.3rem}
+.btn-play{
+  font-size:1.15rem;padding:.85rem 2rem;border-radius:14px;background:var(--accent);
+  display:flex;align-items:center;gap:.5rem;
+}
+.listen-count{font-size:.85rem;color:var(--sub);font-weight:700}
+.gen-status{font-size:.8rem;color:var(--accent2);font-weight:700;min-height:1.1em}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+@media(max-width:480px){.choices{grid-template-columns:1fr}}
+.choice-btn{
+  background:var(--card2);border:2px solid var(--border);border-radius:12px;padding:.9rem .7rem;
+  font-size:1.05rem;font-weight:700;color:var(--text);cursor:pointer;min-height:52px;
+  transition:border-color .15s,background .15s;
+}
+.choice-btn:hover:not(:disabled){border-color:var(--accent)}
+.choice-btn:disabled{cursor:not-allowed;opacity:.6}
+.choice-btn.correct{background:var(--ok);border-color:var(--ok);color:#fff;opacity:1}
+.choice-btn.incorrect{background:var(--bad);border-color:var(--bad);color:#fff;opacity:1}
+.feedback{
+  margin-top:1rem;padding:.85rem 1rem;border-radius:12px;font-size:.92rem;display:none;line-height:1.45;
+}
+.feedback.show{display:block;animation:fadein .2s ease}
+.feedback.fb-ok{background:rgba(62,201,126,.15);border:1px solid var(--ok)}
+.feedback.fb-bad{background:rgba(232,93,106,.15);border:1px solid var(--bad)}
+.next-row{margin-top:1rem;text-align:center}
+/* CALENDAR */
+.cal-head{text-align:center;font-weight:800;font-size:1.2rem;margin-bottom:.6rem;color:var(--accent2)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;max-width:430px;margin:0 auto}
+.cal-day{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:9px;
+  background:var(--card2);border:2px solid var(--border);font-weight:700;font-size:.95rem;
+  cursor:pointer;color:var(--text);transition:border-color .12s;min-height:40px;
+}
+.cal-day:hover:not(:disabled){border-color:var(--accent)}
+.cal-day:disabled{cursor:not-allowed;opacity:.55}
+.cal-day.correct{background:var(--ok);border-color:var(--ok);color:#fff;opacity:1}
+.cal-day.incorrect{background:var(--bad);border-color:var(--bad);color:#fff;opacity:1}
+/* US/UK */
+.flag-choices{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+@media(max-width:480px){.flag-choices{grid-template-columns:1fr}}
+.flag-btn{
+  background:var(--card2);border:2px solid var(--border);border-radius:14px;padding:1.1rem .8rem;
+  cursor:pointer;color:var(--text);text-align:center;transition:border-color .15s;
+}
+.flag-btn:hover:not(:disabled){border-color:var(--accent)}
+.flag-btn:disabled{cursor:not-allowed;opacity:.6}
+.flag-btn.correct{background:var(--ok);border-color:var(--ok);color:#fff;opacity:1}
+.flag-btn.incorrect{background:var(--bad);border-color:var(--bad);color:#fff;opacity:1}
+.flag-btn .f-flag{font-size:2rem}
+.flag-btn .f-name{font-weight:800;margin-top:.3rem}
+.flag-btn .f-pat{font-size:.8rem;color:inherit;opacity:.85;margin-top:.15rem}
+/* AGENDA */
+.agenda-event{
+  text-align:center;font-size:1.05rem;font-weight:800;color:var(--accent2);
+  margin-bottom:.3rem;min-height:1.4em;
+}
+.agenda-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
+@media(max-width:520px){.agenda-grid{grid-template-columns:repeat(2,1fr)}}
+.agenda-card{
+  background:var(--card2);border:2px solid var(--border);border-radius:12px;padding:.85rem .5rem;
+  text-align:center;font-weight:800;font-size:1rem;color:var(--text);cursor:pointer;
+  transition:border-color .15s;min-height:52px;
+}
+.agenda-card:hover:not(:disabled){border-color:var(--accent)}
+.agenda-card:disabled{cursor:not-allowed;opacity:.55}
+.agenda-card.correct{background:var(--ok);border-color:var(--ok);color:#fff;opacity:1}
+.agenda-card.incorrect{background:var(--bad);border-color:var(--bad);color:#fff;opacity:1}
+.agenda-card.used{opacity:.35;cursor:not-allowed}
+/* RESULTS */
+.res-big{font-size:2.6rem;font-weight:900;text-align:center;margin:.6rem 0;color:var(--accent2)}
+.res-sub{text-align:center;color:var(--sub);margin-bottom:1rem}
+.res-list{list-style:none;margin:0 0 1rem}
+.res-list li{
+  display:flex;justify-content:space-between;background:var(--card2);
+  border:1px solid var(--border);border-radius:10px;padding:.6rem .9rem;margin-bottom:.5rem;font-weight:700;
+}
+footer{text-align:center;font-size:.75rem;color:var(--sub);margin-top:1.5rem}
+</style>
+</head>
+<body oncontextmenu="return false" oncopy="return false" onpaste="return false" oncut="return false">
+<div class="wrap">
+
+<header>
+  <div class="h-left">
+    <div class="h-logo">📅</div>
+    <div>
+      <div class="h-title">Listening: Dates in English</div>
+      <div class="h-sub">Meses · Números ordinales · Fechas US/UK · Nivel A1</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:.5rem">
+    <button class="btn btn-ghost btn-small" id="theme-btn" onclick="toggleTheme()">🌙 Tema</button>
+    <button class="btn btn-ghost btn-small" onclick="resetAll()">↺ Reiniciar todo</button>
+  </div>
+</header>
+
+<div id="tts-banner">
+  <div class="spinner" id="tts-spinner"></div>
+  <div id="tts-banner-text">Cargando voz en inglés (Kokoro)… La primera vez puede tardar unos minutos. No cierres la página.</div>
+</div>
+
+<!-- ════════ MENU ════════ -->
+<div class="screen active" id="screen-menu">
+  <div class="card">
+    <p style="margin-bottom:1rem;font-size:.95rem;line-height:1.5">
+      🎧 <b>Instrucciones:</b> Escucha el audio y responde. Tienes <b>3 escuchas</b> por pregunta.
+      Las opciones se desbloquean después de la <b>primera escucha</b>. Completa los 4 módulos en orden.
+    </p>
+    <div class="menu-grid">
+      <button class="menu-btn" id="menu-d1" onclick="startModule(1)">
+        <div class="m-ico">✍️</div>
+        <div class="m-name">1 · Date Dictation</div>
+        <div class="m-desc">Escucha la fecha y elige cómo se escribe</div>
+        <div class="m-score" id="mscore-1"></div>
+      </button>
+      <button class="menu-btn" id="menu-d2" onclick="startModule(2)">
+        <div class="m-ico">🗓️</div>
+        <div class="m-name">2 · Calendar Click</div>
+        <div class="m-desc">Escucha el día y haz clic en el calendario</div>
+        <div class="m-score" id="mscore-2"></div>
+      </button>
+      <button class="menu-btn" id="menu-d3" onclick="startModule(3)">
+        <div class="m-ico">🇺🇸</div>
+        <div class="m-name">3 · US or UK?</div>
+        <div class="m-desc">¿Formato americano o británico?</div>
+        <div class="m-score" id="mscore-3"></div>
+      </button>
+      <button class="menu-btn" id="menu-d4" onclick="startModule(4)">
+        <div class="m-ico">📔</div>
+        <div class="m-name">4 · My Agenda</div>
+        <div class="m-desc">Escucha el evento y marca la fecha</div>
+        <div class="m-score" id="mscore-4"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ MODULE 1: DICTATION ════════ -->
+<div class="screen" id="screen-1">
+  <div class="card">
+    <div class="ex-top">
+      <button class="btn btn-ghost btn-small" onclick="goMenu()">← Menú</button>
+      <div class="ex-progress" id="prog-1"></div>
+    </div>
+    <p style="text-align:center;font-size:.92rem;color:var(--sub)">Escucha la fecha y elige la opción correcta.</p>
+    <div class="audio-zone">
+      <button class="btn btn-play" id="play-1" onclick="playCurrent(1)">🔊 Escuchar</button>
+      <button class="btn btn-ghost btn-small" id="slow-1" onclick="playCurrent(1,true)">🐢 Lento</button>
+      <div class="listen-count" id="count-1">Escuchas: 0/3</div>
+      <div class="gen-status" id="gen-1"></div>
+    </div>
+    <div class="choices" id="choices-1"></div>
+    <div class="feedback" id="fb-1"></div>
+    <div class="next-row"><button class="btn" id="next-1" onclick="nextItem(1)" style="display:none">Siguiente →</button></div>
+  </div>
+</div>
+
+<!-- ════════ MODULE 2: CALENDAR ════════ -->
+<div class="screen" id="screen-2">
+  <div class="card">
+    <div class="ex-top">
+      <button class="btn btn-ghost btn-small" onclick="goMenu()">← Menú</button>
+      <div class="ex-progress" id="prog-2"></div>
+    </div>
+    <p style="text-align:center;font-size:.92rem;color:var(--sub)">Escucha el día y haz clic en el calendario.</p>
+    <div class="audio-zone">
+      <button class="btn btn-play" id="play-2" onclick="playCurrent(2)">🔊 Escuchar</button>
+      <button class="btn btn-ghost btn-small" id="slow-2" onclick="playCurrent(2,true)">🐢 Lento</button>
+      <div class="listen-count" id="count-2">Escuchas: 0/3</div>
+      <div class="gen-status" id="gen-2"></div>
+    </div>
+    <div class="cal-head" id="cal-month"></div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="feedback" id="fb-2"></div>
+    <div class="next-row"><button class="btn" id="next-2" onclick="nextItem(2)" style="display:none">Siguiente →</button></div>
+  </div>
+</div>
+
+<!-- ════════ MODULE 3: US/UK ════════ -->
+<div class="screen" id="screen-3">
+  <div class="card">
+    <div class="ex-top">
+      <button class="btn btn-ghost btn-small" onclick="goMenu()">← Menú</button>
+      <div class="ex-progress" id="prog-3"></div>
+    </div>
+    <p style="text-align:center;font-size:.92rem;color:var(--sub)">¿La fecha está en formato americano o británico?</p>
+    <div class="audio-zone">
+      <button class="btn btn-play" id="play-3" onclick="playCurrent(3)">🔊 Escuchar</button>
+      <button class="btn btn-ghost btn-small" id="slow-3" onclick="playCurrent(3,true)">🐢 Lento</button>
+      <div class="listen-count" id="count-3">Escuchas: 0/3</div>
+      <div class="gen-status" id="gen-3"></div>
+    </div>
+    <div class="flag-choices">
+      <button class="flag-btn" id="flag-us" onclick="answerFlag('us')" disabled>
+        <div class="f-flag">🇺🇸</div><div class="f-name">US English</div><div class="f-pat">Month + Day · "March seventh"</div>
+      </button>
+      <button class="flag-btn" id="flag-uk" onclick="answerFlag('uk')" disabled>
+        <div class="f-flag">🇬🇧</div><div class="f-name">UK English</div><div class="f-pat">Day + Month · "The seventh of March"</div>
+      </button>
+    </div>
+    <div class="feedback" id="fb-3"></div>
+    <div class="next-row"><button class="btn" id="next-3" onclick="nextItem(3)" style="display:none">Siguiente →</button></div>
+  </div>
+</div>
+
+<!-- ════════ MODULE 4: AGENDA ════════ -->
+<div class="screen" id="screen-4">
+  <div class="card">
+    <div class="ex-top">
+      <button class="btn btn-ghost btn-small" onclick="goMenu()">← Menú</button>
+      <div class="ex-progress" id="prog-4"></div>
+    </div>
+    <p style="text-align:center;font-size:.92rem;color:var(--sub)">Escucha la frase y haz clic en la fecha del evento.</p>
+    <div class="audio-zone">
+      <button class="btn btn-play" id="play-4" onclick="playCurrent(4)">🔊 Escuchar</button>
+      <button class="btn btn-ghost btn-small" id="slow-4" onclick="playCurrent(4,true)">🐢 Lento</button>
+      <div class="listen-count" id="count-4">Escuchas: 0/3</div>
+      <div class="gen-status" id="gen-4"></div>
+    </div>
+    <div class="agenda-event" id="agenda-event"></div>
+    <div class="agenda-grid" id="agenda-grid"></div>
+    <div class="feedback" id="fb-4"></div>
+    <div class="next-row"><button class="btn" id="next-4" onclick="nextItem(4)" style="display:none">Siguiente →</button></div>
+  </div>
+</div>
+
+<!-- ════════ RESULTS ════════ -->
+<div class="screen" id="screen-results">
+  <div class="card">
+    <h2 style="text-align:center">🏆 Resultados</h2>
+    <div class="res-big" id="res-total"></div>
+    <div class="res-sub" id="res-msg"></div>
+    <ul class="res-list" id="res-list"></ul>
+    <div style="text-align:center;display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="goMenu()">← Menú</button>
+      <button class="btn" onclick="resetAll()">↺ Intentar de nuevo</button>
+    </div>
+  </div>
+</div>
+
+<footer>ESF 143 · English Lab · Listening: Dates · Teacher Jesús Sentíes</footer>
+</div>
+
+<script>
+/* ═══════════════ STORAGE WRAPPER ═══════════════ */
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+/* ═══════════════ THEME ═══════════════ */
+function applyTheme(t){
+  document.documentElement.classList.toggle('light', t==='light');
+  var b=document.getElementById('theme-btn');
+  if(b) b.textContent = (t==='light' ? '☀️ Tema' : '🌙 Tema');
+}
+function toggleTheme(){
+  var next = document.documentElement.classList.contains('light') ? 'dark' : 'light';
+  applyTheme(next); lsSet('lf-theme', next);
+}
+applyTheme(lsGet('lf-theme') || 'dark');
+
+/* ═══════════════ DATA POOLS ═══════════════ */
+/* Módulo 1 — Dictado: say = texto para TTS, correct = opción correcta escrita */
+var POOL1 = [
+ {say:"March seventh.", correct:"March 7th", opts:["March 17th","May 7th","March 3rd"], tip:"'Seventh' = 7th. Cuidado con 'seventeenth' (17th): la diferencia está en '-teen'."},
+ {say:"June fourteenth.", correct:"June 14th", opts:["June 4th","July 14th","June 24th"], tip:"'Fourteenth' = 14th. 'Fourth' (4th) es más corto, sin '-teen'. June y July suenan parecido: June = /ʤuːn/."},
+ {say:"October thirteenth.", correct:"October 13th", opts:["October 30th","October 3rd","August 13th"], tip:"'Thirteenth' (13th) termina en '-TEENTH'. 'Thirtieth' (30th) termina en '-tieth'."},
+ {say:"April first.", correct:"April 1st", opts:["April 11th","August 1st","April 5th"], tip:"'First' = 1st. 'Eleventh' (11th) tiene tres sílabas: e-LE-venth."},
+ {say:"January twentieth.", correct:"January 20th", opts:["January 12th","June 20th","January 21st"], tip:"'Twentieth' = 20th. 'Twenty-first' (21st) tiene una palabra extra al final: 'first'."},
+ {say:"July fifth.", correct:"July 5th", opts:["July 15th","June 5th","July 9th"], tip:"'Fifth' = 5th. 'Fifteenth' (15th) es más largo: fif-TEENTH."},
+ {say:"September twenty-second.", correct:"September 22nd", opts:["September 2nd","December 22nd","September 12th"], tip:"'Twenty-second' = 22nd. 'Second' solo (2nd) no lleva 'twenty'."},
+ {say:"February ninth.", correct:"February 9th", opts:["February 19th","January 9th","February 5th"], tip:"'Ninth' = 9th. 'Nineteenth' (19th) lleva '-teen' en medio."},
+ {say:"May thirty-first.", correct:"May 31st", opts:["May 13th","March 31st","May 21st"], tip:"'Thirty-first' = 31st. May es corto: /meɪ/. March empieza con /mɑr/."},
+ {say:"November sixteenth.", correct:"November 16th", opts:["November 6th","December 16th","November 26th"], tip:"'Sixteenth' = 16th. 'Sixth' (6th) es una sola sílaba."},
+ {say:"August eighteenth.", correct:"August 18th", opts:["August 8th","October 18th","August 28th"], tip:"'Eighteenth' = 18th. 'Eighth' (8th) es corto, sin '-teen'."},
+ {say:"December twenty-fifth.", correct:"December 25th", opts:["December 21st","November 25th","December 5th"], tip:"'Twenty-fifth' = 25th. ¡Navidad! 🎄 'Fifth' solo sería 5th."},
+ {say:"March twelfth.", correct:"March 12th", opts:["March 20th","May 12th","March 2nd"], tip:"'Twelfth' = 12th. Ojo: se escribe TWELFTH (con F), no 'twelveth'."},
+ {say:"June thirtieth.", correct:"June 30th", opts:["June 13th","July 30th","June 3rd"], tip:"'Thirtieth' (30th) termina en '-tieth'. 'Thirteenth' (13th) termina en '-teenth'."},
+ {say:"October fourth.", correct:"October 4th", opts:["October 14th","October 24th","August 4th"], tip:"'Fourth' = 4th, corto. 'Fourteenth' (14th) lleva '-teen'."},
+ {say:"February twenty-eighth.", correct:"February 28th", opts:["February 20th","February 18th","December 28th"], tip:"'Twenty-eighth' = 28th: dos partes, 'twenty' + 'eighth'."}
+];
+/* Módulo 2 — Calendario: 3 meses, 4 días candidatos por mes (se eligen 2 al azar) */
+var POOL2_MONTHS = [
+ {name:"March", days:31, startDow:0, cand:[13,30,4,14]},
+ {name:"June", days:30, startDow:1, cand:[15,5,19,9]},
+ {name:"October", days:31, startDow:3, cand:[21,12,20,28]}
+];
+var ORDINALS = {1:"first",2:"second",3:"third",4:"fourth",5:"fifth",6:"sixth",7:"seventh",8:"eighth",9:"ninth",10:"tenth",
+ 11:"eleventh",12:"twelfth",13:"thirteenth",14:"fourteenth",15:"fifteenth",16:"sixteenth",17:"seventeenth",18:"eighteenth",
+ 19:"nineteenth",20:"twentieth",21:"twenty-first",22:"twenty-second",23:"twenty-third",24:"twenty-fourth",25:"twenty-fifth",
+ 26:"twenty-sixth",27:"twenty-seventh",28:"twenty-eighth",29:"twenty-ninth",30:"thirtieth",31:"thirty-first"};
+function suffix(n){ var j=n%10,k=n%100; if(j===1&&k!==11)return"st"; if(j===2&&k!==12)return"nd"; if(j===3&&k!==13)return"rd"; return"th"; }
+/* Módulo 3 — US vs UK (mismas fechas en ambos formatos; se eligen 6 de 10) */
+var POOL3 = [
+ {say:"March seventh.", ans:"us", label:"March 7th"},
+ {say:"The seventh of March.", ans:"uk", label:"March 7th"},
+ {say:"July fourth.", ans:"us", label:"July 4th"},
+ {say:"The fourth of July.", ans:"uk", label:"July 4th"},
+ {say:"December first.", ans:"us", label:"December 1st"},
+ {say:"The first of December.", ans:"uk", label:"December 1st"},
+ {say:"May twenty-second.", ans:"us", label:"May 22nd"},
+ {say:"The twenty-second of May.", ans:"uk", label:"May 22nd"},
+ {say:"October ninth.", ans:"us", label:"October 9th"},
+ {say:"The ninth of October.", ans:"uk", label:"October 9th"}
+];
+/* Módulo 4 — Agenda: 5 frases + 1 fecha distractora */
+var POOL4 = [
+ {say:"My birthday is on the twenty-second of November.", event:"🎂 Birthday", date:"November 22nd", tip:"'The twenty-second of November' = November 22nd (formato UK: día + of + mes)."},
+ {say:"The English exam is on May first.", event:"📝 English exam", date:"May 1st", tip:"'May first' = May 1st (formato US: mes + día)."},
+ {say:"Our school trip is on March thirteenth.", event:"🚌 School trip", date:"March 13th", tip:"'Thirteenth' = 13th. No es 'thirtieth' (30th)."},
+ {say:"The party is on the thirtieth of June.", event:"🎉 Party", date:"June 30th", tip:"'Thirtieth' = 30th, termina en '-tieth'. No es 'thirteenth' (13th)."},
+ {say:"Christmas is on December twenty-fifth.", event:"🎄 Christmas", date:"December 25th", tip:"'December twenty-fifth' = December 25th."}
+];
+var POOL4_DISTRACTOR = "July 4th";
+
+/* ═══════════════ STATE ═══════════════ */
+var MAX_LISTENS = 3;
+var state = null;       /* estado del módulo activo */
+var scores = {1:null, 2:null, 3:null, 4:null};
+var playing = false;    /* hay audio sonando o generándose */
+
+function shuffle(a){
+  var arr=a.slice();
+  for(var i=arr.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=arr[i];arr[i]=arr[j];arr[j]=t; }
+  return arr;
+}
+
+/* ═══════════════ NAVIGATION ═══════════════ */
+function showScreen(id){
+  var sc=document.querySelectorAll('.screen');
+  for(var i=0;i<sc.length;i++) sc[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+}
+function goMenu(){
+  state=null; updateMenuScores(); showScreen('screen-menu');
+}
+function updateMenuScores(){
+  var totals={1:8,2:6,3:6,4:5};
+  for(var m=1;m<=4;m++){
+    var el=document.getElementById('mscore-'+m);
+    el.textContent = (scores[m]!==null) ? ('✅ '+scores[m]+'/'+totals[m]) : '';
+  }
+}
+function resetAll(){
+  scores={1:null,2:null,3:null,4:null};
+  state=null; updateMenuScores(); showScreen('screen-menu');
+}
+
+/* ═══════════════ MODULE SETUP ═══════════════ */
+function startModule(m){
+  var items;
+  if(m===1){ items = shuffle(POOL1).slice(0,8); }
+  else if(m===2){
+    items=[];
+    for(var i=0;i<POOL2_MONTHS.length;i++){
+      var mo=POOL2_MONTHS[i];
+      var days=shuffle(mo.cand).slice(0,2);
+      for(var d=0;d<days.length;d++){
+        items.push({month:mo, day:days[d], say:"The "+ORDINALS[days[d]]+"."});
+      }
+    }
+    /* mantener agrupado por mes pero mezclar el orden interno de cada par */
+  }
+  else if(m===3){ items = shuffle(POOL3).slice(0,6); }
+  else { items = shuffle(POOL4); }
+  state = {module:m, items:items, idx:0, score:0, listens:0, answered:false, usedAgenda:[]};
+  if(m===4) buildAgendaGrid();
+  renderItem();
+  showScreen('screen-'+m);
+}
+
+function renderItem(){
+  var m=state.module, it=state.items[state.idx];
+  state.listens=0; state.answered=false;
+  document.getElementById('prog-'+m).textContent = 'Pregunta '+(state.idx+1)+' de '+state.items.length+' · Aciertos: '+state.score;
+  document.getElementById('count-'+m).textContent = 'Escuchas: 0/'+MAX_LISTENS;
+  document.getElementById('gen-'+m).textContent = '';
+  var fb=document.getElementById('fb-'+m); fb.className='feedback'; fb.textContent='';
+  document.getElementById('next-'+m).style.display='none';
+  setPlayButtons(m);
+
+  if(m===1){
+    var box=document.getElementById('choices-1'); box.textContent='';
+    var opts=shuffle([it.correct].concat(it.opts));
+    for(var i=0;i<opts.length;i++){
+      var b=document.createElement('button');
+      b.className='choice-btn'; b.textContent=opts[i]; b.disabled=true;
+      b.onclick=(function(val){return function(){answerChoice(val);};})(opts[i]);
+      box.appendChild(b);
+    }
+  }
+  else if(m===2){
+    document.getElementById('cal-month').textContent = it.month.name;
+    var grid=document.getElementById('cal-grid'); grid.textContent='';
+    for(var s=0;s<it.month.startDow;s++){ var sp=document.createElement('div'); grid.appendChild(sp); }
+    for(var d=1;d<=it.month.days;d++){
+      var c=document.createElement('button');
+      c.className='cal-day'; c.textContent=d; c.disabled=true;
+      c.onclick=(function(day){return function(){answerCal(day);};})(d);
+      grid.appendChild(c);
+    }
+  }
+  else if(m===3){
+    document.getElementById('flag-us').disabled=true;
+    document.getElementById('flag-uk').disabled=true;
+    var fu=document.getElementById('flag-us'), fk=document.getElementById('flag-uk');
+    fu.className='flag-btn'; fk.className='flag-btn';
+  }
+  else if(m===4){
+    document.getElementById('agenda-event').textContent = '❓ Listen…';
+    var cards=document.querySelectorAll('.agenda-card');
+    for(var i2=0;i2<cards.length;i2++){
+      cards[i2].disabled=true;
+      cards[i2].classList.remove('correct','incorrect');
+    }
+  }
+}
+
+function buildAgendaGrid(){
+  var dates=shuffle(POOL4.map(function(p){return p.date;}).concat([POOL4_DISTRACTOR]));
+  var grid=document.getElementById('agenda-grid'); grid.textContent='';
+  for(var i=0;i<dates.length;i++){
+    var c=document.createElement('button');
+    c.className='agenda-card'; c.textContent=dates[i]; c.disabled=true;
+    c.setAttribute('data-date',dates[i]);
+    c.onclick=(function(val){return function(){answerAgenda(val);};})(dates[i]);
+    grid.appendChild(c);
+  }
+}
+
+/* ═══════════════ AUDIO CONTROL ═══════════════ */
+function setPlayButtons(m){
+  var canPlay = window.kokoroReady !== 'loading' && !playing && state && !state.answered && state.listens < MAX_LISTENS;
+  document.getElementById('play-'+m).disabled = !canPlay;
+  document.getElementById('slow-'+m).disabled = !canPlay || state.listens===0; /* lento se habilita tras 1a escucha normal */
+}
+function unlockAnswers(m){
+  if(m===1){
+    var bs=document.querySelectorAll('#choices-1 .choice-btn');
+    for(var i=0;i<bs.length;i++) bs[i].disabled=false;
+  } else if(m===2){
+    var cs=document.querySelectorAll('#cal-grid .cal-day');
+    for(var j=0;j<cs.length;j++) cs[j].disabled=false;
+  } else if(m===3){
+    document.getElementById('flag-us').disabled=false;
+    document.getElementById('flag-uk').disabled=false;
+  } else if(m===4){
+    var ag=document.querySelectorAll('.agenda-card');
+    for(var k=0;k<ag.length;k++){
+      if(!ag[k].classList.contains('used')) ag[k].disabled=false;
+    }
+  }
+}
+function playCurrent(m, slow){
+  if(!state || state.module!==m || playing || state.answered) return;
+  if(state.listens >= MAX_LISTENS) return;
+  var it=state.items[state.idx];
+  playing=true;
+  state.listens++;
+  document.getElementById('count-'+m).textContent='Escuchas: '+state.listens+'/'+MAX_LISTENS;
+  setPlayButtons(m);
+  var gen=document.getElementById('gen-'+m);
+  window.speakPhrase(it.say, slow?0.75:1.0,
+    function onStart(){ gen.textContent = slow ? '🐢 Reproduciendo lento…' : '🔊 Reproduciendo…'; },
+    function onGen(){ gen.textContent = '⏳ Generando audio…'; },
+    function onEnd(){
+      gen.textContent='';
+      playing=false;
+      unlockAnswers(m);
+      setPlayButtons(m);
+    },
+    function onErr(){
+      gen.textContent='⚠️ Error de audio. Intenta de nuevo.';
+      state.listens--; /* no cobrar la escucha fallida */
+      document.getElementById('count-'+m).textContent='Escuchas: '+state.listens+'/'+MAX_LISTENS;
+      playing=false;
+      setPlayButtons(m);
+    }
+  );
+}
+
+/* ═══════════════ ANSWER HANDLERS ═══════════════ */
+function lockAndShow(m, ok, tipHtml){
+  state.answered=true;
+  var fb=document.getElementById('fb-'+m);
+  fb.className='feedback show '+(ok?'fb-ok':'fb-bad');
+  fb.textContent = (ok?'✅ Correct! ':'❌ Not quite. ') + tipHtml;
+  if(ok) state.score++;
+  document.getElementById('prog-'+m).textContent='Pregunta '+(state.idx+1)+' de '+state.items.length+' · Aciertos: '+state.score;
+  document.getElementById('next-'+m).style.display='inline-block';
+  setPlayButtons(m);
+}
+function answerChoice(val){
+  if(!state || state.answered) return;
+  var it=state.items[state.idx], ok=(val===it.correct);
+  var bs=document.querySelectorAll('#choices-1 .choice-btn');
+  for(var i=0;i<bs.length;i++){
+    bs[i].disabled=true;
+    if(bs[i].textContent===it.correct) bs[i].classList.add('correct');
+    else if(bs[i].textContent===val && !ok) bs[i].classList.add('incorrect');
+  }
+  lockAndShow(1, ok, 'La fecha era "'+it.say.replace('.','')+'" = '+it.correct+'. '+it.tip);
+}
+function answerCal(day){
+  if(!state || state.answered) return;
+  var it=state.items[state.idx], ok=(day===it.day);
+  var cs=document.querySelectorAll('#cal-grid .cal-day');
+  for(var i=0;i<cs.length;i++){
+    cs[i].disabled=true;
+    var n=parseInt(cs[i].textContent,10);
+    if(n===it.day) cs[i].classList.add('correct');
+    else if(n===day && !ok) cs[i].classList.add('incorrect');
+  }
+  var tip='"The '+ORDINALS[it.day]+'" = '+it.month.name+' '+it.day+suffix(it.day)+'.';
+  if(!ok){
+    tip+=' Tú marcaste el '+day+suffix(day)+' ("the '+ORDINALS[day]+'"). Compara los sonidos.';
+  }
+  lockAndShow(2, ok, tip);
+}
+function answerFlag(val){
+  if(!state || state.answered) return;
+  var it=state.items[state.idx], ok=(val===it.ans);
+  var fu=document.getElementById('flag-us'), fk=document.getElementById('flag-uk');
+  fu.disabled=true; fk.disabled=true;
+  var correctBtn = (it.ans==='us')?fu:fk;
+  var chosenBtn = (val==='us')?fu:fk;
+  correctBtn.classList.add('correct');
+  if(!ok) chosenBtn.classList.add('incorrect');
+  var tip;
+  if(it.ans==='us') tip='Escuchaste "'+it.say.replace('.','')+'": mes primero ('+it.label+') → US 🇺🇸. El formato UK sería "The … of …".';
+  else tip='Escuchaste "'+it.say.replace('.','')+'": empieza con "The" y usa "of" → UK 🇬🇧 (día + of + mes). El formato US sería mes primero.';
+  lockAndShow(3, ok, tip);
+}
+function answerAgenda(val){
+  if(!state || state.answered) return;
+  var it=state.items[state.idx], ok=(val===it.date);
+  var cards=document.querySelectorAll('.agenda-card');
+  for(var i=0;i<cards.length;i++){
+    cards[i].disabled=true;
+    var dv=cards[i].getAttribute('data-date');
+    if(dv===it.date) cards[i].classList.add('correct');
+    else if(dv===val && !ok) cards[i].classList.add('incorrect');
+  }
+  document.getElementById('agenda-event').textContent = it.event;
+  state.usedAgenda.push(it.date);
+  lockAndShow(4, ok, it.tip);
+}
+
+/* ═══════════════ NEXT / RESULTS ═══════════════ */
+function nextItem(m){
+  /* marcar tarjeta usada en agenda y limpiar marcas de la ronda */
+  if(m===4){
+    var cards=document.querySelectorAll('.agenda-card');
+    for(var i=0;i<cards.length;i++){
+      var dv=cards[i].getAttribute('data-date');
+      cards[i].classList.remove('correct','incorrect');
+      if(state.usedAgenda.indexOf(dv)!==-1){ cards[i].classList.add('used'); cards[i].disabled=true; }
+    }
+  }
+  state.idx++;
+  if(state.idx >= state.items.length){
+    scores[m]=state.score;
+    var done = (scores[1]!==null && scores[2]!==null && scores[3]!==null && scores[4]!==null);
+    if(done) showResults(); else goMenu();
+    return;
+  }
+  renderItem();
+}
+function showResults(){
+  var totals={1:8,2:6,3:6,4:5};
+  var names={1:'✍️ Date Dictation',2:'🗓️ Calendar Click',3:'🇺🇸 US or UK?',4:'📔 My Agenda'};
+  var sum=0, tot=0, list=document.getElementById('res-list');
+  list.textContent='';
+  for(var m=1;m<=4;m++){
+    sum+=scores[m]; tot+=totals[m];
+    var li=document.createElement('li');
+    var s1=document.createElement('span'); s1.textContent=names[m];
+    var s2=document.createElement('span'); s2.textContent=scores[m]+'/'+totals[m];
+    li.appendChild(s1); li.appendChild(s2); list.appendChild(li);
+  }
+  document.getElementById('res-total').textContent = sum+' / '+tot;
+  var pct=sum/tot;
+  var msg = pct>=0.9 ? '¡Excelente oído! 🌟' : pct>=0.7 ? '¡Muy bien! Sigue practicando los pares -teen / -ty.' :
+            pct>=0.5 ? 'Buen intento. Repasa los ordinales 13–19 vs 20–31.' : 'Vuelve a intentarlo — escucha con calma el final de cada número.';
+  document.getElementById('res-msg').textContent=msg;
+  showScreen('screen-results');
+}
+
+/* ═══════════════ TTS BRIDGE (placeholder, lo reemplaza el módulo Kokoro) ═══════════════ */
+window.kokoroReady='loading';
+var currentAudio=null;
+window.speakPhrase = function(text, rate, onStart, onGen, onEnd, onErr){
+  /* Fallback Web Speech API — se usa solo si Kokoro no carga */
+  try{
+    if(!window.speechSynthesis){ onErr(); return; }
+    var u=new SpeechSynthesisUtterance(text);
+    u.lang='en-US'; u.rate=rate;
+    u.onstart=onStart; u.onend=onEnd;
+    u.onerror=function(){ onErr(); };
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }catch(e){ onErr(); }
+};
+function ttsBannerReady(usingFallback){
+  var sp=document.getElementById('tts-spinner');
+  var tx=document.getElementById('tts-banner-text');
+  var bn=document.getElementById('tts-banner');
+  sp.style.display='none';
+  if(usingFallback){
+    tx.textContent='⚠️ No se pudo cargar Kokoro. Usando la voz del navegador (calidad menor).';
+  } else {
+    tx.textContent='✅ Voz lista. ¡Puedes empezar!';
+    setTimeout(function(){ bn.classList.add('hidden'); }, 2500);
+  }
+  if(state) setPlayButtons(state.module);
+}
+/* Mientras Kokoro carga, los botones PLAY quedan deshabilitados al entrar a un módulo
+   porque kokoroReady==='loading' (ver setPlayButtons). */
+</script>
+
+<!-- KOKORO TTS MODULE — no modificar -->
+<script type="module">
+import { KokoroTTS } from "https://esm.run/kokoro-js@1.2.1";
+
+const PAD_SECONDS = 0.35;          // silencio agregado al final de cada clip (anti-corte)
+const VOICE = "af_heart";
+const cache = new Map();           // texto -> object URL del WAV
+
+function floatToWavBlob(samples, sampleRate){
+  // agregar padding de silencio al final
+  const pad = new Float32Array(Math.round(sampleRate * PAD_SECONDS));
+  const data = new Float32Array(samples.length + pad.length);
+  data.set(samples, 0);
+  // pad ya es ceros
+  const buf = new ArrayBuffer(44 + data.length*2);
+  const v = new DataView(buf);
+  function ws(o,s){ for(let i=0;i<s.length;i++) v.setUint8(o+i, s.charCodeAt(i)); }
+  ws(0,'RIFF'); v.setUint32(4, 36 + data.length*2, true); ws(8,'WAVE');
+  ws(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,sampleRate,true); v.setUint32(28,sampleRate*2,true);
+  v.setUint16(32,2,true); v.setUint16(34,16,true);
+  ws(36,'data'); v.setUint32(40, data.length*2, true);
+  let off=44;
+  for(let i=0;i<data.length;i++){
+    let s=Math.max(-1,Math.min(1,data[i]));
+    v.setInt16(off, s<0 ? s*0x8000 : s*0x7FFF, true); off+=2;
+  }
+  return new Blob([buf], {type:'audio/wav'});
+}
+
+let tts=null;
+try{
+  tts = await KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype:"q8" });
+  window.kokoroReady = true;
+
+  window.speakPhrase = function(text, rate, onStart, onGen, onEnd, onErr){
+    const playUrl = (url)=>{
+      try{
+        if(currentAudio){ currentAudio.pause(); }
+        const a = new Audio(url);
+        currentAudio = a;
+        a.playbackRate = rate;
+        a.onended = onEnd;
+        a.onerror = onErr;
+        onStart();
+        a.play().catch(onErr);
+      }catch(e){ onErr(); }
+    };
+    if(cache.has(text)){ playUrl(cache.get(text)); return; }
+    onGen();
+    tts.generate(text, { voice: VOICE }).then(audio=>{
+      const blob = floatToWavBlob(audio.audio, audio.sampling_rate);
+      const url = URL.createObjectURL(blob);
+      cache.set(text, url);
+      playUrl(url);
+    }).catch(()=>{ onErr(); });
+  };
+  ttsBannerReady(false);
+}catch(e){
+  // Kokoro no cargó: queda el fallback Web Speech API definido en el script clásico
+  window.kokoroReady = 'fallback';
+  ttsBannerReady(true);
+}
+</script>
+</body>
+</html>
